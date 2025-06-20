@@ -1124,11 +1124,13 @@
         </div>
     </div>
 
-    <!-- Firebase Scripts -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
-    <script>
+<script>
+    // Aguardar página carregar
+    window.addEventListener('DOMContentLoaded', function() {
         // Configurações do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyB8RL-aQIAySJkFPT9iMWVAe0o7UvcYA8w",
@@ -1209,7 +1211,7 @@
         });
 
         // Logout
-        function logout() {
+        window.logout = function() {
             if (confirm('Deseja sair do sistema?')) {
                 auth.signOut();
             }
@@ -1509,7 +1511,7 @@
         }
 
         // Mudar de aba
-        function switchTab(aircraftId) {
+        window.switchTab = function(aircraftId) {
             if (aircraftId !== currentAircraftId) {
                 currentAircraftId = aircraftId;
                 renderTabs();
@@ -1518,7 +1520,7 @@
         }
 
         // Fechar aba
-        function closeTab(aircraftId) {
+        window.closeTab = function(aircraftId) {
             if (Object.keys(aircraftStates).length > 1) {
                 if (confirm('Tem certeza que deseja excluir esta aeronave e todos seus dados?')) {
                     delete aircraftStates[aircraftId];
@@ -2033,21 +2035,21 @@
         }
 
         // Expandir tudo
-        function expandAll() {
+        window.expandAll = function() {
             document.querySelectorAll('.phase-content').forEach(content => {
                 content.classList.add('active');
             });
         }
 
         // Recolher tudo
-        function collapseAll() {
+        window.collapseAll = function() {
             document.querySelectorAll('.phase-content').forEach(content => {
                 content.classList.remove('active');
             });
         }
 
         // Exportar dados
-        function exportData() {
+        window.exportData = function() {
             const dataStr = JSON.stringify(appState, null, 2);
             const dataBlob = new Blob([dataStr], {type: 'application/json'});
             const url = URL.createObjectURL(dataBlob);
@@ -2058,7 +2060,7 @@
         }
 
         // Limpar dados
-        function clearData() {
+        window.clearData = function() {
             if (confirm('Tem certeza que deseja limpar todos os dados desta aeronave?')) {
                 // CRIAR BACKUP ANTES DE LIMPAR
                 createBackup();
@@ -2172,6 +2174,7 @@
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         }
-    </script>
+    }); // Fecha o window.addEventListener
+</script>
 </body>
 </html>
