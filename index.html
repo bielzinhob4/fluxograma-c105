@@ -523,7 +523,50 @@
         .date-info:hover .date-tooltip {
             display: block;
         }
-
+        /* Animações de Fade */
+        .fade-element {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease-out;
+        }
+        
+        .fade-element.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .phase-card {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease-out;
+        }
+        
+        .phase-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Animação stagger para as fases */
+        .phase-card:nth-child(1) { transition-delay: 0.1s; }
+        .phase-card:nth-child(2) { transition-delay: 0.2s; }
+        .phase-card:nth-child(3) { transition-delay: 0.3s; }
+        .phase-card:nth-child(4) { transition-delay: 0.4s; }
+        .phase-card:nth-child(5) { transition-delay: 0.5s; }
+        .phase-card:nth-child(6) { transition-delay: 0.6s; }
+        .phase-card:nth-child(7) { transition-delay: 0.7s; }
+        .phase-card:nth-child(8) { transition-delay: 0.8s; }
+        .phase-card:nth-child(9) { transition-delay: 0.9s; }
+        .phase-card:nth-child(10) { transition-delay: 1.0s; }
+        .phase-card:nth-child(11) { transition-delay: 1.1s; }
+        .phase-card:nth-child(12) { transition-delay: 1.2s; }
+        .phase-card:nth-child(13) { transition-delay: 1.3s; }
+        .phase-card:nth-child(14) { transition-delay: 1.4s; }
+        .phase-card:nth-child(15) { transition-delay: 1.5s; }
+        
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -646,6 +689,8 @@
                 </div>
             </div>
         </div>
+    <button id="backToTop" style="position: fixed; bottom: 80px; right: 30px; background: #1a5490; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; opacity: 0; transition: all 0.3s; z-index: 100;">↑</button>
+
     </main>
 
     <!-- Modal para impedimentos -->
@@ -899,6 +944,9 @@
                 
                 container.appendChild(phaseCard);
             });
+            
+            // ADICIONE ESTA LINHA:
+            setTimeout(setupScrollAnimations, 100);
         }
 
         // Renderizar tarefa
@@ -1110,6 +1158,57 @@
 
         // Inicializar
         loadData();
+        // Animação de Fade no Scroll
+        function setupScrollAnimations() {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+        
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    } else {
+                        // Remove visible quando sair da tela (para re-animar)
+                        if (entry.boundingClientRect.top > 0) {
+                            entry.target.classList.remove('visible');
+                        }
+                    }
+                });
+            }, observerOptions);
+        
+            // Observar cards de fase
+            document.querySelectorAll('.phase-card').forEach(card => {
+                observer.observe(card);
+            });
+        
+            // Observar outros elementos
+            document.querySelectorAll('.progress-info, .controls, .legend').forEach(el => {
+                el.classList.add('fade-element');
+                observer.observe(el);
+            });
+        }
+        
+        // Chamar após renderizar as fases
+        setTimeout(setupScrollAnimations, 100);
+        
+        // Botão voltar ao topo
+        window.addEventListener('scroll', () => {
+            const backToTop = document.getElementById('backToTop');
+            if (backToTop && window.scrollY > 300) {
+                backToTop.style.opacity = '1';
+            } else if (backToTop) {
+                backToTop.style.opacity = '0';
+            }
+        });
+        
+        const backToTopBtn = document.getElementById('backToTop');
+        if (backToTopBtn) {
+            backToTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
     </script>
 </body>
 </html>
