@@ -240,23 +240,37 @@
             object-position: center;
         }
 
-        /* Botão de logout */
-        .logout-btn {
+        /* NOVO ESTILO - Botão de logout reposicionado */
+        .logout-container {
             position: absolute;
             right: 20px;
-            top: 90px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            bottom: -20px;
+            background: #dc3545;
+            border-radius: 8px;
+            padding: 2px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            border: 2px solid rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 8px 16px;
-            border-radius: 5px;
+            padding: 10px 20px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
+            font-weight: 600;
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: #c82333;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
         }
 
         .header-content {
@@ -308,6 +322,7 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
+            padding-top: 40px; /* Adicionar espaço para o botão de logout */
         }
 
         .controls {
@@ -954,6 +969,17 @@
                 width: 100%;
                 justify-content: space-around;
             }
+
+            .logout-container {
+                position: static;
+                margin-top: 10px;
+                width: 100%;
+            }
+
+            .logout-btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -998,7 +1024,13 @@
     <!-- Aplicação Principal (Fluxograma) -->
     <div id="mainApp">
         <header class="header">
-            <button class="logout-btn" onclick="logout()">Sair</button>
+            <!-- Botão de logout reposicionado -->
+            <div class="logout-container">
+                <button class="logout-btn" onclick="logout()">
+                    <span>🚪</span> Sair do Sistema
+                </button>
+            </div>
+            
             <div class="header-logos">
                 <div class="logo-left">
                     <img src="https://i.imgur.com/QkMKOTv.png" alt="PAMA GL">
@@ -1150,6 +1182,15 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
+        // IMPORTANTE: Configurar persistência para SESSION
+        auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+            .then(() => {
+                console.log('Persistência configurada para SESSION');
+            })
+            .catch((error) => {
+                console.error('Erro ao configurar persistência:', error);
+            });
+
         // Elementos do Sistema de Login
         const loginContainer = document.getElementById('loginContainer');
         const mainApp = document.getElementById('mainApp');
@@ -1157,6 +1198,17 @@
         const errorMsg = document.getElementById('errorMsg');
         const loading = document.getElementById('loading');
         const loginBtn = document.getElementById('loginBtn');
+
+        // NOVO: Verificar se deve forçar logout ao carregar
+        window.addEventListener('load', () => {
+            // Se a página foi recarregada ou veio de um favorito/atalho
+            if (performance.navigation.type === 1 || !document.referrer) {
+                // Fazer logout silencioso
+                auth.signOut().then(() => {
+                    console.log('Logout automático ao recarregar');
+                });
+            }
+        });
 
         // Verificar autenticação
         auth.onAuthStateChanged((user) => {
