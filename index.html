@@ -948,9 +948,11 @@
                         <span style="${task.completed ? 'text-decoration: line-through;' : ''}">${task.name}</span>
                     </div>
                     <div class="task-actions">
-                        ${isBlocked ? 
-                            `<button class="btn btn-danger btn-small" onclick="viewBlock('${task.id}')">Ver Impedimento</button>` :
-                            `<button class="btn btn-danger btn-small" onclick="blockTask('${task.id}')">Impedimento</button>`
+                        ${task.completed ? 
+                            `<button class="btn btn-success btn-small" style="cursor: default;">Concluído</button>` :
+                            isBlocked ? 
+                                `<button class="btn btn-danger btn-small" onclick="viewBlock('${task.id}')">Ver Impedimento</button>` :
+                                `<button class="btn btn-danger btn-small" onclick="blockTask('${task.id}')">Impedimento</button>`
                         }
                     </div>
                 </div>
