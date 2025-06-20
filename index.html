@@ -689,7 +689,7 @@
                 </div>
             </div>
         </div>
-    <button id="backToTop" style="position: fixed; bottom: 80px; right: 30px; background: #1a5490; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; opacity: 0; transition: all 0.3s; z-index: 100;">↑</button>
+    <button id="backToTop" style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1a5490; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; opacity: 0; transition: all 0.3s; z-index: 100;">↑</button>
 
     </main>
 
@@ -1161,8 +1161,8 @@
         // Animação de Fade no Scroll
         function setupScrollAnimations() {
             const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
+                threshold: 0.05,
+                rootMargin: '0px 0px 50px 0px'
             };
         
             const observer = new IntersectionObserver((entries) => {
@@ -1170,10 +1170,8 @@
                     if (entry.isIntersecting) {
                         entry.target.classList.add('visible');
                     } else {
-                        // Remove visible quando sair da tela (para re-animar)
-                        if (entry.boundingClientRect.top > 0) {
-                            entry.target.classList.remove('visible');
-                        }
+                        // Remove visible quando elemento sair completamente da tela
+                        entry.target.classList.remove('visible');
                     }
                 });
             }, observerOptions);
