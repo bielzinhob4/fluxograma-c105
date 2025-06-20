@@ -976,7 +976,21 @@
             }
             
             saveData();
+            
+            // Salvar quais fases estão abertas
+            const openPhases = [];
+            document.querySelectorAll('.phase-content.active').forEach(content => {
+                const id = content.id.replace('phase-content-', '');
+                openPhases.push(id);
+            });
+            
             renderPhases();
+            
+            // Reabrir as fases que estavam abertas
+            openPhases.forEach(id => {
+                document.getElementById(`phase-content-${id}`).classList.add('active');
+            });
+            
             updateProgress();
         }
 
