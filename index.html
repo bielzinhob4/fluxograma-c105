@@ -1743,11 +1743,56 @@
 
         // Limpar dados
         function clearData() {
-            if (confirm('Tem certeza que deseja limpar todos os dados?')) {
-                localStorage.removeItem('c105MaintenanceData');
-                location.reload();
+            if (confirm('Tem certeza que deseja limpar todos os dados desta aeronave?')) {
+                // CRIAR BACKUP ANTES DE LIMPAR
+                createBackup();
+                
+                // Limpar apenas a aeronave atual
+                aircraftStates[currentAircraftId] = createNewAircraftState();
+                appState = aircraftStates[currentAircraftId];
+                
+                // Limpar campos de input
+                document.getElementById('aircraftId').value = '';
+                document.getElementById('startDate').value = '';
+                
+                // Salvar e recarregar
+                saveAllData();
+                renderTabs();
+                renderPhases();
+                updateProgress();
+                updateDaysElapsed();
             }
         }
+
+        // ADICIONE ESTAS NOVAS FUNÇÕES AQUI:
+        
+        // Função de backup antes de operações críticas
+        function createBackup() {
+            const backup = {
+                date: new Date().toISOString(),
+                data: JSON.stringify(aircraftStates)
+            };
+            localStorage.setItem('c105Backup', JSON.stringify(backup));
+        }
+
+        // Função para restaurar backup (caso precise)
+        function restoreBackup() {
+            const backup = localStorage.getItem('c105Backup');
+            if (backup) {
+                const backupData = JSON.parse(backup);
+                if (confirm(`Restaurar backup de ${new Date(backupData.date).toLocaleString()}?`)) {
+                    aircraftStates = JSON.parse(backupData.data);
+                    currentAircraftId = Object.keys(aircraftStates)[0];
+                    saveAllData();
+                    location.reload();
+                }
+            } else {
+                alert('Nenhum backup encontrado.');
+            }
+        }
+
+        // Event listeners
+        document.getElementById('aircraftId').addEventListener('input', saveData);
 
         // Event listeners
         document.getElementById('aircraftId').addEventListener('input', saveData);
