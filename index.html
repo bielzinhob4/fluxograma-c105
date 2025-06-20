@@ -1765,13 +1765,13 @@
         }
 
         // Toggle fase
-        function togglePhase(phaseId) {
+        window.togglePhase = function(phaseId) {
             const content = document.getElementById(`phase-content-${phaseId}`);
             content.classList.toggle('active');
         }
 
         // Toggle tarefa
-        function toggleTask(phaseId, taskId) {
+        window.toggleTask = function(phaseId, taskId) {
             const phase = appState.phases.find(p => p.id === phaseId);
             const task = phase.tasks.find(t => t.id === taskId);
             task.completed = !task.completed;
@@ -1802,13 +1802,13 @@
 
         // Bloquear tarefa
         let currentTaskId = null;
-        function blockTask(taskId) {
+        window.blockTask = function(taskId) {
             currentTaskId = taskId;
             document.getElementById('blockModal').classList.add('active');
         }
 
         // Ver impedimento
-        function viewBlock(taskId) {
+        window.viewBlock = function(taskId) {
             const block = appState.blocks[taskId];
             if (block) {
                 const message = `Impedimento: ${block.type}\nDescrição: ${block.description}\nAção: ${block.action}\n\nDeseja editar este impedimento?`;
@@ -1825,7 +1825,7 @@
         }
         
         // Remover impedimento
-        function removeBlock(taskId) {
+        window.removeBlock = function(taskId) {
             if (confirm('Deseja remover o impedimento desta tarefa?')) {
                 delete appState.blocks[taskId];
                 
@@ -1849,14 +1849,14 @@
             }
         }
         // Toggle informações da tarefa
-        function toggleTaskInfo(taskId) {
+        window.toggleTaskInfo = function(taskId) {
             const infoModal = document.getElementById(`info-${taskId}`);
             if (infoModal) {
                 infoModal.classList.toggle('active');
             }
         }
                 // Mostrar formulário de nova tarefa
-        function showNewTaskForm(phaseId) {
+        window.showNewTaskForm = function(phaseId) {
             const form = document.getElementById(`new-task-form-${phaseId}`);
             const input = document.getElementById(`new-task-input-${phaseId}`);
             if (form) {
@@ -1866,7 +1866,7 @@
         }
 
         // Esconder formulário de nova tarefa
-        function hideNewTaskForm(phaseId) {
+        window.hideNewTaskForm = function(phaseId) {
             const form = document.getElementById(`new-task-form-${phaseId}`);
             const input = document.getElementById(`new-task-input-${phaseId}`);
             if (form) {
@@ -1876,7 +1876,7 @@
         }
 
         // Adicionar nova tarefa
-        function addNewTask(phaseId) {
+        window.addNewTask = function(phaseId) {
             const input = document.getElementById(`new-task-input-${phaseId}`);
             const taskName = input.value.trim();
             
@@ -1924,7 +1924,7 @@
             }
         }
                 // Excluir tarefa
-        function deleteTask(phaseId, taskId) {
+        window.deleteTask = function(phaseId, taskId) {
             if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
                 const phase = appState.phases.find(p => p.id === phaseId);
                 phase.tasks = phase.tasks.filter(t => t.id !== taskId);
@@ -1955,7 +1955,7 @@
         }
 
         // Editar informações da tarefa
-        function editTaskInfo(taskId, field) {
+        window.editTaskInfo = function(taskId, field) {
             let currentValue = '';
             let prompt_text = '';
             
@@ -2028,7 +2028,7 @@
         }
 
         // Salvar impedimento
-        function saveBlock() {
+        window.saveBlock = function() {
             const type = document.getElementById('blockType').value;
             const description = document.getElementById('blockDescription').value;
             const action = document.getElementById('blockAction').value;
@@ -2048,7 +2048,7 @@
         }
 
         // Fechar modal
-        function closeModal() {
+        window.closeModal = function() {
             document.getElementById('blockModal').classList.remove('active');
             document.getElementById('blockType').value = '';
             document.getElementById('blockDescription').value = '';
