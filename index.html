@@ -215,6 +215,21 @@
             background: #45a049;
             transform: translateY(-1px);
         }
+        
+        .btn-delete {
+            background: #f44336;
+            color: white;
+            padding: 4px 8px;
+            font-size: 14px;
+            border-radius: 4px;
+            margin-left: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-delete:hover {
+            background: #d32f2f;
+        }
 
         .new-task-form {
             background: #f0f7ff;
@@ -1099,7 +1114,7 @@
             const isBlocked = appState.blocks[task.id];
             
             return `
-                <div class="task-item">
+                <div class="task-item ${task.custom ? 'custom' : ''}">
                     <div class="task-info">
                         <input type="checkbox" 
                                class="task-checkbox" 
@@ -1107,7 +1122,8 @@
                                ${isBlocked ? 'disabled' : ''}
                                onchange="toggleTask(${phaseId}, '${task.id}')">
                         <span style="${task.completed ? 'text-decoration: line-through;' : ''}">${task.name}</span>
-                        ${task.info ? `<button class="btn btn-info" onclick="toggleTaskInfo('${task.id}')" title="Ver informações">ℹ</button>` : ''}
+                        <button class="btn btn-info" onclick="toggleTaskInfo('${task.id}')" title="Ver informações">ℹ</button>
+                        ${task.custom ? `<button class="btn btn-delete" onclick="deleteTask(${phaseId}, '${task.id}')" title="Excluir tarefa">🗑️</button>` : ''}
                     </div>
                     <div class="task-actions">
                         ${task.completed ? 
@@ -1118,35 +1134,38 @@
                         }
                     </div>
                 </div>
-                ${task.info ? `
-                    <div class="task-info-modal" id="info-${task.id}">
-                        <div class="info-section">
-                            <h4>🔧 Ferramentas Necessárias:</h4>
-                            <ul>
-                                ${task.info.tools.map(tool => `<li>${tool}</li>`).join('')}
-                            </ul>
-                        </div>
-                        <div class="info-section">
-                            <h4>📋 Materiais:</h4>
-                            <ul>
-                                ${task.info.materials.map(material => `<li>${material}</li>`).join('')}
-                            </ul>
-                        </div>
-                        <div class="info-section">
-                            <h4>⚠️ Segurança:</h4>
-                            <ul>
-                                ${task.info.safety.map(safety => `<li>${safety}</li>`).join('')}
-                            </ul>
-                        </div>
-                        <div class="info-section">
-                            <h4>⏱️ Tempo Estimado:</h4>
-                            <p>${task.info.time}</p>
-                        </div>
-                        <div class="manual-ref">
-                            <strong>📖 Referência:</strong> ${task.info.manual}
-                        </div>
+                <div class="task-info-modal" id="info-${task.id}">
+                    <div class="info-section">
+                        <h4>🔧 Ferramentas Necessárias:</h4>
+                        <ul id="tools-${task.id}">
+                            ${task.info && task.info.tools ? task.info.tools.map(tool => `<li>${tool}</li>`).join('') : '<li>Clique para adicionar ferramentas</li>'}
+                        </ul>
+                        <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'tools')">✏️ Editar</button>
                     </div>
-                ` : ''}
+                    <div class="info-section">
+                        <h4>📋 Materiais:</h4>
+                        <ul id="materials-${task.id}">
+                            ${task.info && task.info.materials ? task.info.materials.map(material => `<li>${material}</li>`).join('') : '<li>Clique para adicionar materiais</li>'}
+                        </ul>
+                        <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'materials')">✏️ Editar</button>
+                    </div>
+                    <div class="info-section">
+                        <h4>⚠️ Segurança:</h4>
+                        <ul id="safety-${task.id}">
+                            ${task.info && task.info.safety ? task.info.safety.map(safety => `<li>${safety}</li>`).join('') : '<li>Clique para adicionar informações de segurança</li>'}
+                        </ul>
+                        <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'safety')">✏️ Editar</button>
+                    </div>
+                    <div class="info-section">
+                        <h4>⏱️ Tempo Estimado:</h4>
+                        <p id="time-${task.id}">${task.info && task.info.time ? task.info.time : 'Clique para adicionar tempo estimado'}</p>
+                        <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'time')">✏️ Editar</button>
+                    </div>
+                    <div class="manual-ref">
+                        <strong>📖 Referência:</strong> <span id="manual-${task.id}">${task.info && task.info.manual ? task.info.manual : 'Clique para adicionar referência'}</span>
+                        <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'manual')">✏️ Editar</button>
+                    </div>
+                </div>
             `;
         }
 
@@ -1273,7 +1292,14 @@
                     id: newTaskId,
                     name: taskName,
                     completed: false,
-                    custom: true // Marca como tarefa personalizada
+                    custom: true,
+                    info: {
+                        tools: [],
+                        materials: [],
+                        safety: [],
+                        time: '',
+                        manual: ''
+                    }
                 };
                 
                 phase.tasks.push(newTask);
@@ -1298,6 +1324,109 @@
                 
                 // Limpar e esconder formulário
                 hideNewTaskForm(phaseId);
+            }
+        }
+                // Excluir tarefa
+        function deleteTask(phaseId, taskId) {
+            if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
+                const phase = appState.phases.find(p => p.id === phaseId);
+                phase.tasks = phase.tasks.filter(t => t.id !== taskId);
+                
+                // Remover impedimento se existir
+                if (appState.blocks[taskId]) {
+                    delete appState.blocks[taskId];
+                }
+                
+                saveData();
+                
+                // Manter fases abertas
+                const openPhases = [];
+                document.querySelectorAll('.phase-content.active').forEach(content => {
+                    const id = content.id.replace('phase-content-', '');
+                    openPhases.push(id);
+                });
+                
+                renderPhases();
+                
+                // Reabrir fases
+                openPhases.forEach(id => {
+                    document.getElementById(`phase-content-${id}`).classList.add('active');
+                });
+                
+                updateProgress();
+            }
+        }
+
+        // Editar informações da tarefa
+        function editTaskInfo(taskId, field) {
+            let currentValue = '';
+            let prompt_text = '';
+            
+            // Encontrar a tarefa
+            let task = null;
+            for (let phase of appState.phases) {
+                task = phase.tasks.find(t => t.id === taskId);
+                if (task) break;
+            }
+            
+            if (!task) return;
+            
+            // Garantir que task.info existe
+            if (!task.info) {
+                task.info = {
+                    tools: [],
+                    materials: [],
+                    safety: [],
+                    time: '',
+                    manual: ''
+                };
+            }
+            
+            switch(field) {
+                case 'tools':
+                    currentValue = task.info.tools ? task.info.tools.join('\n') : '';
+                    prompt_text = 'Ferramentas (uma por linha):';
+                    break;
+                case 'materials':
+                    currentValue = task.info.materials ? task.info.materials.join('\n') : '';
+                    prompt_text = 'Materiais (um por linha):';
+                    break;
+                case 'safety':
+                    currentValue = task.info.safety ? task.info.safety.join('\n') : '';
+                    prompt_text = 'Informações de segurança (uma por linha):';
+                    break;
+                case 'time':
+                    currentValue = task.info.time || '';
+                    prompt_text = 'Tempo estimado:';
+                    break;
+                case 'manual':
+                    currentValue = task.info.manual || '';
+                    prompt_text = 'Referência do manual:';
+                    break;
+            }
+            
+            const newValue = prompt(prompt_text, currentValue);
+            
+            if (newValue !== null) {
+                switch(field) {
+                    case 'tools':
+                    case 'materials':
+                    case 'safety':
+                        task.info[field] = newValue.split('\n').filter(line => line.trim() !== '');
+                        break;
+                    case 'time':
+                    case 'manual':
+                        task.info[field] = newValue;
+                        break;
+                }
+                
+                saveData();
+                renderPhases();
+                
+                // Reabrir a modal
+                setTimeout(() => {
+                    toggleTaskInfo(taskId);
+                }, 100);
             }
         }
 
