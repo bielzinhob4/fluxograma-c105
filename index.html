@@ -176,6 +176,20 @@
             background: #f44336;
             color: white;
         }
+        
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #f57c00;
+        }
         .btn-info {
             background: #2196f3;
             color: white;
@@ -1129,7 +1143,8 @@
                         ${task.completed ? 
                             `<button class="btn btn-success btn-small" style="cursor: default;">Concluído</button>` :
                             isBlocked ? 
-                                `<button class="btn btn-danger btn-small" onclick="viewBlock('${task.id}')">Ver Impedimento</button>` :
+                                `<button class="btn btn-danger btn-small" onclick="viewBlock('${task.id}')">Ver Impedimento</button>
+                                 <button class="btn btn-warning btn-small" onclick="removeBlock('${task.id}')">Remover Impedimento</button>` :
                                 `<button class="btn btn-danger btn-small" onclick="blockTask('${task.id}')">Impedimento</button>`
                         }
                     </div>
@@ -1253,7 +1268,41 @@
         function viewBlock(taskId) {
             const block = appState.blocks[taskId];
             if (block) {
-                alert(`Impedimento: ${block.type}\nDescrição: ${block.description}\nAção: ${block.action}`);
+                const message = `Impedimento: ${block.type}\nDescrição: ${block.description}\nAção: ${block.action}\n\nDeseja editar este impedimento?`;
+                
+                if (confirm(message)) {
+                    // Preencher o modal com os dados existentes
+                    currentTaskId = taskId;
+                    document.getElementById('blockType').value = block.type;
+                    document.getElementById('blockDescription').value = block.description;
+                    document.getElementById('blockAction').value = block.action || '';
+                    document.getElementById('blockModal').classList.add('active');
+                }
+            }
+        }
+        
+        // Remover impedimento
+        function removeBlock(taskId) {
+            if (confirm('Deseja remover o impedimento desta tarefa?')) {
+                delete appState.blocks[taskId];
+                
+                saveData();
+                
+                // Manter fases abertas
+                const openPhases = [];
+                document.querySelectorAll('.phase-content.active').forEach(content => {
+                    const id = content.id.replace('phase-content-', '');
+                    openPhases.push(id);
+                });
+                
+                renderPhases();
+                
+                // Reabrir fases
+                openPhases.forEach(id => {
+                    document.getElementById(`phase-content-${id}`).classList.add('active');
+                });
+                
+                updateProgress();
             }
         }
         // Toggle informações da tarefa
