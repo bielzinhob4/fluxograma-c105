@@ -1123,7 +1123,7 @@
                                onchange="toggleTask(${phaseId}, '${task.id}')">
                         <span style="${task.completed ? 'text-decoration: line-through;' : ''}">${task.name}</span>
                         <button class="btn btn-info" onclick="toggleTaskInfo('${task.id}')" title="Ver informações">ℹ</button>
-                        ${task.custom ? `<button class="btn btn-delete" onclick="deleteTask(${phaseId}, '${task.id}')" title="Excluir tarefa">🗑️</button>` : ''}
+
                     </div>
                     <div class="task-actions">
                         ${task.completed ? 
@@ -1138,21 +1138,21 @@
                     <div class="info-section">
                         <h4>🔧 Ferramentas Necessárias:</h4>
                         <ul id="tools-${task.id}">
-                            ${task.info && task.info.tools ? task.info.tools.map(tool => `<li>${tool}</li>`).join('') : '<li>Clique para adicionar ferramentas</li>'}
+                            ${task.info && task.info.tools && task.info.tools.length > 0 ? task.info.tools.map(tool => `<li>${tool}</li>`).join('') : '<li>Clique para adicionar ferramentas</li>'}
                         </ul>
                         <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'tools')">✏️ Editar</button>
                     </div>
                     <div class="info-section">
                         <h4>📋 Materiais:</h4>
                         <ul id="materials-${task.id}">
-                            ${task.info && task.info.materials ? task.info.materials.map(material => `<li>${material}</li>`).join('') : '<li>Clique para adicionar materiais</li>'}
+                            ${task.info && task.info.materials && task.info.materials.length > 0 ? task.info.materials.map(material => `<li>${material}</li>`).join('') : '<li>Clique para adicionar materiais</li>'}
                         </ul>
                         <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'materials')">✏️ Editar</button>
                     </div>
                     <div class="info-section">
                         <h4>⚠️ Segurança:</h4>
                         <ul id="safety-${task.id}">
-                            ${task.info && task.info.safety ? task.info.safety.map(safety => `<li>${safety}</li>`).join('') : '<li>Clique para adicionar informações de segurança</li>'}
+                            ${task.info && task.info.safety && task.info.safety.length > 0 ? task.info.safety.map(safety => `<li>${safety}</li>`).join('') : '<li>Clique para adicionar informações de segurança</li>'}
                         </ul>
                         <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'safety')">✏️ Editar</button>
                     </div>
@@ -1164,6 +1164,11 @@
                     <div class="manual-ref">
                         <strong>📖 Referência:</strong> <span id="manual-${task.id}">${task.info && task.info.manual ? task.info.manual : 'Clique para adicionar referência'}</span>
                         <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'manual')">✏️ Editar</button>
+                    </div>
+                    <div class="info-section" style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+                        <h4 style="color: #f44336;">🗑️ Excluir Tarefa:</h4>
+                        <p style="color: #666; margin-bottom: 10px;">Esta ação não pode ser desfeita</p>
+                        <button class="btn btn-danger btn-small" onclick="deleteTask(${phaseId}, '${task.id}')">🗑️ Excluir Esta Tarefa</button>
                     </div>
                 </div>
             `;
