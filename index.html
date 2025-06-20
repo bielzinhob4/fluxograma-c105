@@ -176,7 +176,7 @@
             background: #f44336;
             color: white;
         }
-                .btn-info {
+        .btn-info {
             background: #2196f3;
             color: white;
             padding: 4px 8px;
@@ -195,6 +195,45 @@
         .btn-info:hover {
             background: #1976d2;
             transform: scale(1.1);
+        }
+        
+        .btn-add-task {
+            background: #4caf50;
+            color: white;
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 5px;
+            margin: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-add-task:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+
+        .new-task-form {
+            background: #f0f7ff;
+            padding: 15px;
+            margin: 10px 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .new-task-form.active {
+            display: block;
+        }
+
+        .new-task-input {
+            width: calc(100% - 120px);
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
         }
 
         .task-info-modal {
@@ -1034,6 +1073,16 @@
                         <div class="tasks-list">
                             ${phase.tasks.map(task => renderTask(phase.id, task)).join('')}
                         </div>
+                        <button class="btn btn-add-task" onclick="showNewTaskForm(${phase.id})">
+                            <span style="font-size: 18px;">+</span> Adicionar Tarefa
+                        </button>
+                        <div class="new-task-form" id="new-task-form-${phase.id}">
+                            <input type="text" class="new-task-input" id="new-task-input-${phase.id}" 
+                                   placeholder="Nome da nova tarefa..." 
+                                   onkeypress="if(event.key==='Enter') addNewTask(${phase.id})">
+                            <button class="btn btn-success btn-small" onclick="addNewTask(${phase.id})">Adicionar</button>
+                            <button class="btn btn-small" onclick="hideNewTaskForm(${phase.id})">Cancelar</button>
+                        </div>
                     </div>
                 `;
                 
@@ -1188,6 +1237,67 @@
             const infoModal = document.getElementById(`info-${taskId}`);
             if (infoModal) {
                 infoModal.classList.toggle('active');
+            }
+        }
+                // Mostrar formulário de nova tarefa
+        function showNewTaskForm(phaseId) {
+            const form = document.getElementById(`new-task-form-${phaseId}`);
+            const input = document.getElementById(`new-task-input-${phaseId}`);
+            if (form) {
+                form.classList.add('active');
+                input.focus();
+            }
+        }
+
+        // Esconder formulário de nova tarefa
+        function hideNewTaskForm(phaseId) {
+            const form = document.getElementById(`new-task-form-${phaseId}`);
+            const input = document.getElementById(`new-task-input-${phaseId}`);
+            if (form) {
+                form.classList.remove('active');
+                input.value = '';
+            }
+        }
+
+        // Adicionar nova tarefa
+        function addNewTask(phaseId) {
+            const input = document.getElementById(`new-task-input-${phaseId}`);
+            const taskName = input.value.trim();
+            
+            if (taskName) {
+                const phase = appState.phases.find(p => p.id === phaseId);
+                const newTaskNumber = phase.tasks.length + 1;
+                const newTaskId = `${phaseId}.${newTaskNumber}`;
+                
+                const newTask = {
+                    id: newTaskId,
+                    name: taskName,
+                    completed: false,
+                    custom: true // Marca como tarefa personalizada
+                };
+                
+                phase.tasks.push(newTask);
+                
+                saveData();
+                
+                // Manter fases abertas
+                const openPhases = [];
+                document.querySelectorAll('.phase-content.active').forEach(content => {
+                    const id = content.id.replace('phase-content-', '');
+                    openPhases.push(id);
+                });
+                
+                renderPhases();
+                
+                // Reabrir fases
+                openPhases.forEach(id => {
+                    document.getElementById(`phase-content-${id}`).classList.add('active');
+                });
+                
+                updateProgress();
+                
+                // Limpar e esconder formulário
+                hideNewTaskForm(phaseId);
             }
         }
 
