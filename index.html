@@ -241,16 +241,17 @@
         }
 
         /* NOVO ESTILO - Botão de logout reposicionado */
-        .logout-container {
-            position: absolute;
-            right: 20px;
-            bottom: -20px;
-            background: #dc3545;
-            border-radius: 8px;
-            padding: 2px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-            z-index: 100;
-        }
+.logout-container {
+    position: absolute;
+    right: 150px;  
+    top: 50%;     
+    transform: translateY(-50%);  
+    background: #dc3545;
+    border-radius: 8px;
+    padding: 2px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    z-index: 100;
+}
 
         .logout-btn {
             background: #dc3545;
@@ -1026,9 +1027,7 @@
         <header class="header">
             <!-- Botão de logout reposicionado -->
             <div class="logout-container">
-                <button class="logout-btn" onclick="logout()">
-                    <span>🚪</span> Sair do Sistema
-                </button>
+                <button class="logout-btn" onclick="logout()">SAIR</button>
             </div>
             
             <div class="header-logos">
