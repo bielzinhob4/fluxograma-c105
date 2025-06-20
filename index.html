@@ -190,6 +190,66 @@
         .btn-warning:hover {
             background: #f57c00;
         }
+        
+        .aircraft-tabs {
+            background: white;
+            padding: 10px;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: -5px;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: 2px solid transparent;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab:hover {
+            background: #e0e0e0;
+        }
+
+        .tab.active {
+            background: #1a5490;
+            color: white;
+            border-color: #1a5490;
+        }
+
+        .tab-close {
+            margin-left: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            opacity: 0.7;
+        }
+
+        .tab-close:hover {
+            opacity: 1;
+        }
+
+        .btn-new-tab {
+            padding: 8px 12px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-new-tab:hover {
+            background: #45a049;
+        }
         .btn-info {
             background: #2196f3;
             color: white;
@@ -744,6 +804,10 @@
     </header>
 
     <main class="main-container">
+        <div class="aircraft-tabs" id="aircraftTabs">
+            <!-- Abas serão adicionadas dinamicamente aqui -->
+        </div>
+        
         <div class="help-box" style="background: #e8f4f8; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #2196f3;">
             <p style="margin: 0; font-size: 14px;">
                 <strong>📅 Data de Início:</strong> Coloque a data em que a aeronave ENTROU na linha de revisão (chegou no hangar para manutenção).
@@ -1050,31 +1114,140 @@
         ];
 
         // Estado da aplicação
-        let appState = {
-            phases: phases,
-            aircraftId: '',
-            startDate: '',
-            blocks: {}
-        };
+        let aircraftStates = {};
+        let currentAircraftId = null;
+        
+        // Estado padrão para nova aeronave
+        function createNewAircraftState() {
+            return {
+                phases: JSON.parse(JSON.stringify(phases)), // Deep copy
+                aircraftId: '',
+                startDate: '',
+                blocks: {}
+            };
+        }
+        
+        // Compatibilidade com dados antigos
+        let appState = null;
 
         // Carregar dados salvos
+        // Carregar dados salvos
         function loadData() {
+            initializeTabs();
+        }
+
+        // Gerenciamento de abas
+        function initializeTabs() {
             const saved = localStorage.getItem('c105MaintenanceData');
-            if (saved) {
-                appState = JSON.parse(saved);
-                document.getElementById('aircraftId').value = appState.aircraftId || '';
-                document.getElementById('startDate').value = appState.startDate || '';
+            const savedTabs = localStorage.getItem('c105AircraftTabs');
+            
+            if (savedTabs) {
+                aircraftStates = JSON.parse(savedTabs);
+                const aircraftIds = Object.keys(aircraftStates);
+                if (aircraftIds.length > 0) {
+                    currentAircraftId = aircraftIds[0];
+                }
+            } else if (saved) {
+                // Migrar dados antigos para o novo formato
+                const oldData = JSON.parse(saved);
+                const aircraftId = oldData.aircraftId || 'aircraft-1';
+                aircraftStates[aircraftId] = oldData;
+                currentAircraftId = aircraftId;
+                saveAllData();
+            } else {
+                // Criar primeira aba
+                createNewTab();
             }
+            
+            renderTabs();
+            loadCurrentAircraft();
+        }
+
+        // Criar nova aba
+        function createNewTab() {
+            const newId = 'aircraft-' + Date.now();
+            aircraftStates[newId] = createNewAircraftState();
+            currentAircraftId = newId;
+            saveAllData();
+            renderTabs();
+            loadCurrentAircraft();
+        }
+
+        // Renderizar abas
+        function renderTabs() {
+            const tabsContainer = document.getElementById('aircraftTabs');
+            tabsContainer.innerHTML = '';
+            
+            Object.keys(aircraftStates).forEach(aircraftId => {
+                const state = aircraftStates[aircraftId];
+                const tab = document.createElement('div');
+                tab.className = `tab ${aircraftId === currentAircraftId ? 'active' : ''}`;
+                tab.innerHTML = `
+                    <span onclick="switchTab('${aircraftId}')">${state.aircraftId || 'Nova Aeronave'}</span>
+                    ${Object.keys(aircraftStates).length > 1 ? `<span class="tab-close" onclick="closeTab('${aircraftId}')">×</span>` : ''}
+                `;
+                tabsContainer.appendChild(tab);
+            });
+            
+            const newTabBtn = document.createElement('button');
+            newTabBtn.className = 'btn-new-tab';
+            newTabBtn.innerHTML = '+ Nova Aeronave';
+            newTabBtn.onclick = createNewTab;
+            tabsContainer.appendChild(newTabBtn);
+        }
+
+        // Mudar de aba
+        function switchTab(aircraftId) {
+            if (aircraftId !== currentAircraftId) {
+                currentAircraftId = aircraftId;
+                renderTabs();
+                loadCurrentAircraft();
+            }
+        }
+
+        // Fechar aba
+        function closeTab(aircraftId) {
+            if (Object.keys(aircraftStates).length > 1) {
+                if (confirm('Tem certeza que deseja excluir esta aeronave e todos seus dados?')) {
+                    delete aircraftStates[aircraftId];
+                    
+                    if (currentAircraftId === aircraftId) {
+                        currentAircraftId = Object.keys(aircraftStates)[0];
+                    }
+                    
+                    saveAllData();
+                    renderTabs();
+                    loadCurrentAircraft();
+                }
+            } else {
+                alert('Você precisa manter pelo menos uma aeronave.');
+            }
+        }
+
+        // Carregar aeronave atual
+        function loadCurrentAircraft() {
+            appState = aircraftStates[currentAircraftId];
+            document.getElementById('aircraftId').value = appState.aircraftId || '';
+            document.getElementById('startDate').value = appState.startDate || '';
             renderPhases();
             updateProgress();
             updateDaysElapsed();
         }
 
+        // Salvar todos os dados
+        function saveAllData() {
+            localStorage.setItem('c105AircraftTabs', JSON.stringify(aircraftStates));
+        }
+
         // Salvar dados
         function saveData() {
-            appState.aircraftId = document.getElementById('aircraftId').value;
-            appState.startDate = document.getElementById('startDate').value;
-            localStorage.setItem('c105MaintenanceData', JSON.stringify(appState));
+            if (appState && currentAircraftId) {
+                appState.aircraftId = document.getElementById('aircraftId').value;
+                appState.startDate = document.getElementById('startDate').value;
+                aircraftStates[currentAircraftId] = appState;
+                saveAllData();
+                renderTabs(); // Atualizar nome na aba
+            }
         }
 
         // Renderizar fases
