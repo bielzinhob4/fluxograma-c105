@@ -176,6 +176,74 @@
             background: #f44336;
             color: white;
         }
+                .btn-info {
+            background: #2196f3;
+            color: white;
+            padding: 4px 8px;
+            font-size: 16px;
+            min-width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-info:hover {
+            background: #1976d2;
+            transform: scale(1.1);
+        }
+
+        .task-info-modal {
+            background: #f0f7ff;
+            border: 2px solid #2196f3;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .task-info-modal.active {
+            display: block;
+        }
+
+        .info-section {
+            margin-bottom: 15px;
+        }
+
+        .info-section h4 {
+            color: #1a5490;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .info-section ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .info-section li {
+            margin-bottom: 5px;
+            position: relative;
+        }
+
+        .info-section li:before {
+            content: "•";
+            position: absolute;
+            left: -15px;
+            color: #2196f3;
+        }
+
+        .manual-ref {
+            background: #fff3cd;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border-left: 4px solid #ffc107;
+        }
 
         .progress-info {
             background: white;
@@ -801,10 +869,54 @@
                 id: 9,
                 title: "CHECKS DE HANGAR",
                 tasks: [
-                    { id: "9.1", name: "Teste de sistemas hidráulicos", completed: false },
-                    { id: "9.2", name: "Teste de comandos de voo", completed: false },
-                    { id: "9.3", name: "Verificação de instrumentos", completed: false },
-                    { id: "9.4", name: "Teste de sistemas elétricos", completed: false }
+                    { 
+                        id: "9.1", 
+                        name: "Teste de sistemas hidráulicos", 
+                        completed: false,
+                        info: {
+                            tools: ["Bancada de teste hidráulico", "Manômetro 0-3000 PSI", "Chaves 13/16\" e 3/4\"", "Recipiente para fluido"],
+                            materials: ["Skydrol LD-4 (2 litros)", "Panos limpos", "Luvas nitrílicas"],
+                            safety: ["Sistema pressurizado - despressurizar antes", "Usar óculos de proteção", "Verificar vazamentos antes de pressurizar"],
+                            manual: "T.O. 1C-105E-2-2, Cap. 3, Pág. 3-45",
+                            time: "2-3 horas"
+                        }
+                    },
+                    { 
+                        id: "9.2", 
+                        name: "Teste de comandos de voo", 
+                        completed: false,
+                        info: {
+                            tools: ["Barras de comando", "Indicador de deflexão", "Chaves Allen conjunto"],
+                            materials: ["Graxa aeronáutica", "Óleo lubrificante MIL-PRF-7870"],
+                            safety: ["Certificar área livre antes de mover superfícies", "Dois técnicos necessários"],
+                            manual: "T.O. 1C-105E-2-2, Cap. 4, Pág. 4-12",
+                            time: "1-2 horas"
+                        }
+                    },
+                    { 
+                        id: "9.3", 
+                        name: "Verificação de instrumentos", 
+                        completed: false,
+                        info: {
+                            tools: ["Multímetro digital", "Fonte de alimentação 28VDC", "Kit de teste pitot-estático"],
+                            materials: ["Álcool isopropílico", "Panos antiestáticos"],
+                            safety: ["Cuidado com instrumentos sensíveis", "Não aplicar pressão excessiva"],
+                            manual: "T.O. 1C-105E-2-2, Cap. 5, Pág. 5-8",
+                            time: "3-4 horas"
+                        }
+                    },
+                    { 
+                        id: "9.4", 
+                        name: "Teste de sistemas elétricos", 
+                        completed: false,
+                        info: {
+                            tools: ["Megôhmetro", "Amperímetro alicate", "Teste de continuidade"],
+                            materials: ["Fita isolante", "Terminais elétricos", "Spray limpa contatos"],
+                            safety: ["Desconectar baterias antes de trabalhar", "Verificar aterramento", "Usar EPIs para trabalho elétrico"],
+                            manual: "T.O. 1C-105E-2-2, Cap. 6, Pág. 6-22",
+                            time: "2-3 horas"
+                        }
+                    }
                 ]
             },
             {
@@ -946,6 +1058,7 @@
                                ${isBlocked ? 'disabled' : ''}
                                onchange="toggleTask(${phaseId}, '${task.id}')">
                         <span style="${task.completed ? 'text-decoration: line-through;' : ''}">${task.name}</span>
+                        ${task.info ? `<button class="btn btn-info" onclick="toggleTaskInfo('${task.id}')" title="Ver informações">ℹ</button>` : ''}
                     </div>
                     <div class="task-actions">
                         ${task.completed ? 
@@ -956,6 +1069,35 @@
                         }
                     </div>
                 </div>
+                ${task.info ? `
+                    <div class="task-info-modal" id="info-${task.id}">
+                        <div class="info-section">
+                            <h4>🔧 Ferramentas Necessárias:</h4>
+                            <ul>
+                                ${task.info.tools.map(tool => `<li>${tool}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="info-section">
+                            <h4>📋 Materiais:</h4>
+                            <ul>
+                                ${task.info.materials.map(material => `<li>${material}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="info-section">
+                            <h4>⚠️ Segurança:</h4>
+                            <ul>
+                                ${task.info.safety.map(safety => `<li>${safety}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="info-section">
+                            <h4>⏱️ Tempo Estimado:</h4>
+                            <p>${task.info.time}</p>
+                        </div>
+                        <div class="manual-ref">
+                            <strong>📖 Referência:</strong> ${task.info.manual}
+                        </div>
+                    </div>
+                ` : ''}
             `;
         }
 
@@ -1039,6 +1181,13 @@
             const block = appState.blocks[taskId];
             if (block) {
                 alert(`Impedimento: ${block.type}\nDescrição: ${block.description}\nAção: ${block.action}`);
+            }
+        }
+        // Toggle informações da tarefa
+        function toggleTaskInfo(taskId) {
+            const infoModal = document.getElementById(`info-${taskId}`);
+            if (infoModal) {
+                infoModal.classList.toggle('active');
             }
         }
 
