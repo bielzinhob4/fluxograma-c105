@@ -1185,28 +1185,28 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
+    // Configurações do Firebase (FORA do DOMContentLoaded)
+    const firebaseConfig = {
+        apiKey: "AIzaSyB8RL-aQIivSJKFPI9iMWVAe0o7UvcYA8w",
+        authDomain: "fluxograma-c105.firebaseapp.com",
+        projectId: "fluxograma-c105",
+        storageBucket: "fluxograma-c105.firebasestorage.app",
+        messagingSenderId: "309539238622",
+        appId: "1:309539238622:web:004d67de0c799d8cb6c84f"
+    };
+    
+    // Inicializar Firebase IMEDIATAMENTE
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    
+    // VERIFICAÇÃO DE INICIALIZAÇÃO
+    console.log('Firebase inicializado:', firebase.apps.length > 0);
+    console.log('Auth disponível:', auth !== undefined);
+    console.log('Firestore disponível:', db !== undefined);
+
     // Aguardar página carregar
     window.addEventListener('DOMContentLoaded', function() {
-
-        // Configurações do Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyB8RL-aQIivSJKFPI9iMWVAe0o7UvcYA8w",
-            authDomain: "fluxograma-c105.firebaseapp.com",
-            projectId: "fluxograma-c105",
-            storageBucket: "fluxograma-c105.firebasestorage.app",
-            messagingSenderId: "309539238622",
-            appId: "1:309539238622:web:004d67de0c799d8cb6c84f"
-        };
-        
-        // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore(); // NOVA LINHA: Inicializar Firestore
-        
-        // VERIFICAÇÃO DE INICIALIZAÇÃO
-        console.log('Firebase inicializado:', firebase.apps.length > 0);
-        console.log('Auth disponível:', auth !== undefined);
-        console.log('Firestore disponível:', db !== undefined);
 
         // IMPORTANTE: Configurar persistência para SESSION
         auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
