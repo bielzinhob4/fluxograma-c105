@@ -310,9 +310,11 @@
             background: rgba(255,255,255,0.2);
             border: 1px solid rgba(255,255,255,0.3);
             color: white;
-            padding: 5px 10px;
-            border-radius: 3px;
+            padding: 10px 15px;
+            border-radius: 6px;
             width: 150px;
+            font-size: 14px;
+            font-weight: 500;
         }
 
         .aircraft-info input::placeholder {
@@ -1229,6 +1231,11 @@
         // Verificar autenticação
         auth.onAuthStateChanged((user) => {
             if (user) {
+                // Limpar estados anteriores
+                aircraftStates = {};
+                currentAircraftId = null;
+                appState = null;
+                
                 // Usuário autenticado - mostrar aplicação
                 loginContainer.style.display = 'none';
                 mainApp.style.display = 'block';
@@ -1243,12 +1250,20 @@
                 // NOVA LINHA: Verificar se é admin
                 checkIfAdmin();
                 
+                // Carregar dados específicos da seção
+                loadData();
+                
                 // Registrar acesso
                 console.log(`Acesso autorizado: ${user.email} em ${new Date().toLocaleString('pt-BR')}`);
             } else {
                 // Usuário não autenticado - mostrar login
                 loginContainer.style.display = 'flex';
                 mainApp.style.display = 'none';
+                
+                // Limpar dados ao fazer logout
+                aircraftStates = {};
+                currentAircraftId = null;
+                appState = null;
             }
         });
 
@@ -2206,12 +2221,8 @@
             updateDaysElapsed();
         });
 
-        // Inicializar - só carrega dados se estiver autenticado
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                loadData();
-            }
-        });
+        // Remova este trecho duplicado - já está sendo tratado no onAuthStateChanged principal
+
         // Animação de Fade no Scroll
         function setupScrollAnimations() {
             const observerOptions = {
