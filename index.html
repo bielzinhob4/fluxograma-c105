@@ -1312,30 +1312,36 @@
             }
         });
 
-        // Login
+// Login
+document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            console.log('FORMULÁRIO ENVIADO!'); // NOVO TESTE
+            console.log('FORMULÁRIO ENVIADO!');
             
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            const loading = document.getElementById('loading');
+            const loginBtn = document.getElementById('loginBtn');
             
-            console.log('Tentando login com:', email); // DEBUG
+            console.log('Tentando login com:', email);
             
             showError('');
             loading.style.display = 'block';
             loginBtn.disabled = true;
 
             try {
-                console.log('Iniciando autenticação...'); // DEBUG
+                console.log('Iniciando autenticação...');
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                console.log('Login bem-sucedido:', userCredential.user.email); // DEBUG
+                console.log('Login bem-sucedido:', userCredential.user.email);
                 // onAuthStateChanged cuidará da navegação
             } catch (error) {
-                console.error('Erro detalhado de login:', error); // DEBUG DETALHADO
-                console.error('Código do erro:', error.code); // DEBUG
-                console.error('Mensagem do erro:', error.message); // DEBUG
+                console.error('Erro detalhado de login:', error);
+                console.error('Código do erro:', error.code);
+                console.error('Mensagem do erro:', error.message);
                 
                 let mensagem = 'Erro ao fazer login';
                 
@@ -1362,13 +1368,15 @@
                 loginBtn.disabled = false;
             }
         });
+    }
+});
 
-        // Logout
-        window.logout = function() {
-            if (confirm('Deseja sair do sistema?')) {
-                auth.signOut();
-            }
-        }
+// Logout
+window.logout = function() {
+    if (confirm('Deseja sair do sistema?')) {
+        auth.signOut();
+    }
+}
 
         // Mostrar erro
         function showError(msg) {
