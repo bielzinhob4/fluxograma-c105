@@ -1003,12 +1003,12 @@
             <form id="loginForm">
                 <div class="form-group">
                     <label for="email">E-mail de Acesso</label>
-                    <input type="email" id="email" required placeholder="usuario@email.com">
+                    <input type="email" id="email" name="email" required placeholder="usuario@email.com" autocomplete="email">
                 </div>
 
                 <div class="form-group">
                     <label for="password">Senha</label>
-                    <input type="password" id="password" required placeholder="••••••••">
+                    <input type="password" id="password" name="password" required placeholder="••••••••" autocomplete="current-password">
                 </div>
 
                 <button type="submit" class="btn-login" id="loginBtn">
@@ -1318,6 +1318,8 @@
         // Login
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            console.log('FORMULÁRIO ENVIADO!'); // NOVO TESTE
             
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
