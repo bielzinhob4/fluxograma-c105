@@ -1565,9 +1565,9 @@
             const isAdmin = user.email === 'admin@c105.fab';
             
             if (isAdmin) {
-                // Admin: coletar aeronaves de todas as seções
+                // Admin: coletar TODAS as aeronaves de todas as seções
                 const sections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-                const allAircraft = new Set();
+                const allAircraftMap = new Map(); // Usar Map para evitar duplicatas por matrícula
                 
                 sections.forEach(section => {
                     const sectionKey = `c105_${section}_data`;
@@ -1575,25 +1575,32 @@
                     
                     if (sectionData) {
                         const data = JSON.parse(sectionData);
-                        Object.values(data).forEach(aircraft => {
-                            if (aircraft.aircraftId) {
-                                allAircraft.add(aircraft.aircraftId);
+                        // Percorrer cada aeronave da seção
+                        Object.entries(data).forEach(([key, aircraft]) => {
+                            // Se tem matrícula, usar como chave. Senão, usar o ID original
+                            const identifier = aircraft.aircraftId || key;
+                            
+                            // Se já não existe essa aeronave no Map, adicionar
+                            if (!allAircraftMap.has(identifier)) {
+                                allAircraftMap.set(identifier, {
+                                    phases: JSON.parse(JSON.stringify(phases)),
+                                    aircraftId: aircraft.aircraftId || '',
+                                    startDate: aircraft.startDate || '',
+                                    blocks: {},
+                                    section: 'ADMINISTRADOR',
+                                    originalKey: key
+                                });
                             }
                         });
                     }
                 });
                 
-                // Criar estado virtual para cada aeronave única
+                // Converter Map para objeto aircraftStates
                 aircraftStates = {};
-                allAircraft.forEach(aircraftId => {
-                    const virtualId = 'admin-' + aircraftId;
-                    aircraftStates[virtualId] = {
-                        phases: JSON.parse(JSON.stringify(phases)),
-                        aircraftId: aircraftId,
-                        startDate: '',
-                        blocks: {},
-                        section: 'ADMINISTRADOR'
-                    };
+                let index = 0;
+                allAircraftMap.forEach((aircraft, identifier) => {
+                    const adminKey = 'admin-' + index++;
+                    aircraftStates[adminKey] = aircraft;
                 });
                 
                 const aircraftIds = Object.keys(aircraftStates);
@@ -1780,7 +1787,11 @@
                 if (sectionData) {
                     const data = JSON.parse(sectionData);
                     Object.values(data).forEach(aircraft => {
-                        if (aircraft.aircraftId === aircraftId && aircraft.phases) {
+                        // Comparar tanto pela matrícula quanto pela ausência dela
+                        const matches = (aircraftId && aircraft.aircraftId === aircraftId) || 
+                                       (!aircraftId && !aircraft.aircraftId);
+                        
+                        if (matches && aircraft.phases) {
                             const phase = aircraft.phases.find(p => p.id === phaseId);
                             if (phase) {
                                 sectionProgress.total = phase.tasks.length;
