@@ -1039,7 +1039,7 @@
                 </div>
             </div>
             <div class="header-content">
-                <h1>FLUXOGRAMA - HIDRÁULICA: C-105 AMAZONAS</h1>
+                <h1 id="sectionTitle">FLUXOGRAMA - <span id="sectionName">CARREGANDO...</span>: C-105 AMAZONAS</h1>
                 <div class="aircraft-info">
                     <input type="text" id="aircraftId" placeholder="Matrícula da Aeronave" title="Ex: FAB 2855" />
                     <div class="date-info">
@@ -1068,6 +1068,7 @@
                 <button class="btn btn-primary" onclick="collapseAll()">📁 Recolher Tudo</button>
                 <button class="btn btn-success" onclick="exportData()">💾 Exportar Dados</button>
                 <button class="btn btn-danger" onclick="clearData()">🗑️ Limpar Tudo</button>
+                <button class="btn btn-warning" onclick="showAdminDashboard()" id="btnAdmin" style="display: none;">👨‍💼 Painel Admin</button>
             </div>
 
             <div class="progress-info">
@@ -1121,7 +1122,23 @@
                 </div>
             </div>
         <button id="backToTop" style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1a5490; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; opacity: 0; transition: all 0.3s; z-index: 100;">↑</button>
-
+        <!-- Modal Dashboard Administrativo -->
+        <div class="modal" id="adminModal">
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h2>Painel Administrativo - Todas as Seções</h2>
+                </div>
+                <div class="modal-body">
+                    <div id="adminDashboard">
+                        <!-- Dados serão carregados aqui -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="exportAllSections()">Exportar Relatório Geral</button>
+                    <button class="btn" onclick="closeAdminModal()">Fechar</button>
+                </div>
+            </div>
+        </div>
         </main>
 
         <!-- Modal para impedimentos -->
@@ -1215,6 +1232,16 @@
                 // Usuário autenticado - mostrar aplicação
                 loginContainer.style.display = 'none';
                 mainApp.style.display = 'block';
+                
+                // Atualizar nome da seção
+                const sectionNameElement = document.getElementById('sectionName');
+                if (sectionNameElement) {
+                    const sectionName = user.email.split('@')[0].toUpperCase();
+                    sectionNameElement.textContent = sectionName;
+                }
+                
+                // NOVA LINHA: Verificar se é admin
+                checkIfAdmin();
                 
                 // Registrar acesso
                 console.log(`Acesso autorizado: ${user.email} em ${new Date().toLocaleString('pt-BR')}`);
@@ -1489,11 +1516,15 @@
         
         // Estado padrão para nova aeronave
         function createNewAircraftState() {
+            const user = firebase.auth().currentUser;
+            const userSection = user ? user.email.split('@')[0].toUpperCase() : 'SEÇÃO';
+            
             return {
                 phases: JSON.parse(JSON.stringify(phases)), // Deep copy
                 aircraftId: '',
                 startDate: '',
-                blocks: {}
+                blocks: {},
+                section: userSection // NOVA LINHA: Identificar seção
             };
         }
         
@@ -1508,8 +1539,11 @@
 
         // Gerenciamento de abas
         function initializeTabs() {
-            const saved = localStorage.getItem('c105MaintenanceData');
-            const savedTabs = localStorage.getItem('c105AircraftTabs');
+            const user = firebase.auth().currentUser;
+            if (!user) return;
+            
+            const sectionKey = `c105_${user.email.split('@')[0]}_data`;
+            const savedTabs = localStorage.getItem(sectionKey);
             
             if (savedTabs) {
                 aircraftStates = JSON.parse(savedTabs);
@@ -1517,13 +1551,6 @@
                 if (aircraftIds.length > 0) {
                     currentAircraftId = aircraftIds[0];
                 }
-            } else if (saved) {
-                // Migrar dados antigos para o novo formato
-                const oldData = JSON.parse(saved);
-                const aircraftId = oldData.aircraftId || 'aircraft-1';
-                aircraftStates[aircraftId] = oldData;
-                currentAircraftId = aircraftId;
-                saveAllData();
             } else {
                 // Criar primeira aba
                 createNewTab();
@@ -1606,7 +1633,11 @@
 
         // Salvar todos os dados
         function saveAllData() {
-            localStorage.setItem('c105AircraftTabs', JSON.stringify(aircraftStates));
+            const user = firebase.auth().currentUser;
+            if (user) {
+                const sectionKey = `c105_${user.email.split('@')[0]}_data`;
+                localStorage.setItem(sectionKey, JSON.stringify(aircraftStates));
+            }
         }
 
         // Salvar dados
@@ -2230,6 +2261,90 @@
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         }
+
+        // ========== SISTEMA ADMINISTRATIVO ==========
+
+        // Verificar se é administrador
+        function checkIfAdmin() {
+            const user = firebase.auth().currentUser;
+            if (user && user.email === 'admin@c105.fab') {
+                document.getElementById('btnAdmin').style.display = 'inline-flex';
+            }
+        }
+        
+        // Mostrar dashboard administrativo
+        window.showAdminDashboard = function() {
+            const sections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+            let dashboardHTML = '<h3>Progresso por Seção:</h3>';
+            
+            sections.forEach(section => {
+                const sectionKey = `c105_${section}_data`;
+                const sectionData = localStorage.getItem(sectionKey);
+                
+                if (sectionData) {
+                    const data = JSON.parse(sectionData);
+                    const aircraft = Object.values(data)[0];
+                    
+                    if (aircraft) {
+                        const totalTasks = aircraft.phases.reduce((sum, phase) => sum + phase.tasks.length, 0);
+                        const completedTasks = aircraft.phases.reduce((sum, phase) => 
+                            sum + phase.tasks.filter(task => task.completed).length, 0);
+                        const percentage = Math.round((completedTasks / totalTasks) * 100);
+                        
+                        dashboardHTML += `
+                            <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                                <h4>${section.toUpperCase()}</h4>
+                                <div>Aeronave: ${aircraft.aircraftId || 'Não informado'}</div>
+                                <div>Progresso: ${percentage}% (${completedTasks}/${totalTasks} tarefas)</div>
+                                <div style="background: #e0e0e0; height: 20px; border-radius: 10px; margin-top: 5px;">
+                                    <div style="background: #4caf50; height: 100%; width: ${percentage}%; border-radius: 10px;"></div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    dashboardHTML += `
+                        <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                            <h4>${section.toUpperCase()}</h4>
+                            <div style="color: #999;">Nenhum dado ainda</div>
+                        </div>
+                    `;
+                }
+            });
+            
+            document.getElementById('adminDashboard').innerHTML = dashboardHTML;
+            document.getElementById('adminModal').classList.add('active');
+        }
+        
+        // Fechar modal admin
+        window.closeAdminModal = function() {
+            document.getElementById('adminModal').classList.remove('active');
+        }
+        
+        // Exportar dados de todas as seções
+        window.exportAllSections = function() {
+            const sections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+            const allData = {};
+            
+            sections.forEach(section => {
+                const sectionKey = `c105_${section}_data`;
+                const sectionData = localStorage.getItem(sectionKey);
+                if (sectionData) {
+                    allData[section] = JSON.parse(sectionData);
+                }
+            });
+            
+            const dataStr = JSON.stringify(allData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `c105_all_sections_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+        
+        // ========== FIM DO SISTEMA ADMINISTRATIVO ==========
+        
     }); // Fecha o window.addEventListener
 </script>
 </body>
