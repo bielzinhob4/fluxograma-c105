@@ -1267,6 +1267,12 @@
                 
                 // NOVA LINHA: Verificar se é admin (mas primeiro limpar)
                 document.getElementById('btnAdmin').style.display = 'none';
+                
+                // Se for admin, executar limpeza automática de dados órfãos
+                if (user.email === 'admin@c105.fab') {
+                    window.cleanOrphanData();
+                }
+                
                 checkIfAdmin();
                 
                 // Configurar interface para admin
@@ -1586,13 +1592,12 @@
             
             if (isAdmin) {
                 // Admin: coletar TODAS as aeronaves de todas as seções
-                const sections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+                const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
                 const allAircraftMap = new Map(); // Usar Map para evitar duplicatas por matrícula
                 
-                // Buscar todas as chaves que começam com c105_ no localStorage
-                const allKeys = Object.keys(localStorage).filter(key => key.startsWith('c105_') && key.endsWith('_data'));
-                
-                allKeys.forEach(sectionKey => {
+                // Processar apenas seções válidas
+                validSections.forEach(section => {
+                    const sectionKey = `c105_${section}_data`;
                     const sectionData = localStorage.getItem(sectionKey);
                     
                     if (sectionData) {
@@ -1620,30 +1625,34 @@
                                                 startDate: aircraft.startDate || '',
                                                 blocks: aircraft.blocks || {},
                                                 section: 'ADMINISTRADOR',
-                                                originalKey: key
+                                                originalSection: section
                                             });
                                         }
                                     }
                                 });
                             }
                         } catch (error) {
-                            console.error(`Erro ao processar ${sectionKey}:`, error);
+                            console.error(`Erro ao processar ${section}:`, error);
                         }
                     }
                 });
                 
-            // Converter Map para objeto aircraftStates
-            aircraftStates = {};
-            let index = 0;
-            allAircraftMap.forEach((aircraft, identifier) => {
-                const adminKey = 'admin-' + index++;
-                aircraftStates[adminKey] = aircraft;
-            });
-            
-            const aircraftIds = Object.keys(aircraftStates);
-            if (aircraftIds.length > 0) {
-                currentAircraftId = aircraftIds[0];
-            }
+                // Converter Map para objeto aircraftStates
+                aircraftStates = {};
+                let index = 0;
+                allAircraftMap.forEach((aircraft, identifier) => {
+                    const adminKey = 'admin-' + index++;
+                    aircraftStates[adminKey] = aircraft;
+                });
+                
+                // Se não houver aeronaves, não criar abas vazias
+                const aircraftIds = Object.keys(aircraftStates);
+                if (aircraftIds.length > 0) {
+                    currentAircraftId = aircraftIds[0];
+                } else {
+                    // Admin sem aeronaves para visualizar
+                    currentAircraftId = null;
+                }
                 
         } else {
                 // Seções normais
@@ -1681,12 +1690,19 @@
             const tabsContainer = document.getElementById('aircraftTabs');
             tabsContainer.innerHTML = '';
             
+            const user = firebase.auth().currentUser;
+            const isAdmin = user && user.email === 'admin@c105.fab';
+            
+            // Se admin sem aeronaves, mostrar mensagem
+            if (isAdmin && Object.keys(aircraftStates).length === 0) {
+                tabsContainer.innerHTML = '<div style="padding: 10px; color: #666;">Nenhuma aeronave em manutenção</div>';
+                return;
+            }
+            
             Object.keys(aircraftStates).forEach(aircraftId => {
                 const state = aircraftStates[aircraftId];
                 const tab = document.createElement('div');
                 tab.className = `tab ${aircraftId === currentAircraftId ? 'active' : ''}`;
-                const user = firebase.auth().currentUser;
-                const isAdmin = user && user.email === 'admin@c105.fab';
                 
                 tab.innerHTML = `
                     <span onclick="switchTab('${aircraftId}')">${state.aircraftId || 'Nova Aeronave'}</span>
@@ -1694,9 +1710,6 @@
                 `;
                 tabsContainer.appendChild(tab);
             });
-            
-            const user = firebase.auth().currentUser;
-            const isAdmin = user && user.email === 'admin@c105.fab';
             
             if (!isAdmin) {
                 const newTabBtn = document.createElement('button');
@@ -1740,6 +1753,23 @@
             const user = firebase.auth().currentUser;
             const isAdmin = user && user.email === 'admin@c105.fab';
             
+            // Se não há aeronave atual
+            if (!currentAircraftId || !aircraftStates[currentAircraftId]) {
+                document.getElementById('aircraftId').value = '';
+                document.getElementById('startDate').value = '';
+                document.getElementById('daysElapsed').textContent = '0 dias';
+                
+                if (isAdmin) {
+                    // Admin sem aeronaves - mostrar mensagem
+                    renderAdminPhases();
+                    updateProgress();
+                } else {
+                    // Seção técnica - criar nova aeronave
+                    createNewTab();
+                }
+                return;
+            }
+            
             appState = aircraftStates[currentAircraftId];
             document.getElementById('aircraftId').value = appState.aircraftId || '';
             document.getElementById('startDate').value = appState.startDate || '';
@@ -1780,6 +1810,17 @@
             const container = document.getElementById('phasesContainer');
             container.innerHTML = '';
             
+            // Se não há aeronaves, mostrar mensagem
+            if (!appState || !appState.aircraftId) {
+                container.innerHTML = `
+                    <div style="background: #f8f9fa; padding: 40px; text-align: center; border-radius: 10px; margin: 20px 0;">
+                        <h3 style="color: #666; margin-bottom: 10px;">Nenhuma aeronave em manutenção</h3>
+                        <p style="color: #999;">As aeronaves aparecerão aqui quando forem adicionadas pelas seções técnicas.</p>
+                    </div>
+                `;
+                return;
+            }
+            
             const currentAircraftId = appState.aircraftId;
             
             phases.forEach(phase => {
@@ -1811,10 +1852,10 @@
         
         // Renderizar progresso das seções para uma fase específica
         function renderAdminSectionsProgress(phaseId, aircraftId) {
-            const sections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
             let html = '<div style="display: grid; gap: 15px;">';
             
-            sections.forEach(section => {
+            validSections.forEach(section => {
                 const sectionKey = `c105_${section}_data`;
                 const sectionData = localStorage.getItem(sectionKey);
                 
@@ -1825,22 +1866,23 @@
                 };
                 
                 if (sectionData) {
-                    const data = JSON.parse(sectionData);
-                    Object.values(data).forEach(aircraft => {
-                        // Comparar tanto pela matrícula quanto pela ausência dela
-                        const matches = (aircraftId && aircraft.aircraftId === aircraftId) || 
-                                       (!aircraftId && !aircraft.aircraftId);
-                        
-                        if (matches && aircraft.phases) {
-                            const phase = aircraft.phases.find(p => p.id === phaseId);
-                            if (phase) {
-                                sectionProgress.total = phase.tasks.length;
-                                sectionProgress.completed = phase.tasks.filter(t => t.completed).length;
-                                sectionProgress.percentage = sectionProgress.total > 0 ? 
-                                    Math.round((sectionProgress.completed / sectionProgress.total) * 100) : 0;
+                    try {
+                        const data = JSON.parse(sectionData);
+                        Object.values(data).forEach(aircraft => {
+                            // Comparar apenas pela matrícula quando ela existe
+                            if (aircraft && aircraft.aircraftId === aircraftId && aircraft.phases) {
+                                const phase = aircraft.phases.find(p => p.id === phaseId);
+                                if (phase) {
+                                    sectionProgress.total = phase.tasks.length;
+                                    sectionProgress.completed = phase.tasks.filter(t => t.completed).length;
+                                    sectionProgress.percentage = sectionProgress.total > 0 ? 
+                                        Math.round((sectionProgress.completed / sectionProgress.total) * 100) : 0;
+                                }
                             }
-                        }
-                    });
+                        });
+                    } catch (error) {
+                        console.error(`Erro ao processar dados de ${section}:`, error);
+                    }
                 }
                 
                 html += `
@@ -2310,13 +2352,23 @@
 
         // Atualizar progresso
         function updateProgress() {
+            // Se não há dados, zerar tudo
+            if (!appState || !appState.phases) {
+                document.getElementById('progressFill').style.width = '0%';
+                document.getElementById('progressFill').textContent = '0%';
+                document.getElementById('completedCount').textContent = '0';
+                document.getElementById('pendingCount').textContent = '0';
+                document.getElementById('blockedCount').textContent = '0';
+                return;
+            }
+            
             const totalTasks = appState.phases.reduce((sum, phase) => sum + phase.tasks.length, 0);
             const completedTasks = appState.phases.reduce((sum, phase) => 
                 sum + phase.tasks.filter(task => task.completed).length, 0);
-            const blockedTasks = Object.keys(appState.blocks).length;
+            const blockedTasks = Object.keys(appState.blocks || {}).length;
             const pendingTasks = totalTasks - completedTasks - blockedTasks;
             
-            const percentage = Math.round((completedTasks / totalTasks) * 100);
+            const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
             const progressFill = document.getElementById('progressFill');
             progressFill.style.width = percentage + '%';
             progressFill.textContent = percentage + '%';
@@ -2481,6 +2533,64 @@
         }
 
         // ========== SISTEMA ADMINISTRATIVO ==========
+
+        // Função de limpeza de dados órfãos (para debug)
+        window.cleanOrphanData = function() {
+            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+            const allKeys = Object.keys(localStorage);
+            
+            allKeys.forEach(key => {
+                if (key.startsWith('c105_') && key.endsWith('_data')) {
+                    const sectionName = key.replace('c105_', '').replace('_data', '');
+                    if (!validSections.includes(sectionName)) {
+                        console.log(`Removendo chave inválida: ${key}`);
+                        localStorage.removeItem(key);
+                    }
+                }
+            });
+            
+            console.log('Limpeza de dados órfãos concluída');
+        }
+
+        // Função de debug para verificar dados (útil para diagnóstico)
+        window.debugC105Data = function() {
+            console.log('=== DEBUG C-105 ===');
+            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+            
+            validSections.forEach(section => {
+                const key = `c105_${section}_data`;
+                const data = localStorage.getItem(key);
+                
+                if (data) {
+                    try {
+                        const parsed = JSON.parse(data);
+                        const aircraftIds = Object.values(parsed)
+                            .filter(a => a && a.aircraftId)
+                            .map(a => a.aircraftId);
+                        
+                        console.log(`${section.toUpperCase()}: ${aircraftIds.length > 0 ? aircraftIds.join(', ') : 'Sem aeronaves'}`);
+                    } catch (e) {
+                        console.log(`${section.toUpperCase()}: Erro ao processar dados`);
+                    }
+                } else {
+                    console.log(`${section.toUpperCase()}: Sem dados`);
+                }
+            });
+            
+            // Verificar chaves órfãs
+            const allKeys = Object.keys(localStorage).filter(key => key.startsWith('c105_') && key.endsWith('_data'));
+            const orphanKeys = allKeys.filter(key => {
+                const sectionName = key.replace('c105_', '').replace('_data', '');
+                return !validSections.includes(sectionName);
+            });
+            
+            if (orphanKeys.length > 0) {
+                console.log('\nCHAVES ÓRFÃS ENCONTRADAS:', orphanKeys);
+                console.log('Execute cleanOrphanData() para removê-las');
+            }
+            
+            console.log('==================');
+        }
 
         // Verificar se é administrador
         function checkIfAdmin() {
