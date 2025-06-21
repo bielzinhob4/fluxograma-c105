@@ -1598,20 +1598,20 @@
                 }
             });
                 
-                // Converter Map para objeto aircraftStates
-                aircraftStates = {};
-                let index = 0;
-                allAircraftMap.forEach((aircraft, identifier) => {
-                    const adminKey = 'admin-' + index++;
-                    aircraftStates[adminKey] = aircraft;
-                });
+            // Converter Map para objeto aircraftStates
+            aircraftStates = {};
+            let index = 0;
+            allAircraftMap.forEach((aircraft, identifier) => {
+                const adminKey = 'admin-' + index++;
+                aircraftStates[adminKey] = aircraft;
+            });
+            
+            const aircraftIds = Object.keys(aircraftStates);
+            if (aircraftIds.length > 0) {
+                currentAircraftId = aircraftIds[0];
+            }
                 
-                const aircraftIds = Object.keys(aircraftStates);
-                if (aircraftIds.length > 0) {
-                    currentAircraftId = aircraftIds[0];
-                }
-                
-            } else {
+        } else {
                 // Seções normais
                 const sectionKey = `c105_${user.email.split('@')[0]}_data`;
                 const savedTabs = localStorage.getItem(sectionKey);
