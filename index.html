@@ -1182,6 +1182,7 @@
 <!-- Firebase Scripts -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
     // Aguardar página carregar
@@ -1200,6 +1201,7 @@
         // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const db = firebase.firestore(); // NOVA LINHA: Inicializar Firestore
 
         // IMPORTANTE: Configurar persistência para SESSION
         auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
@@ -1597,36 +1599,29 @@
         let appState = null;
 
         // Carregar dados salvos
-        // Carregar dados salvos
         function loadData() {
             initializeTabs();
         }
 
-        // Gerenciamento de abas
-        function initializeTabs() {
+        // Gerenciamento de abas - ATUALIZADO PARA FIRESTORE
+        async function initializeTabs() {
             const user = firebase.auth().currentUser;
             if (!user) return;
             
             const isAdmin = user.email === 'admin@c105.fab';
             
             if (isAdmin) {
-                // Admin: coletar TODAS as aeronaves de todas as seções
+                // Admin: coletar TODAS as aeronaves de todas as seções do Firestore
                 const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-                const allAircraftMap = new Map(); // Usar Map para evitar duplicatas por matrícula
+                const allAircraftMap = new Map();
                 
-                // Processar apenas seções válidas
-                validSections.forEach(section => {
-                    const sectionKey = `c105_${section}_data`;
-                    const sectionData = localStorage.getItem(sectionKey);
-                    
-                    if (sectionData) {
-                        try {
-                            const data = JSON.parse(sectionData);
-                            // Verificar se data é um objeto válido
-                            if (data && typeof data === 'object') {
-                                // Percorrer cada aeronave da seção
-                                Object.entries(data).forEach(([key, aircraft]) => {
-                                    // Verificar se aircraft é válido e tem estrutura correta
+                for (const section of validSections) {
+                    try {
+                        const doc = await db.collection('sections').doc(section).get();
+                        if (doc.exists) {
+                            const data = doc.data();
+                            if (data && data.aircraftStates) {
+                                Object.entries(data.aircraftStates).forEach(([key, aircraft]) => {
                                     if (aircraft && 
                                         typeof aircraft === 'object' && 
                                         aircraft.aircraftId && 
@@ -1636,7 +1631,6 @@
                                         
                                         const identifier = aircraft.aircraftId;
                                         
-                                        // Se já não existe essa aeronave no Map, adicionar
                                         if (!allAircraftMap.has(identifier)) {
                                             allAircraftMap.set(identifier, {
                                                 phases: JSON.parse(JSON.stringify(phases)),
@@ -1650,11 +1644,47 @@
                                     }
                                 });
                             }
-                        } catch (error) {
-                            console.error(`Erro ao processar ${section}:`, error);
+                        } else {
+                            // Fallback para localStorage se não existir no Firestore
+                            const sectionKey = `c105_${section}_data`;
+                            const sectionData = localStorage.getItem(sectionKey);
+                            
+                            if (sectionData) {
+                                try {
+                                    const data = JSON.parse(sectionData);
+                                    if (data && typeof data === 'object') {
+                                        Object.entries(data).forEach(([key, aircraft]) => {
+                                            if (aircraft && 
+                                                typeof aircraft === 'object' && 
+                                                aircraft.aircraftId && 
+                                                aircraft.aircraftId.trim() !== '' &&
+                                                aircraft.phases && 
+                                                Array.isArray(aircraft.phases)) {
+                                                
+                                                const identifier = aircraft.aircraftId;
+                                                
+                                                if (!allAircraftMap.has(identifier)) {
+                                                    allAircraftMap.set(identifier, {
+                                                        phases: JSON.parse(JSON.stringify(phases)),
+                                                        aircraftId: aircraft.aircraftId,
+                                                        startDate: aircraft.startDate || '',
+                                                        blocks: aircraft.blocks || {},
+                                                        section: 'ADMINISTRADOR',
+                                                        originalSection: section
+                                                    });
+                                                }
+                                            }
+                                        });
+                                    }
+                                } catch (error) {
+                                    console.error(`Erro ao processar localStorage ${section}:`, error);
+                                }
+                            }
                         }
+                    } catch (error) {
+                        console.error(`Erro ao buscar dados do Firestore para ${section}:`, error);
                     }
-                });
+                }
                 
                 // Converter Map para objeto aircraftStates
                 aircraftStates = {};
@@ -1664,29 +1694,62 @@
                     aircraftStates[adminKey] = aircraft;
                 });
                 
-                // Se não houver aeronaves, não criar abas vazias
                 const aircraftIds = Object.keys(aircraftStates);
                 if (aircraftIds.length > 0) {
                     currentAircraftId = aircraftIds[0];
                 } else {
-                    // Admin sem aeronaves para visualizar
                     currentAircraftId = null;
                 }
                 
-        } else {
-                // Seções normais
-                const sectionKey = `c105_${user.email.split('@')[0].split('.')[0]}_data`;
-                const savedTabs = localStorage.getItem(sectionKey);
+            } else {
+                // Seções normais - buscar do Firestore
+                const sectionName = user.email.split('@')[0].split('.')[0];
                 
-                if (savedTabs) {
-                    aircraftStates = JSON.parse(savedTabs);
-                    const aircraftIds = Object.keys(aircraftStates);
-                    if (aircraftIds.length > 0) {
-                        currentAircraftId = aircraftIds[0];
+                try {
+                    const doc = await db.collection('sections').doc(sectionName).get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        if (data && data.aircraftStates) {
+                            aircraftStates = data.aircraftStates;
+                            const aircraftIds = Object.keys(aircraftStates);
+                            if (aircraftIds.length > 0) {
+                                currentAircraftId = aircraftIds[0];
+                            }
+                        } else {
+                            createNewTab();
+                        }
+                    } else {
+                        // Fallback para localStorage se não existir no Firestore
+                        const sectionKey = `c105_${sectionName}_data`;
+                        const savedTabs = localStorage.getItem(sectionKey);
+                        
+                        if (savedTabs) {
+                            aircraftStates = JSON.parse(savedTabs);
+                            const aircraftIds = Object.keys(aircraftStates);
+                            if (aircraftIds.length > 0) {
+                                currentAircraftId = aircraftIds[0];
+                            }
+                            // Salvar no Firestore
+                            await saveAllData();
+                        } else {
+                            createNewTab();
+                        }
                     }
-                } else {
-                    // Criar primeira aba
-                    createNewTab();
+                } catch (error) {
+                    console.error('Erro ao buscar dados do Firestore:', error);
+                    // Fallback para localStorage
+                    const sectionKey = `c105_${sectionName}_data`;
+                    const savedTabs = localStorage.getItem(sectionKey);
+                    
+                    if (savedTabs) {
+                        aircraftStates = JSON.parse(savedTabs);
+                        const aircraftIds = Object.keys(aircraftStates);
+                        if (aircraftIds.length > 0) {
+                            currentAircraftId = aircraftIds[0];
+                        }
+                    } else {
+                        createNewTab();
+                    }
                 }
             }
             
@@ -1804,12 +1867,24 @@
             updateDaysElapsed();
         }
 
-        // Salvar todos os dados
-        function saveAllData() {
+        // Salvar todos os dados - ATUALIZADO PARA FIRESTORE
+        async function saveAllData() {
             const user = firebase.auth().currentUser;
-            if (user) {
-                const sectionKey = `c105_${user.email.split('@')[0].split('.')[0]}_data`;
-                localStorage.setItem(sectionKey, JSON.stringify(aircraftStates));
+            if (user && !user.email.includes('admin')) {
+                const sectionName = user.email.split('@')[0].split('.')[0];
+                try {
+                    await db.collection('sections').doc(sectionName).set({
+                        aircraftStates: aircraftStates,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedBy: user.email
+                    });
+                    console.log('Dados salvos no Firestore com sucesso');
+                } catch (error) {
+                    console.error('Erro ao salvar no Firestore, usando fallback:', error);
+                    // Fallback para localStorage
+                    const sectionKey = `c105_${sectionName}_data`;
+                    localStorage.setItem(sectionKey, JSON.stringify(aircraftStates));
+                }
             }
         }
 
@@ -1824,8 +1899,8 @@
             }
         }
 
-        // Renderizar fases para administrador
-        function renderAdminPhases() {
+        // Renderizar fases para administrador - ATUALIZADO PARA FIRESTORE
+        async function renderAdminPhases() {
             const container = document.getElementById('phasesContainer');
             container.innerHTML = '';
             
@@ -1843,20 +1918,30 @@
             const currentAircraftId = appState.aircraftId;
             const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
             
-            phases.forEach(phase => {
+            for (const phase of phases) {
                 // Calcular status da fase baseado em todas as seções
                 let hasBlocked = false;
                 let hasCompleted = false;
                 let hasInProgress = false;
                 
-                validSections.forEach(section => {
-                    const sectionKey = `c105_${section}_data`;
-                    const sectionData = localStorage.getItem(sectionKey);
-                    
-                    if (sectionData) {
-                        try {
-                            const data = JSON.parse(sectionData);
-                            Object.values(data).forEach(aircraft => {
+                for (const section of validSections) {
+                    try {
+                        const doc = await db.collection('sections').doc(section).get();
+                        let sectionData = null;
+                        
+                        if (doc.exists) {
+                            sectionData = doc.data().aircraftStates;
+                        } else {
+                            // Fallback para localStorage
+                            const sectionKey = `c105_${section}_data`;
+                            const localData = localStorage.getItem(sectionKey);
+                            if (localData) {
+                                sectionData = JSON.parse(localData);
+                            }
+                        }
+                        
+                        if (sectionData) {
+                            Object.values(sectionData).forEach(aircraft => {
                                 if (aircraft && aircraft.aircraftId === currentAircraftId && aircraft.phases) {
                                     const phaseData = aircraft.phases.find(p => p.id === phase.id);
                                     if (phaseData) {
@@ -1876,24 +1961,34 @@
                                     }
                                 }
                             });
-                        } catch (error) {
-                            console.error(`Erro ao processar ${section}:`, error);
                         }
+                    } catch (error) {
+                        console.error(`Erro ao processar ${section}:`, error);
                     }
-                });
+                }
                 
                 // Calcular totais para determinar status
                 let totalTasks = 0;
                 let totalCompleted = 0;
                 
-                validSections.forEach(section => {
-                    const sectionKey = `c105_${section}_data`;
-                    const sectionData = localStorage.getItem(sectionKey);
-                    
-                    if (sectionData) {
-                        try {
-                            const data = JSON.parse(sectionData);
-                            Object.values(data).forEach(aircraft => {
+                for (const section of validSections) {
+                    try {
+                        const doc = await db.collection('sections').doc(section).get();
+                        let sectionData = null;
+                        
+                        if (doc.exists) {
+                            sectionData = doc.data().aircraftStates;
+                        } else {
+                            // Fallback para localStorage
+                            const sectionKey = `c105_${section}_data`;
+                            const localData = localStorage.getItem(sectionKey);
+                            if (localData) {
+                                sectionData = JSON.parse(localData);
+                            }
+                        }
+                        
+                        if (sectionData) {
+                            Object.values(sectionData).forEach(aircraft => {
                                 if (aircraft && aircraft.aircraftId === currentAircraftId && aircraft.phases) {
                                     const phaseData = aircraft.phases.find(p => p.id === phase.id);
                                     if (phaseData) {
@@ -1902,17 +1997,16 @@
                                     }
                                 }
                             });
-                        } catch (error) {
-                            console.error(`Erro ao processar ${section}:`, error);
                         }
+                    } catch (error) {
+                        console.error(`Erro ao processar ${section}:`, error);
                     }
-                });
+                }
                 
                 // Determinar status final da fase
                 let phaseStatus = 'pending';
                 if (hasBlocked) phaseStatus = 'blocked';
                 else if (totalTasks > 0) {
-                    // Só marca como concluído se TODAS as tarefas estiverem completas
                     if (totalCompleted === totalTasks) {
                         phaseStatus = 'completed';
                     } else if (totalCompleted > 0) {
@@ -1936,37 +2030,47 @@
                     </div>
                     <div class="phase-content" id="phase-content-${phase.id}">
                         <div class="tasks-list" style="padding: 20px;">
-                            ${renderAdminSectionsProgress(phase.id, currentAircraftId)}
+                            ${await renderAdminSectionsProgress(phase.id, currentAircraftId)}
                         </div>
                     </div>
                 `;
                 
                 container.appendChild(phaseCard);
-            });
+            }
             
             setTimeout(setupScrollAnimations, 100);
         }
         
-        // Renderizar progresso das seções para uma fase específica
-        function renderAdminSectionsProgress(phaseId, aircraftId) {
+        // Renderizar progresso das seções para uma fase específica - ATUALIZADO PARA FIRESTORE
+        async function renderAdminSectionsProgress(phaseId, aircraftId) {
             const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
             let html = '<div style="display: grid; gap: 15px;">';
             
-            validSections.forEach(section => {
-                const sectionKey = `c105_${section}_data`;
-                const sectionData = localStorage.getItem(sectionKey);
-                
+            for (const section of validSections) {
                 let sectionProgress = {
                     total: 0,
                     completed: 0,
-                    percentage: 0
+                    percentage: 0,
+                    hasData: false
                 };
                 
-                if (sectionData) {
-                    try {
-                        const data = JSON.parse(sectionData);
-                        Object.values(data).forEach(aircraft => {
-                            // Comparar apenas pela matrícula quando ela existe
+                try {
+                    const doc = await db.collection('sections').doc(section).get();
+                    let sectionData = null;
+                    
+                    if (doc.exists) {
+                        sectionData = doc.data().aircraftStates;
+                    } else {
+                        // Fallback para localStorage
+                        const sectionKey = `c105_${section}_data`;
+                        const localData = localStorage.getItem(sectionKey);
+                        if (localData) {
+                            sectionData = JSON.parse(localData);
+                        }
+                    }
+                    
+                    if (sectionData) {
+                        Object.values(sectionData).forEach(aircraft => {
                             if (aircraft && aircraft.aircraftId === aircraftId && aircraft.phases) {
                                 const phase = aircraft.phases.find(p => p.id === phaseId);
                                 if (phase) {
@@ -1974,12 +2078,13 @@
                                     sectionProgress.completed = phase.tasks.filter(t => t.completed).length;
                                     sectionProgress.percentage = sectionProgress.total > 0 ? 
                                         Math.round((sectionProgress.completed / sectionProgress.total) * 100) : 0;
+                                    sectionProgress.hasData = true;
                                 }
                             }
                         });
-                    } catch (error) {
-                        console.error(`Erro ao processar dados de ${section}:`, error);
                     }
+                } catch (error) {
+                    console.error(`Erro ao processar dados de ${section}:`, error);
                 }
                 
                 html += `
@@ -1998,7 +2103,7 @@
                         </div>
                     </div>
                 `;
-            });
+            }
             
             html += '</div>';
             return html;
@@ -2447,8 +2552,8 @@
             document.getElementById('blockAction').value = '';
         }
 
-        // Atualizar progresso
-        function updateProgress() {
+        // Atualizar progresso - ATUALIZADO PARA FIRESTORE
+        async function updateProgress() {
             const user = firebase.auth().currentUser;
             const isAdmin = user && user.email === 'admin@c105.fab';
             
@@ -2469,14 +2574,24 @@
                 let totalCompleted = 0;
                 let totalBlocked = 0;
                 
-                validSections.forEach(section => {
-                    const sectionKey = `c105_${section}_data`;
-                    const sectionData = localStorage.getItem(sectionKey);
-                    
-                    if (sectionData) {
-                        try {
-                            const data = JSON.parse(sectionData);
-                            Object.values(data).forEach(aircraft => {
+                for (const section of validSections) {
+                    try {
+                        const doc = await db.collection('sections').doc(section).get();
+                        let sectionData = null;
+                        
+                        if (doc.exists) {
+                            sectionData = doc.data().aircraftStates;
+                        } else {
+                            // Fallback para localStorage
+                            const sectionKey = `c105_${section}_data`;
+                            const localData = localStorage.getItem(sectionKey);
+                            if (localData) {
+                                sectionData = JSON.parse(localData);
+                            }
+                        }
+                        
+                        if (sectionData) {
+                            Object.values(sectionData).forEach(aircraft => {
                                 if (aircraft && aircraft.aircraftId === appState.aircraftId && aircraft.phases) {
                                     aircraft.phases.forEach(phase => {
                                         totalTasks += phase.tasks.length;
@@ -2487,11 +2602,11 @@
                                     });
                                 }
                             });
-                        } catch (error) {
-                            console.error(`Erro ao processar ${section}:`, error);
                         }
+                    } catch (error) {
+                        console.error(`Erro ao processar ${section}:`, error);
                     }
-                });
+                }
                 
                 const pendingTasks = totalTasks - totalCompleted - totalBlocked;
                 const percentage = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
@@ -2695,31 +2810,47 @@
         }
 
         // Função de debug para verificar dados (útil para diagnóstico)
-        window.debugC105Data = function() {
+        window.debugC105Data = async function() {
             console.log('=== DEBUG C-105 ===');
             const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
             
-            validSections.forEach(section => {
-                const key = `c105_${section}_data`;
-                const data = localStorage.getItem(key);
-                
-                if (data) {
-                    try {
-                        const parsed = JSON.parse(data);
-                        const aircraftIds = Object.values(parsed)
-                            .filter(a => a && a.aircraftId)
-                            .map(a => a.aircraftId);
+            for (const section of validSections) {
+                try {
+                    const doc = await db.collection('sections').doc(section).get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        const aircraftIds = data.aircraftStates ? 
+                            Object.values(data.aircraftStates)
+                                .filter(a => a && a.aircraftId)
+                                .map(a => a.aircraftId) : [];
                         
-                        console.log(`${section.toUpperCase()}: ${aircraftIds.length > 0 ? aircraftIds.join(', ') : 'Sem aeronaves'}`);
-                    } catch (e) {
-                        console.log(`${section.toUpperCase()}: Erro ao processar dados`);
+                        console.log(`${section.toUpperCase()} (Firestore): ${aircraftIds.length > 0 ? aircraftIds.join(', ') : 'Sem aeronaves'}`);
+                    } else {
+                        // Verificar localStorage
+                        const key = `c105_${section}_data`;
+                        const localData = localStorage.getItem(key);
+                        
+                        if (localData) {
+                            try {
+                                const parsed = JSON.parse(localData);
+                                const aircraftIds = Object.values(parsed)
+                                    .filter(a => a && a.aircraftId)
+                                    .map(a => a.aircraftId);
+                                
+                                console.log(`${section.toUpperCase()} (localStorage): ${aircraftIds.length > 0 ? aircraftIds.join(', ') : 'Sem aeronaves'}`);
+                            } catch (e) {
+                                console.log(`${section.toUpperCase()}: Erro ao processar dados localStorage`);
+                            }
+                        } else {
+                            console.log(`${section.toUpperCase()}: Sem dados`);
+                        }
                     }
-                } else {
-                    console.log(`${section.toUpperCase()}: Sem dados`);
+                } catch (error) {
+                    console.error(`Erro ao verificar ${section}:`, error);
                 }
-            });
+            }
             
-            // Verificar chaves órfãs
+            // Verificar chaves órfãs no localStorage
             const allKeys = Object.keys(localStorage).filter(key => key.startsWith('c105_') && key.endsWith('_data'));
             const orphanKeys = allKeys.filter(key => {
                 const sectionName = key.replace('c105_', '').replace('_data', '');
@@ -2744,35 +2875,48 @@
             }
         }
         
-        // Mostrar dashboard administrativo
-        window.showAdminDashboard = function() {
+        // Mostrar dashboard administrativo - ATUALIZADO PARA FIRESTORE
+        window.showAdminDashboard = async function() {
             const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
             const allAircraftMap = new Map();
             
             // Coletar todas as aeronaves únicas
-            validSections.forEach(section => {
-                const sectionKey = `c105_${section}_data`;
-                const sectionData = localStorage.getItem(sectionKey);
-                
-                if (sectionData) {
-                    try {
-                        const data = JSON.parse(sectionData);
-                        Object.values(data).forEach(aircraft => {
+            for (const section of validSections) {
+                try {
+                    const doc = await db.collection('sections').doc(section).get();
+                    let sectionData = null;
+                    
+                    if (doc.exists) {
+                        const data = doc.data();
+                        if (data && data.aircraftStates) {
+                            sectionData = data.aircraftStates;
+                        }
+                    } else {
+                        // Fallback para localStorage
+                        const sectionKey = `c105_${section}_data`;
+                        const localData = localStorage.getItem(sectionKey);
+                        if (localData) {
+                            sectionData = JSON.parse(localData);
+                        }
+                    }
+                    
+                    if (sectionData) {
+                        Object.values(sectionData).forEach(aircraft => {
                             if (aircraft && aircraft.aircraftId && aircraft.aircraftId.trim() !== '') {
                                 if (!allAircraftMap.has(aircraft.aircraftId)) {
                                     allAircraftMap.set(aircraft.aircraftId, {
                                         aircraftId: aircraft.aircraftId,
                                         startDate: aircraft.startDate || '',
-                                        phases: JSON.parse(JSON.stringify(phases)) // Cópia das fases padrão
+                                        phases: JSON.parse(JSON.stringify(phases))
                                     });
                                 }
                             }
                         });
-                    } catch (error) {
-                        console.error(`Erro ao processar ${section}:`, error);
                     }
+                } catch (error) {
+                    console.error(`Erro ao processar ${section}:`, error);
                 }
-            });
+            }
             
             // Se não há aeronaves
             if (allAircraftMap.size === 0) {
@@ -2810,7 +2954,7 @@
             
             // Adicionar conteúdo para cada aeronave
             firstAircraft = true;
-            allAircraftMap.forEach((aircraft, aircraftId) => {
+            for (const [aircraftId, aircraft] of allAircraftMap) {
                 dashboardHTML += `
                     <div class="admin-aircraft-content" id="admin-content-${aircraftId}" style="${firstAircraft ? '' : 'display: none;'}">
                         <h3>Aeronave: ${aircraftId}</h3>
@@ -2818,13 +2962,13 @@
                 `;
                 
                 // Para cada fase, calcular a média de progresso entre todas as seções
-                phases.forEach(phase => {
+                for (const phase of phases) {
                     let totalCompleted = 0;
                     let totalTasks = 0;
                     let sectionDetails = [];
                     
                     // Garantir que todas as seções apareçam
-                    validSections.forEach(section => {
+                    for (const section of validSections) {
                         let sectionInfo = {
                             section: getDisplaySectionName(section),
                             completed: 0,
@@ -2833,13 +2977,26 @@
                             hasData: false
                         };
                         
-                        const sectionKey = `c105_${section}_data`;
-                        const sectionData = localStorage.getItem(sectionKey);
-                        
-                        if (sectionData) {
-                            try {
-                                const data = JSON.parse(sectionData);
-                                Object.values(data).forEach(sectionAircraft => {
+                        try {
+                            const doc = await db.collection('sections').doc(section).get();
+                            let sectionData = null;
+                            
+                            if (doc.exists) {
+                                const data = doc.data();
+                                if (data && data.aircraftStates) {
+                                    sectionData = data.aircraftStates;
+                                }
+                            } else {
+                                // Fallback para localStorage
+                                const sectionKey = `c105_${section}_data`;
+                                const localData = localStorage.getItem(sectionKey);
+                                if (localData) {
+                                    sectionData = JSON.parse(localData);
+                                }
+                            }
+                            
+                            if (sectionData) {
+                                Object.values(sectionData).forEach(sectionAircraft => {
                                     if (sectionAircraft && sectionAircraft.aircraftId === aircraftId && sectionAircraft.phases) {
                                         const phaseData = sectionAircraft.phases.find(p => p.id === phase.id);
                                         if (phaseData && phaseData.tasks.length > 0) {
@@ -2854,13 +3011,13 @@
                                         }
                                     }
                                 });
-                            } catch (error) {
-                                console.error(`Erro ao processar ${section}:`, error);
                             }
+                        } catch (error) {
+                            console.error(`Erro ao processar ${section}:`, error);
                         }
                         
                         sectionDetails.push(sectionInfo);
-                    });
+                    }
                     
                     // Média ponderada: total de tarefas concluídas / total de tarefas
                     const averageProgress = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
@@ -2890,14 +3047,14 @@
                             </div>
                         </div>
                     `;
-                });
+                }
                 
                 dashboardHTML += `
                         </div>
                     </div>
                 `;
                 firstAircraft = false;
-            });
+            }
             
             dashboardHTML += `
                     </div>
@@ -2979,97 +3136,3 @@
                         color: #333;
                         z-index: 1;
                     }
-                    
-                    .admin-phase-progress {
-                        font-weight: bold;
-                        font-size: 18px;
-                        color: #333;
-                        z-index: 1;
-                    }
-                    
-                    .admin-phase-details {
-                        padding: 15px;
-                        background: #f8f9fa;
-                        display: grid;
-                        grid-template-columns: repeat(7, 1fr);
-                        gap: 10px;
-                    }
-                    
-                    .admin-section-detail {
-                        display: flex;
-                        align-items: center;
-                        padding: 5px 10px;
-                        background: white;
-                        border-radius: 4px;
-                        font-size: 12px;
-                        white-space: nowrap;
-                    }
-                    
-                    .section-name {
-                        font-weight: 600;
-                        color: #1a5490;
-                        margin-right: 10px;
-                    }
-                    
-                    .section-progress {
-                        color: #666;
-                    }
-                </style>
-            `;
-            
-            document.getElementById('adminDashboard').innerHTML = dashboardHTML;
-            document.getElementById('adminModal').classList.add('active');
-        }
-        
-        // Função para trocar abas no admin
-        window.switchAdminTab = function(aircraftId) {
-            // Esconder todos os conteúdos
-            document.querySelectorAll('.admin-aircraft-content').forEach(content => {
-                content.style.display = 'none';
-            });
-            
-            // Remover active de todas as abas
-            document.querySelectorAll('.admin-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Mostrar conteúdo selecionado
-            document.getElementById(`admin-content-${aircraftId}`).style.display = 'block';
-            
-            // Marcar aba como ativa
-            event.target.classList.add('active');
-        }
-        
-        // Fechar modal admin
-        window.closeAdminModal = function() {
-            document.getElementById('adminModal').classList.remove('active');
-        }
-        
-        // Exportar dados de todas as seções
-        window.exportAllSections = function() {
-            const sections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-            const allData = {};
-            
-            sections.forEach(section => {
-                const sectionKey = `c105_${section}_data`;
-                const sectionData = localStorage.getItem(sectionKey);
-                if (sectionData) {
-                    allData[section] = JSON.parse(sectionData);
-                }
-            });
-            
-            const dataStr = JSON.stringify(allData, null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `c105_all_sections_${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-        }
-        
-        // ========== FIM DO SISTEMA ADMINISTRATIVO ==========
-        
-    }); // Fecha o window.addEventListener
-</script>
-</body>
-</html>
