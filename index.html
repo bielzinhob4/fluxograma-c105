@@ -1609,26 +1609,28 @@
                                         aircraft.aircraftId.trim() !== '' &&
                                         aircraft.phases && 
                                         Array.isArray(aircraft.phases)) {
-                            
-                        // Só adicionar aeronaves que têm matrícula preenchida
-                        if (aircraft.aircraftId && aircraft.aircraftId.trim() !== '') {
-                            const identifier = aircraft.aircraftId;
-                            
-                            // Se já não existe essa aeronave no Map, adicionar
-                            if (!allAircraftMap.has(identifier)) {
-                                allAircraftMap.set(identifier, {
-                                    phases: JSON.parse(JSON.stringify(phases)),
-                                    aircraftId: aircraft.aircraftId || '',
-                                    startDate: aircraft.startDate || '',
-                                    blocks: {},
-                                    section: 'ADMINISTRADOR',
-                                    originalKey: key
+                                        
+                                        const identifier = aircraft.aircraftId;
+                                        
+                                        // Se já não existe essa aeronave no Map, adicionar
+                                        if (!allAircraftMap.has(identifier)) {
+                                            allAircraftMap.set(identifier, {
+                                                phases: JSON.parse(JSON.stringify(phases)),
+                                                aircraftId: aircraft.aircraftId,
+                                                startDate: aircraft.startDate || '',
+                                                blocks: aircraft.blocks || {},
+                                                section: 'ADMINISTRADOR',
+                                                originalKey: key
+                                            });
+                                        }
+                                    }
                                 });
                             }
+                        } catch (error) {
+                            console.error(`Erro ao processar ${sectionKey}:`, error);
                         }
-                    });
-                }
-            });
+                    }
+                });
                 
             // Converter Map para objeto aircraftStates
             aircraftStates = {};
