@@ -1380,8 +1380,11 @@ window.logout = function() {
 
         // Mostrar erro
         function showError(msg) {
-            errorMsg.textContent = msg;
-            errorMsg.style.display = msg ? 'block' : 'none';
+            const errorMsg = document.getElementById('errorMsg');
+            if (errorMsg) {
+                errorMsg.textContent = msg;
+                errorMsg.style.display = msg ? 'block' : 'none';
+            }
         }
 
         // ===== CÓDIGO ORIGINAL DO FLUXOGRAMA =====
