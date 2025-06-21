@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fluxograma C-105</title>
+    <title>FLUXOGRAMA - HIDRÁULICA: C-105 AMAZONAS FAB</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔧</text></svg>">
     <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔧</text></svg>">
 
@@ -1202,6 +1202,11 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore(); // NOVA LINHA: Inicializar Firestore
+        
+        // VERIFICAÇÃO DE INICIALIZAÇÃO
+        console.log('Firebase inicializado:', firebase.apps.length > 0);
+        console.log('Auth disponível:', auth !== undefined);
+        console.log('Firestore disponível:', db !== undefined);
 
         // IMPORTANTE: Configurar persistência para SESSION
         auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
@@ -1219,6 +1224,14 @@
         const errorMsg = document.getElementById('errorMsg');
         const loading = document.getElementById('loading');
         const loginBtn = document.getElementById('loginBtn');
+        
+        // VERIFICAR SE ELEMENTOS EXISTEM
+        console.log('Elementos do login carregados:', {
+            loginForm: loginForm !== null,
+            errorMsg: errorMsg !== null,
+            loading: loading !== null,
+            loginBtn: loginBtn !== null
+        });
 
         // NOVO: Verificar se deve forçar logout ao carregar
         window.addEventListener('load', () => {
@@ -1273,14 +1286,14 @@
                 document.getElementById('btnAdmin').style.display = 'none';
                 
                 // Se for admin, executar limpeza automática de dados órfãos
-                if (user.email === 'admin@c105.fab') {
+                if (user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com') {
                     window.cleanOrphanData();
                 }
                 
                 checkIfAdmin();
                 
                 // Configurar interface para admin
-                if (user.email === 'admin@c105.fab') {
+                if (user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com') {
                     document.getElementById('btnExport').style.display = 'none';
                     document.getElementById('btnClear').style.display = 'none';
                 }
@@ -1309,15 +1322,21 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             
+            console.log('Tentando login com:', email); // DEBUG
+            
             showError('');
             loading.style.display = 'block';
             loginBtn.disabled = true;
 
             try {
-                await auth.signInWithEmailAndPassword(email, password);
+                console.log('Iniciando autenticação...'); // DEBUG
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                console.log('Login bem-sucedido:', userCredential.user.email); // DEBUG
                 // onAuthStateChanged cuidará da navegação
             } catch (error) {
-                console.error('Erro de login:', error);
+                console.error('Erro detalhado de login:', error); // DEBUG DETALHADO
+                console.error('Código do erro:', error.code); // DEBUG
+                console.error('Mensagem do erro:', error.message); // DEBUG
                 
                 let mensagem = 'Erro ao fazer login';
                 
@@ -1334,6 +1353,8 @@
                     case 'auth/too-many-requests':
                         mensagem = 'Muitas tentativas. Tente novamente mais tarde';
                         break;
+                    default:
+                        mensagem = `Erro: ${error.message}`;
                 }
                 
                 showError(mensagem);
@@ -1573,7 +1594,19 @@
                 'admin': 'ADMINISTRADOR'
             };
             
-            const cleanName = technicalName.toLowerCase().split('@')[0].split('.')[0];
+            // Extrair o nome da seção do email
+            // Suporta formatos: hidraulica.fab@gmail.com, hidraulica@c105.fab, etc.
+            let cleanName = technicalName.toLowerCase();
+            
+            // Remover domínio
+            cleanName = cleanName.split('@')[0];
+            
+            // Remover .fab se existir
+            cleanName = cleanName.replace('.fab', '');
+            
+            // Pegar apenas a primeira parte (antes de qualquer ponto)
+            cleanName = cleanName.split('.')[0];
+            
             return displayNames[cleanName] || technicalName.toUpperCase();
         }
         
@@ -1608,7 +1641,7 @@
             const user = firebase.auth().currentUser;
             if (!user) return;
             
-            const isAdmin = user.email === 'admin@c105.fab';
+            const isAdmin = user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com';
             
             if (isAdmin) {
                 // Admin: coletar TODAS as aeronaves de todas as seções do Firestore
@@ -2868,7 +2901,7 @@
         // Verificar se é administrador
         function checkIfAdmin() {
             const user = firebase.auth().currentUser;
-            if (user && user.email === 'admin@c105.fab') {
+            if (user && (user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com')) {
                 document.getElementById('btnAdmin').style.display = 'inline-flex';
             } else {
                 document.getElementById('btnAdmin').style.display = 'none';
