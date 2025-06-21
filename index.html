@@ -823,6 +823,8 @@
             width: 90%;
             max-width: 500px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-header {
@@ -1125,7 +1127,7 @@
         <button id="backToTop" style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1a5490; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; opacity: 0; transition: all 0.3s; z-index: 100;">↑</button>
         <!-- Modal Dashboard Administrativo -->
         <div class="modal" id="adminModal">
-            <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-content" style="max-width: 1200px;">
                 <div class="modal-header">
                     <h2>Painel Administrativo - Todas as Seções</h2>
                 </div>
@@ -2604,46 +2606,289 @@
         
         // Mostrar dashboard administrativo
         window.showAdminDashboard = function() {
-            const sections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-            let dashboardHTML = '<h3>Progresso por Seção:</h3>';
+            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+            const allAircraftMap = new Map();
             
-            sections.forEach(section => {
+            // Coletar todas as aeronaves únicas
+            validSections.forEach(section => {
                 const sectionKey = `c105_${section}_data`;
                 const sectionData = localStorage.getItem(sectionKey);
                 
                 if (sectionData) {
-                    const data = JSON.parse(sectionData);
-                    const aircraft = Object.values(data)[0];
-                    
-                    if (aircraft) {
-                        const totalTasks = aircraft.phases.reduce((sum, phase) => sum + phase.tasks.length, 0);
-                        const completedTasks = aircraft.phases.reduce((sum, phase) => 
-                            sum + phase.tasks.filter(task => task.completed).length, 0);
-                        const percentage = Math.round((completedTasks / totalTasks) * 100);
-                        
-                        dashboardHTML += `
-                            <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                                <h4>${section.toUpperCase()}</h4>
-                                <div>Aeronave: ${aircraft.aircraftId || 'Não informado'}</div>
-                                <div>Progresso: ${percentage}% (${completedTasks}/${totalTasks} tarefas)</div>
-                                <div style="background: #e0e0e0; height: 20px; border-radius: 10px; margin-top: 5px;">
-                                    <div style="background: #4caf50; height: 100%; width: ${percentage}%; border-radius: 10px;"></div>
-                                </div>
-                            </div>
-                        `;
+                    try {
+                        const data = JSON.parse(sectionData);
+                        Object.values(data).forEach(aircraft => {
+                            if (aircraft && aircraft.aircraftId && aircraft.aircraftId.trim() !== '') {
+                                if (!allAircraftMap.has(aircraft.aircraftId)) {
+                                    allAircraftMap.set(aircraft.aircraftId, {
+                                        aircraftId: aircraft.aircraftId,
+                                        startDate: aircraft.startDate || '',
+                                        phases: JSON.parse(JSON.stringify(phases)) // Cópia das fases padrão
+                                    });
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        console.error(`Erro ao processar ${section}:`, error);
                     }
-                } else {
-                    dashboardHTML += `
-                        <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                            <h4>${section.toUpperCase()}</h4>
-                            <div style="color: #999;">Nenhum dado ainda</div>
-                        </div>
-                    `;
                 }
             });
             
+            // Se não há aeronaves
+            if (allAircraftMap.size === 0) {
+                document.getElementById('adminDashboard').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <h3>Nenhuma aeronave em manutenção</h3>
+                        <p>As aeronaves aparecerão aqui quando forem adicionadas pelas seções técnicas.</p>
+                    </div>
+                `;
+                document.getElementById('adminModal').classList.add('active');
+                return;
+            }
+            
+            // Criar HTML com abas
+            let dashboardHTML = `
+                <div class="admin-tabs-container">
+                    <div class="admin-tabs">
+            `;
+            
+            // Adicionar abas para cada aeronave
+            let firstAircraft = true;
+            allAircraftMap.forEach((aircraft, aircraftId) => {
+                dashboardHTML += `
+                    <div class="admin-tab ${firstAircraft ? 'active' : ''}" onclick="switchAdminTab('${aircraftId}')">
+                        ${aircraftId}
+                    </div>
+                `;
+                firstAircraft = false;
+            });
+            
+            dashboardHTML += `
+                    </div>
+                    <div class="admin-content">
+            `;
+            
+            // Adicionar conteúdo para cada aeronave
+            firstAircraft = true;
+            allAircraftMap.forEach((aircraft, aircraftId) => {
+                dashboardHTML += `
+                    <div class="admin-aircraft-content" id="admin-content-${aircraftId}" style="${firstAircraft ? '' : 'display: none;'}">
+                        <h3>Aeronave: ${aircraftId}</h3>
+                        <div class="admin-phases-grid">
+                `;
+                
+                // Para cada fase, calcular a média de progresso entre todas as seções
+                phases.forEach(phase => {
+                    let totalProgress = 0;
+                    let sectionsWithData = 0;
+                    let sectionDetails = [];
+                    
+                    validSections.forEach(section => {
+                        const sectionKey = `c105_${section}_data`;
+                        const sectionData = localStorage.getItem(sectionKey);
+                        
+                        if (sectionData) {
+                            try {
+                                const data = JSON.parse(sectionData);
+                                Object.values(data).forEach(sectionAircraft => {
+                                    if (sectionAircraft && sectionAircraft.aircraftId === aircraftId && sectionAircraft.phases) {
+                                        const phaseData = sectionAircraft.phases.find(p => p.id === phase.id);
+                                        if (phaseData) {
+                                            const completed = phaseData.tasks.filter(t => t.completed).length;
+                                            const total = phaseData.tasks.length;
+                                            const percentage = total > 0 ? (completed / total) * 100 : 0;
+                                            
+                                            totalProgress += percentage;
+                                            sectionsWithData++;
+                                            
+                                            sectionDetails.push({
+                                                section: section.toUpperCase(),
+                                                completed: completed,
+                                                total: total,
+                                                percentage: Math.round(percentage)
+                                            });
+                                        }
+                                    }
+                                });
+                            } catch (error) {
+                                console.error(`Erro ao processar ${section}:`, error);
+                            }
+                        }
+                    });
+                    
+                    const averageProgress = sectionsWithData > 0 ? Math.round(totalProgress / sectionsWithData) : 0;
+                    
+                    dashboardHTML += `
+                        <div class="admin-phase-card">
+                            <div class="admin-phase-header" style="background: linear-gradient(to right, #4caf50 0%, #4caf50 ${averageProgress}%, #e0e0e0 ${averageProgress}%, #e0e0e0 100%);">
+                                <div class="admin-phase-number">${phase.id}</div>
+                                <div class="admin-phase-title">${phase.title}</div>
+                                <div class="admin-phase-progress">${averageProgress}%</div>
+                            </div>
+                            <div class="admin-phase-details">
+                    `;
+                    
+                    // Mostrar detalhes por seção
+                    sectionDetails.forEach(detail => {
+                        dashboardHTML += `
+                            <div class="admin-section-detail">
+                                <span class="section-name">${detail.section}:</span>
+                                <span class="section-progress">${detail.completed}/${detail.total} (${detail.percentage}%)</span>
+                            </div>
+                        `;
+                    });
+                    
+                    dashboardHTML += `
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                dashboardHTML += `
+                        </div>
+                    </div>
+                `;
+                firstAircraft = false;
+            });
+            
+            dashboardHTML += `
+                    </div>
+                </div>
+            `;
+            
+            // Adicionar estilos específicos do admin
+            dashboardHTML += `
+                <style>
+                    .admin-tabs-container {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 20px;
+                    }
+                    
+                    .admin-tabs {
+                        display: flex;
+                        gap: 10px;
+                        border-bottom: 2px solid #e0e0e0;
+                        padding-bottom: 10px;
+                    }
+                    
+                    .admin-tab {
+                        padding: 10px 20px;
+                        background: #f0f0f0;
+                        border-radius: 8px 8px 0 0;
+                        cursor: pointer;
+                        font-weight: 600;
+                        transition: all 0.3s;
+                    }
+                    
+                    .admin-tab:hover {
+                        background: #e0e0e0;
+                    }
+                    
+                    .admin-tab.active {
+                        background: #1a5490;
+                        color: white;
+                    }
+                    
+                    .admin-phases-grid {
+                        display: grid;
+                        gap: 15px;
+                        margin-top: 20px;
+                    }
+                    
+                    .admin-phase-card {
+                        border: 1px solid #ddd;
+                        border-radius: 8px;
+                        overflow: hidden;
+                    }
+                    
+                    .admin-phase-header {
+                        padding: 15px;
+                        display: flex;
+                        align-items: center;
+                        gap: 15px;
+                        position: relative;
+                        min-height: 60px;
+                    }
+                    
+                    .admin-phase-number {
+                        background: rgba(26, 84, 144, 0.9);
+                        color: white;
+                        width: 35px;
+                        height: 35px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-weight: bold;
+                        font-size: 14px;
+                        z-index: 1;
+                    }
+                    
+                    .admin-phase-title {
+                        flex: 1;
+                        font-weight: 600;
+                        color: #333;
+                        z-index: 1;
+                    }
+                    
+                    .admin-phase-progress {
+                        font-weight: bold;
+                        font-size: 18px;
+                        color: #333;
+                        z-index: 1;
+                    }
+                    
+                    .admin-phase-details {
+                        padding: 15px;
+                        background: #f8f9fa;
+                        display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                        gap: 10px;
+                    }
+                    
+                    .admin-section-detail {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 5px 10px;
+                        background: white;
+                        border-radius: 4px;
+                        font-size: 12px;
+                    }
+                    
+                    .section-name {
+                        font-weight: 600;
+                        color: #1a5490;
+                    }
+                    
+                    .section-progress {
+                        color: #666;
+                    }
+                </style>
+            `;
+            
             document.getElementById('adminDashboard').innerHTML = dashboardHTML;
             document.getElementById('adminModal').classList.add('active');
+        }
+        
+        // Função para trocar abas no admin
+        window.switchAdminTab = function(aircraftId) {
+            // Esconder todos os conteúdos
+            document.querySelectorAll('.admin-aircraft-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Remover active de todas as abas
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar conteúdo selecionado
+            document.getElementById(`admin-content-${aircraftId}`).style.display = 'block';
+            
+            // Marcar aba como ativa
+            event.target.classList.add('active');
         }
         
         // Fechar modal admin
