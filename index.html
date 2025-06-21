@@ -1230,10 +1230,29 @@
         // Verificar autenticação
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // Limpar estados anteriores
+                // Limpar estados anteriores E FORÇAR RESET COMPLETO
                 aircraftStates = {};
                 currentAircraftId = null;
                 appState = null;
+                
+                // Limpar interface anterior
+                const phasesContainer = document.getElementById('phasesContainer');
+                if (phasesContainer) phasesContainer.innerHTML = '';
+                
+                const tabsContainer = document.getElementById('aircraftTabs');
+                if (tabsContainer) tabsContainer.innerHTML = '';
+                
+                // Resetar inputs
+                const aircraftIdInput = document.getElementById('aircraftId');
+                const startDateInput = document.getElementById('startDate');
+                if (aircraftIdInput) {
+                    aircraftIdInput.value = '';
+                    aircraftIdInput.disabled = false;
+                }
+                if (startDateInput) {
+                    startDateInput.value = '';
+                    startDateInput.disabled = false;
+                }
                 
                 // Usuário autenticado - mostrar aplicação
                 loginContainer.style.display = 'none';
@@ -1569,8 +1588,10 @@
                 const sections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
                 const allAircraftMap = new Map(); // Usar Map para evitar duplicatas por matrícula
                 
-                sections.forEach(section => {
-                    const sectionKey = `c105_${section}_data`;
+                // Buscar todas as chaves que começam com c105_ no localStorage
+                const allKeys = Object.keys(localStorage).filter(key => key.startsWith('c105_') && key.endsWith('_data'));
+                
+                allKeys.forEach(sectionKey => {
                     const sectionData = localStorage.getItem(sectionKey);
                     
                     if (sectionData) {
