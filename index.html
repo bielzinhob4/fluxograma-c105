@@ -2070,8 +2070,11 @@ window.addEventListener('load', function() {
         const container = document.getElementById('phasesContainer');
         container.innerHTML = '';
         
-        // Se não há aeronaves, mostrar mensagem
-        if (!appState || !appState.aircraftId || appState.aircraftId.trim() === '') {
+        // Para admin, sempre renderizar baseado nas aeronaves carregadas
+        const user = firebase.auth().currentUser;
+        const isAdmin = user && (user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com');
+        
+        if (!isAdmin || !appState || !appState.aircraftId || appState.aircraftId.trim() === '') {
             container.innerHTML = `
                 <div style="background: #f8f9fa; padding: 40px; text-align: center; border-radius: 10px; margin: 20px 0;">
                     <h3 style="color: #666; margin-bottom: 10px;">Nenhuma aeronave em manutenção</h3>
