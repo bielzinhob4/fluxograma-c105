@@ -242,7 +242,7 @@
 
         .logout-container {
             position: absolute;
-            right: 136px;  /* Meio termo entre o logo (60px) e os campos */
+            right: 136px;
             top: 50%;     
             transform: translateY(-50%);  
             background: #dc3545;
@@ -324,7 +324,7 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
-            padding-top: 40px; /* Adicionar espaço para o botão de logout */
+            padding-top: 40px;
         }
 
         .controls {
@@ -366,11 +366,6 @@
             color: white;
         }
 
-        .btn-danger {
-            background: #f44336;
-            color: white;
-        }
-        
         .btn-danger {
             background: #f44336;
             color: white;
@@ -444,6 +439,7 @@
         .btn-new-tab:hover {
             background: #45a049;
         }
+        
         .btn-info {
             background: #2196f3;
             color: white;
@@ -915,6 +911,7 @@
         .date-info:hover .date-tooltip {
             display: block;
         }
+        
         /* Animações de Fade */
         .fade-element {
             opacity: 0;
@@ -942,6 +939,112 @@
         html {
             scroll-behavior: smooth;
         }
+        
+        /* Admin Dashboard Styles */
+        .admin-tabs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        
+        .admin-tab {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .admin-tab:hover {
+            background: #e0e0e0;
+        }
+        
+        .admin-tab.active {
+            background: #1a5490;
+            color: white;
+        }
+        
+        .admin-phases-grid {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .admin-phase-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .admin-phase-header {
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            min-height: 60px;
+        }
+        
+        .admin-phase-number {
+            background: rgba(26, 84, 144, 0.9);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            z-index: 1;
+        }
+        
+        .admin-phase-title {
+            flex: 1;
+            font-weight: 600;
+            color: #333;
+            z-index: 1;
+        }
+        
+        .admin-phase-progress {
+            font-weight: bold;
+            font-size: 18px;
+            color: #333;
+            z-index: 1;
+        }
+        
+        .admin-phase-details {
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        
+        .admin-section-detail {
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            background: white;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-name {
+            font-weight: 600;
+            color: #1a5490;
+        }
+        
+        .section-progress {
+            color: #666;
+        }
+        
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -1185,6 +1288,17 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
+// Aguardar o Firebase e o DOM carregarem completamente
+window.addEventListener('load', function() {
+    console.log('Página carregada, iniciando sistema...');
+    
+    // Verificar se o Firebase foi carregado
+    if (typeof firebase === 'undefined') {
+        console.error('Firebase não foi carregado!');
+        alert('Erro ao carregar o sistema. Por favor, recarregue a página.');
+        return;
+    }
+    
     // Configurações do Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyB8RL-aQIivSJKFPI9iMWVAe0o7UvcYA8w",
@@ -1205,581 +1319,494 @@
     console.log('Auth disponível:', auth !== undefined);
     console.log('Firestore disponível:', db !== undefined);
 
-        // IMPORTANTE: Configurar persistência para SESSION
-        auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
-            .then(() => {
-                console.log('Persistência configurada para SESSION');
-            })
-            .catch((error) => {
-                console.error('Erro ao configurar persistência:', error);
-            });
-
-        // Elementos do Sistema de Login
-        const loginContainer = document.getElementById('loginContainer');
-        const mainApp = document.getElementById('mainApp');
-        const loginForm = document.getElementById('loginForm');
-        const errorMsg = document.getElementById('errorMsg');
-        const loading = document.getElementById('loading');
-        const loginBtn = document.getElementById('loginBtn');
-        
-        // VERIFICAR SE ELEMENTOS EXISTEM
-        console.log('Elementos do login carregados:', {
-            loginForm: loginForm !== null,
-            errorMsg: errorMsg !== null,
-            loading: loading !== null,
-            loginBtn: loginBtn !== null
+    // IMPORTANTE: Configurar persistência para SESSION
+    auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+        .then(() => {
+            console.log('Persistência configurada para SESSION');
+        })
+        .catch((error) => {
+            console.error('Erro ao configurar persistência:', error);
         });
 
-        // NOVO: Verificar se deve forçar logout ao carregar
-        window.addEventListener('load', () => {
-            // Se a página foi recarregada ou veio de um favorito/atalho
-            if (performance.navigation.type === 1 || !document.referrer) {
-                // Fazer logout silencioso
-                auth.signOut().then(() => {
-                    console.log('Logout automático ao recarregar');
-                });
-            }
+    // Elementos do Sistema de Login
+    const loginContainer = document.getElementById('loginContainer');
+    const mainApp = document.getElementById('mainApp');
+    const errorMsg = document.getElementById('errorMsg');
+    const loading = document.getElementById('loading');
+    const loginBtn = document.getElementById('loginBtn');
+
+    // Verificar se deve forçar logout ao carregar
+    // Se a página foi recarregada ou veio de um favorito/atalho
+    if (performance.navigation.type === 1 || !document.referrer) {
+        // Fazer logout silencioso
+        auth.signOut().then(() => {
+            console.log('Logout automático ao recarregar');
         });
+    }
 
-        // Verificar autenticação
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                // Limpar estados anteriores E FORÇAR RESET COMPLETO
-                aircraftStates = {};
-                currentAircraftId = null;
-                appState = null;
-                
-                // Limpar interface anterior
-                const phasesContainer = document.getElementById('phasesContainer');
-                if (phasesContainer) phasesContainer.innerHTML = '';
-                
-                const tabsContainer = document.getElementById('aircraftTabs');
-                if (tabsContainer) tabsContainer.innerHTML = '';
-                
-                // Resetar inputs
-                const aircraftIdInput = document.getElementById('aircraftId');
-                const startDateInput = document.getElementById('startDate');
-                if (aircraftIdInput) {
-                    aircraftIdInput.value = '';
-                    aircraftIdInput.disabled = false;
-                }
-                if (startDateInput) {
-                    startDateInput.value = '';
-                    startDateInput.disabled = false;
-                }
-                
-                // Usuário autenticado - mostrar aplicação
-                loginContainer.style.display = 'none';
-                mainApp.style.display = 'block';
-                
-                // Atualizar nome da seção
-                const sectionNameElement = document.getElementById('sectionName');
-                if (sectionNameElement) {
-                    const sectionName = user.email.split('@')[0].split('.')[0];
-                    sectionNameElement.textContent = getDisplaySectionName(sectionName);
-                }
-                
-                // NOVA LINHA: Verificar se é admin (mas primeiro limpar)
-                document.getElementById('btnAdmin').style.display = 'none';
-                
-                // Se for admin, executar limpeza automática de dados órfãos
-                if (user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com') {
-                    window.cleanOrphanData();
-                }
-                
-                checkIfAdmin();
-                
-                // Configurar interface para admin
-                if (user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com') {
-                    document.getElementById('btnExport').style.display = 'none';
-                    document.getElementById('btnClear').style.display = 'none';
-                }
-                
-                // Carregar dados específicos da seção
-                loadData();
-                
-                // Registrar acesso
-                console.log(`Acesso autorizado: ${user.email} em ${new Date().toLocaleString('pt-BR')}`);
-            } else {
-                // Usuário não autenticado - mostrar login
-                loginContainer.style.display = 'flex';
-                mainApp.style.display = 'none';
-                
-                // Limpar dados ao fazer logout
-                aircraftStates = {};
-                currentAircraftId = null;
-                appState = null;
+    // Verificar autenticação
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            // Limpar estados anteriores E FORÇAR RESET COMPLETO
+            aircraftStates = {};
+            currentAircraftId = null;
+            appState = null;
+            
+            // Limpar interface anterior
+            const phasesContainer = document.getElementById('phasesContainer');
+            if (phasesContainer) phasesContainer.innerHTML = '';
+            
+            const tabsContainer = document.getElementById('aircraftTabs');
+            if (tabsContainer) tabsContainer.innerHTML = '';
+            
+            // Resetar inputs
+            const aircraftIdInput = document.getElementById('aircraftId');
+            const startDateInput = document.getElementById('startDate');
+            if (aircraftIdInput) {
+                aircraftIdInput.value = '';
+                aircraftIdInput.disabled = false;
             }
-        });
-
-// Login
-const loginForm = document.getElementById('loginForm');
-if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        console.log('FORMULÁRIO ENVIADO!');
-        
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const errorMsg = document.getElementById('errorMsg');
-        const loading = document.getElementById('loading');
-        const loginBtn = document.getElementById('loginBtn');
-        
-        console.log('Tentando login com:', email);
-        
-        // showError('');  // Mantenha comentado por enquanto
-        loading.style.display = 'block';
-        loginBtn.disabled = true;
-
-        try {
-            console.log('Iniciando autenticação...');
-            const userCredential = await auth.signInWithEmailAndPassword(email, password);
-            console.log('Login bem-sucedido:', userCredential.user.email);
-            // onAuthStateChanged cuidará da navegação
-        } catch (error) {
-            console.error('Erro detalhado de login:', error);
-            console.error('Código do erro:', error.code);
-            console.error('Mensagem do erro:', error.message);
-            
-            let mensagem = 'Erro ao fazer login';
-            
-            switch(error.code) {
-                case 'auth/user-not-found':
-                    mensagem = 'Usuário não autorizado';
-                    break;
-                case 'auth/wrong-password':
-                    mensagem = 'Senha incorreta';
-                    break;
-                case 'auth/invalid-email':
-                    mensagem = 'E-mail inválido';
-                    break;
-                case 'auth/too-many-requests':
-                    mensagem = 'Muitas tentativas. Tente novamente mais tarde';
-                    break;
-                default:
-                    mensagem = `Erro: ${error.message}`;
+            if (startDateInput) {
+                startDateInput.value = '';
+                startDateInput.disabled = false;
             }
             
-            // showError(mensagem);  // Mantenha comentado por enquanto
-            alert(mensagem);  // Temporariamente usar alert
-        } finally {
-            loading.style.display = 'none';
-            loginBtn.disabled = false;
+            // Usuário autenticado - mostrar aplicação
+            loginContainer.style.display = 'none';
+            mainApp.style.display = 'block';
+            
+            // Atualizar nome da seção
+            const sectionNameElement = document.getElementById('sectionName');
+            if (sectionNameElement) {
+                const sectionName = user.email.split('@')[0].split('.')[0];
+                sectionNameElement.textContent = getDisplaySectionName(sectionName);
+            }
+            
+            // NOVA LINHA: Verificar se é admin (mas primeiro limpar)
+            document.getElementById('btnAdmin').style.display = 'none';
+            
+            // Se for admin, executar limpeza automática de dados órfãos
+            if (user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com') {
+                window.cleanOrphanData();
+            }
+            
+            checkIfAdmin();
+            
+            // Configurar interface para admin
+            if (user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com') {
+                document.getElementById('btnExport').style.display = 'none';
+                document.getElementById('btnClear').style.display = 'none';
+            }
+            
+            // Carregar dados específicos da seção
+            loadData();
+            
+            // Registrar acesso
+            console.log(`Acesso autorizado: ${user.email} em ${new Date().toLocaleString('pt-BR')}`);
+        } else {
+            // Usuário não autenticado - mostrar login
+            loginContainer.style.display = 'flex';
+            mainApp.style.display = 'none';
+            
+            // Limpar dados ao fazer logout
+            aircraftStates = {};
+            currentAircraftId = null;
+            appState = null;
         }
     });
-}
 
-// Logout
-window.logout = function() {
-    if (confirm('Deseja sair do sistema?')) {
-        auth.signOut();
+    // Logout
+    window.logout = function() {
+        if (confirm('Deseja sair do sistema?')) {
+            auth.signOut();
+        }
     }
-}
 
-        // Mostrar erro
-        function showError(msg) {
-            const errorMsg = document.getElementById('errorMsg');
-            if (errorMsg) {
-                errorMsg.textContent = msg;
-                errorMsg.style.display = msg ? 'block' : 'none';
-            }
+    // Mostrar erro
+    function showError(msg) {
+        const errorMsg = document.getElementById('errorMsg');
+        if (errorMsg) {
+            errorMsg.textContent = msg;
+            errorMsg.style.display = msg ? 'block' : 'none';
         }
+    }
 
-        // ===== CÓDIGO ORIGINAL DO FLUXOGRAMA =====
-        
-        // Estrutura de dados das fases
-        const phases = [
-            {
-                id: 1,
-                title: "RECEBIMENTO DA AERONAVE",
-                tasks: [
-                    { id: "1.1", name: "Conferir documentação (TFOA, última revisão)", completed: false },
-                    { id: "1.2", name: "Verificar discrepâncias anteriores", completed: false },
-                    { id: "1.3", name: "Inspeção visual externa inicial", completed: false },
-                    { id: "1.4", name: "Registrar hora/combustível", completed: false },
-                    { id: "1.5", name: "Fotografar condição geral", completed: false }
-                ]
-            },
-            {
-                id: 2,
-                title: "LAVAGEM DA AERONAVE",
-                tasks: [
-                    { id: "2.1", name: "Preparar área de lavagem", completed: false },
-                    { id: "2.2", name: "Aplicar desengraxante", completed: false },
-                    { id: "2.3", name: "Lavagem com água pressurizada", completed: false },
-                    { id: "2.4", name: "Secagem", completed: false },
-                    { id: "2.5", name: "Inspeção pós-lavagem", completed: false }
-                ]
-            },
-            {
-                id: 3,
-                title: "DESMONTAGEM DA AERONAVE",
-                tasks: [
-                    { id: "3.1", name: "Remover portas", completed: false },
-                    { id: "3.2", name: "Remover painéis de acesso", completed: false },
-                    { id: "3.3", name: "Remover componentes hidráulicos", completed: false },
-                    { id: "3.4", name: "Catalogar peças removidas", completed: false },
-                    { id: "3.5", name: "Armazenar adequadamente", completed: false }
-                ]
-            },
-            {
-                id: 4,
-                title: "LAVAGEM INTERNA",
-                tasks: [
-                    { id: "4.1", name: "Proteger equipamentos sensíveis", completed: false },
-                    { id: "4.2", name: "Limpeza do cockpit", completed: false },
-                    { id: "4.3", name: "Limpeza do compartimento de carga", completed: false },
-                    { id: "4.4", name: "Desinfecção", completed: false }
-                ]
-            },
-            {
-                id: 5,
-                title: "INSPETORIA/ABERTURA FRD PARTE INTERNA",
-                tasks: [
-                    { id: "5.1", name: "Abrir FRD correspondente", completed: false },
-                    { id: "5.2", name: "Inspeção estrutural", completed: false },
-                    { id: "5.3", name: "Verificar corrosão", completed: false },
-                    { id: "5.4", name: "Medir desgastes", completed: false },
-                    { id: "5.5", name: "Registrar discrepâncias", completed: false }
-                ]
-            },
-            {
-                id: 6,
-                title: "PEDIDO DE MATERIAL TOTAL PARA A INSPEÇÃO",
-                tasks: [
-                    { id: "6.1", name: "Listar materiais necessários", completed: false },
-                    { id: "6.2", name: "Verificar estoque", completed: false },
-                    { id: "6.3", name: "Emitir requisições", completed: false },
-                    { id: "6.4", name: "Acompanhar entregas", completed: false }
-                ]
-            },
-            {
-                id: 7,
-                title: "CUMP. FRD/DIR TÉCNICA/REL VOO",
-                tasks: [
-                    { id: "7.1", name: "Executar itens do FRD", completed: false },
-                    { id: "7.2", name: "Cumprir diretrizes técnicas", completed: false },
-                    { id: "7.3", name: "Analisar relatórios de voo", completed: false },
-                    { id: "7.4", name: "Documentar cumprimento", completed: false }
-                ]
-            },
-            {
-                id: 8,
-                title: "MONTAGEM/FECHAMENTO ACESSO INT",
-                tasks: [
-                    { id: "8.1", name: "Reinstalar componentes internos", completed: false },
-                    { id: "8.2", name: "Fechar painéis de acesso", completed: false },
-                    { id: "8.3", name: "Verificar torques", completed: false },
-                    { id: "8.4", name: "Instalar lacres", completed: false }
-                ]
-            },
-            {
-                id: 9,
-                title: "CHECKS DE HANGAR",
-                tasks: [
-                    { 
-                        id: "9.1", 
-                        name: "Teste de sistemas hidráulicos", 
-                        completed: false,
-                        info: {
-                            tools: ["Bancada de teste hidráulico", "Manômetro 0-3000 PSI", "Chaves 13/16\" e 3/4\"", "Recipiente para fluido"],
-                            materials: ["Skydrol LD-4 (2 litros)", "Panos limpos", "Luvas nitrílicas"],
-                            safety: ["Sistema pressurizado - despressurizar antes", "Usar óculos de proteção", "Verificar vazamentos antes de pressurizar"],
-                            manual: "T.O. 1C-105E-2-2, Cap. 3, Pág. 3-45",
-                            time: "2-3 horas"
-                        }
-                    },
-                    { 
-                        id: "9.2", 
-                        name: "Teste de comandos de voo", 
-                        completed: false,
-                        info: {
-                            tools: ["Barras de comando", "Indicador de deflexão", "Chaves Allen conjunto"],
-                            materials: ["Graxa aeronáutica", "Óleo lubrificante MIL-PRF-7870"],
-                            safety: ["Certificar área livre antes de mover superfícies", "Dois técnicos necessários"],
-                            manual: "T.O. 1C-105E-2-2, Cap. 4, Pág. 4-12",
-                            time: "1-2 horas"
-                        }
-                    },
-                    { 
-                        id: "9.3", 
-                        name: "Verificação de instrumentos", 
-                        completed: false,
-                        info: {
-                            tools: ["Multímetro digital", "Fonte de alimentação 28VDC", "Kit de teste pitot-estático"],
-                            materials: ["Álcool isopropílico", "Panos antiestáticos"],
-                            safety: ["Cuidado com instrumentos sensíveis", "Não aplicar pressão excessiva"],
-                            manual: "T.O. 1C-105E-2-2, Cap. 5, Pág. 5-8",
-                            time: "3-4 horas"
-                        }
-                    },
-                    { 
-                        id: "9.4", 
-                        name: "Teste de sistemas elétricos", 
-                        completed: false,
-                        info: {
-                            tools: ["Megôhmetro", "Amperímetro alicate", "Teste de continuidade"],
-                            materials: ["Fita isolante", "Terminais elétricos", "Spray limpa contatos"],
-                            safety: ["Desconectar baterias antes de trabalhar", "Verificar aterramento", "Usar EPIs para trabalho elétrico"],
-                            manual: "T.O. 1C-105E-2-2, Cap. 6, Pág. 6-22",
-                            time: "2-3 horas"
-                        }
+    // ===== CÓDIGO ORIGINAL DO FLUXOGRAMA =====
+    
+    // Estrutura de dados das fases
+    const phases = [
+        {
+            id: 1,
+            title: "RECEBIMENTO DA AERONAVE",
+            tasks: [
+                { id: "1.1", name: "Conferir documentação (TFOA, última revisão)", completed: false },
+                { id: "1.2", name: "Verificar discrepâncias anteriores", completed: false },
+                { id: "1.3", name: "Inspeção visual externa inicial", completed: false },
+                { id: "1.4", name: "Registrar hora/combustível", completed: false },
+                { id: "1.5", name: "Fotografar condição geral", completed: false }
+            ]
+        },
+        {
+            id: 2,
+            title: "LAVAGEM DA AERONAVE",
+            tasks: [
+                { id: "2.1", name: "Preparar área de lavagem", completed: false },
+                { id: "2.2", name: "Aplicar desengraxante", completed: false },
+                { id: "2.3", name: "Lavagem com água pressurizada", completed: false },
+                { id: "2.4", name: "Secagem", completed: false },
+                { id: "2.5", name: "Inspeção pós-lavagem", completed: false }
+            ]
+        },
+        {
+            id: 3,
+            title: "DESMONTAGEM DA AERONAVE",
+            tasks: [
+                { id: "3.1", name: "Remover portas", completed: false },
+                { id: "3.2", name: "Remover painéis de acesso", completed: false },
+                { id: "3.3", name: "Remover componentes hidráulicos", completed: false },
+                { id: "3.4", name: "Catalogar peças removidas", completed: false },
+                { id: "3.5", name: "Armazenar adequadamente", completed: false }
+            ]
+        },
+        {
+            id: 4,
+            title: "LAVAGEM INTERNA",
+            tasks: [
+                { id: "4.1", name: "Proteger equipamentos sensíveis", completed: false },
+                { id: "4.2", name: "Limpeza do cockpit", completed: false },
+                { id: "4.3", name: "Limpeza do compartimento de carga", completed: false },
+                { id: "4.4", name: "Desinfecção", completed: false }
+            ]
+        },
+        {
+            id: 5,
+            title: "INSPETORIA/ABERTURA FRD PARTE INTERNA",
+            tasks: [
+                { id: "5.1", name: "Abrir FRD correspondente", completed: false },
+                { id: "5.2", name: "Inspeção estrutural", completed: false },
+                { id: "5.3", name: "Verificar corrosão", completed: false },
+                { id: "5.4", name: "Medir desgastes", completed: false },
+                { id: "5.5", name: "Registrar discrepâncias", completed: false }
+            ]
+        },
+        {
+            id: 6,
+            title: "PEDIDO DE MATERIAL TOTAL PARA A INSPEÇÃO",
+            tasks: [
+                { id: "6.1", name: "Listar materiais necessários", completed: false },
+                { id: "6.2", name: "Verificar estoque", completed: false },
+                { id: "6.3", name: "Emitir requisições", completed: false },
+                { id: "6.4", name: "Acompanhar entregas", completed: false }
+            ]
+        },
+        {
+            id: 7,
+            title: "CUMP. FRD/DIR TÉCNICA/REL VOO",
+            tasks: [
+                { id: "7.1", name: "Executar itens do FRD", completed: false },
+                { id: "7.2", name: "Cumprir diretrizes técnicas", completed: false },
+                { id: "7.3", name: "Analisar relatórios de voo", completed: false },
+                { id: "7.4", name: "Documentar cumprimento", completed: false }
+            ]
+        },
+        {
+            id: 8,
+            title: "MONTAGEM/FECHAMENTO ACESSO INT",
+            tasks: [
+                { id: "8.1", name: "Reinstalar componentes internos", completed: false },
+                { id: "8.2", name: "Fechar painéis de acesso", completed: false },
+                { id: "8.3", name: "Verificar torques", completed: false },
+                { id: "8.4", name: "Instalar lacres", completed: false }
+            ]
+        },
+        {
+            id: 9,
+            title: "CHECKS DE HANGAR",
+            tasks: [
+                { 
+                    id: "9.1", 
+                    name: "Teste de sistemas hidráulicos", 
+                    completed: false,
+                    info: {
+                        tools: ["Bancada de teste hidráulico", "Manômetro 0-3000 PSI", "Chaves 13/16\" e 3/4\"", "Recipiente para fluido"],
+                        materials: ["Skydrol LD-4 (2 litros)", "Panos limpos", "Luvas nitrílicas"],
+                        safety: ["Sistema pressurizado - despressurizar antes", "Usar óculos de proteção", "Verificar vazamentos antes de pressurizar"],
+                        manual: "T.O. 1C-105E-2-2, Cap. 3, Pág. 3-45",
+                        time: "2-3 horas"
                     }
-                ]
-            },
-            {
-                id: 10,
-                title: "CHECKS DE PISTA",
-                tasks: [
-                    { id: "10.1", name: "Partida de motores", completed: false },
-                    { id: "10.2", name: "Taxi check", completed: false },
-                    { id: "10.3", name: "Verificação de freios", completed: false },
-                    { id: "10.4", name: "Teste de comunicação", completed: false }
-                ]
-            },
-            {
-                id: 11,
-                title: "RESSELAGEM",
-                tasks: [
-                    { id: "11.1", name: "Remover selante antigo", completed: false },
-                    { id: "11.2", name: "Preparar superfícies", completed: false },
-                    { id: "11.3", name: "Aplicar novo selante", completed: false },
-                    { id: "11.4", name: "Tempo de cura", completed: false }
-                ]
-            },
-            {
-                id: 12,
-                title: "PINTURA/LAVAGEM",
-                tasks: [
-                    { id: "12.1", name: "Preparação de superfície", completed: false },
-                    { id: "12.2", name: "Aplicação de primer", completed: false },
-                    { id: "12.3", name: "Pintura", completed: false },
-                    { id: "12.4", name: "Lavagem final", completed: false }
-                ]
-            },
-            {
-                id: 13,
-                title: "PESAGEM",
-                tasks: [
-                    { id: "13.1", name: "Drenar combustível", completed: false },
-                    { id: "13.2", name: "Posicionar em balanças", completed: false },
-                    { id: "13.3", name: "Registrar pesos", completed: false },
-                    { id: "13.4", name: "Calcular CG", completed: false }
-                ]
-            },
-            {
-                id: 14,
-                title: "VOO DE EXPERIÊNCIA",
-                tasks: [
-                    { id: "14.1", name: "Briefing com tripulação", completed: false },
-                    { id: "14.2", name: "Execução do voo", completed: false },
-                    { id: "14.3", name: "Análise de parâmetros", completed: false },
-                    { id: "14.4", name: "Correção de discrepâncias", completed: false }
-                ]
-            },
-            {
-                id: 15,
-                title: "ENTREGA DA AERONAVE",
-                tasks: [
-                    { id: "15.1", name: "Documentação completa", completed: false },
-                    { id: "15.2", name: "Limpeza final", completed: false },
-                    { id: "15.3", name: "Briefing de entrega", completed: false },
-                    { id: "15.4", name: "Assinatura de recebimento", completed: false }
-                ]
-            }
-        ];
-
-        // Mapeamento de nomes de seção para exibição
-        function getDisplaySectionName(technicalName) {
-            const displayNames = {
-                'hidraulica': 'HIDRÁULICA',
-                'pneumatica': 'PNEUMÁTICA',
-                'celula': 'CÉLULA',
-                'comando': 'COMANDO DE VOO',
-                'eletrica': 'ELÉTRICA',
-                'motores': 'MOTORES',
-                'estrutura': 'ESTRUTURA',
-                'admin': 'ADMINISTRADOR'
-            };
-            
-            // Extrair o nome da seção do email
-            // Suporta formatos: hidraulica.fab@gmail.com, hidraulica@c105.fab, etc.
-            let cleanName = technicalName.toLowerCase();
-            
-            // Remover domínio
-            cleanName = cleanName.split('@')[0];
-            
-            // Remover .fab se existir
-            cleanName = cleanName.replace('.fab', '');
-            
-            // Pegar apenas a primeira parte (antes de qualquer ponto)
-            cleanName = cleanName.split('.')[0];
-            
-            return displayNames[cleanName] || technicalName.toUpperCase();
-        }
-        
-        // Estado da aplicação
-        let aircraftStates = {};
-        let currentAircraftId = null;
-        
-        // Estado padrão para nova aeronave
-        function createNewAircraftState() {
-            const user = firebase.auth().currentUser;
-            const userSection = user ? user.email.split('@')[0].toUpperCase() : 'SEÇÃO';
-            
-            return {
-                phases: JSON.parse(JSON.stringify(phases)), // Deep copy
-                aircraftId: '',
-                startDate: '',
-                blocks: {},
-                section: userSection // NOVA LINHA: Identificar seção
-            };
-        }
-        
-        // Compatibilidade com dados antigos
-        let appState = null;
-
-        // Carregar dados salvos
-        function loadData() {
-            initializeTabs();
-        }
-
-        // Gerenciamento de abas - ATUALIZADO PARA FIRESTORE
-        async function initializeTabs() {
-            const user = firebase.auth().currentUser;
-            if (!user) return;
-            
-            const isAdmin = user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com';
-            
-            if (isAdmin) {
-                // Admin: coletar TODAS as aeronaves de todas as seções do Firestore
-                const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-                const allAircraftMap = new Map();
-                
-                for (const section of validSections) {
-                    try {
-                        const doc = await db.collection('sections').doc(section).get();
-                        if (doc.exists) {
-                            const data = doc.data();
-                            if (data && data.aircraftStates) {
-                                Object.entries(data.aircraftStates).forEach(([key, aircraft]) => {
-                                    if (aircraft && 
-                                        typeof aircraft === 'object' && 
-                                        aircraft.aircraftId && 
-                                        aircraft.aircraftId.trim() !== '' &&
-                                        aircraft.phases && 
-                                        Array.isArray(aircraft.phases)) {
-                                        
-                                        const identifier = aircraft.aircraftId;
-                                        
-                                        if (!allAircraftMap.has(identifier)) {
-                                            allAircraftMap.set(identifier, {
-                                                phases: JSON.parse(JSON.stringify(phases)),
-                                                aircraftId: aircraft.aircraftId,
-                                                startDate: aircraft.startDate || '',
-                                                blocks: aircraft.blocks || {},
-                                                section: 'ADMINISTRADOR',
-                                                originalSection: section
-                                            });
-                                        }
-                                    }
-                                });
-                            }
-                        } else {
-                            // Fallback para localStorage se não existir no Firestore
-                            const sectionKey = `c105_${section}_data`;
-                            const sectionData = localStorage.getItem(sectionKey);
-                            
-                            if (sectionData) {
-                                try {
-                                    const data = JSON.parse(sectionData);
-                                    if (data && typeof data === 'object') {
-                                        Object.entries(data).forEach(([key, aircraft]) => {
-                                            if (aircraft && 
-                                                typeof aircraft === 'object' && 
-                                                aircraft.aircraftId && 
-                                                aircraft.aircraftId.trim() !== '' &&
-                                                aircraft.phases && 
-                                                Array.isArray(aircraft.phases)) {
-                                                
-                                                const identifier = aircraft.aircraftId;
-                                                
-                                                if (!allAircraftMap.has(identifier)) {
-                                                    allAircraftMap.set(identifier, {
-                                                        phases: JSON.parse(JSON.stringify(phases)),
-                                                        aircraftId: aircraft.aircraftId,
-                                                        startDate: aircraft.startDate || '',
-                                                        blocks: aircraft.blocks || {},
-                                                        section: 'ADMINISTRADOR',
-                                                        originalSection: section
-                                                    });
-                                                }
-                                            }
-                                        });
-                                    }
-                                } catch (error) {
-                                    console.error(`Erro ao processar localStorage ${section}:`, error);
-                                }
-                            }
-                        }
-                    } catch (error) {
-                        console.error(`Erro ao buscar dados do Firestore para ${section}:`, error);
+                },
+                { 
+                    id: "9.2", 
+                    name: "Teste de comandos de voo", 
+                    completed: false,
+                    info: {
+                        tools: ["Barras de comando", "Indicador de deflexão", "Chaves Allen conjunto"],
+                        materials: ["Graxa aeronáutica", "Óleo lubrificante MIL-PRF-7870"],
+                        safety: ["Certificar área livre antes de mover superfícies", "Dois técnicos necessários"],
+                        manual: "T.O. 1C-105E-2-2, Cap. 4, Pág. 4-12",
+                        time: "1-2 horas"
+                    }
+                },
+                { 
+                    id: "9.3", 
+                    name: "Verificação de instrumentos", 
+                    completed: false,
+                    info: {
+                        tools: ["Multímetro digital", "Fonte de alimentação 28VDC", "Kit de teste pitot-estático"],
+                        materials: ["Álcool isopropílico", "Panos antiestáticos"],
+                        safety: ["Cuidado com instrumentos sensíveis", "Não aplicar pressão excessiva"],
+                        manual: "T.O. 1C-105E-2-2, Cap. 5, Pág. 5-8",
+                        time: "3-4 horas"
+                    }
+                },
+                { 
+                    id: "9.4", 
+                    name: "Teste de sistemas elétricos", 
+                    completed: false,
+                    info: {
+                        tools: ["Megôhmetro", "Amperímetro alicate", "Teste de continuidade"],
+                        materials: ["Fita isolante", "Terminais elétricos", "Spray limpa contatos"],
+                        safety: ["Desconectar baterias antes de trabalhar", "Verificar aterramento", "Usar EPIs para trabalho elétrico"],
+                        manual: "T.O. 1C-105E-2-2, Cap. 6, Pág. 6-22",
+                        time: "2-3 horas"
                     }
                 }
-                
-                // Converter Map para objeto aircraftStates
-                aircraftStates = {};
-                let index = 0;
-                allAircraftMap.forEach((aircraft, identifier) => {
-                    const adminKey = 'admin-' + index++;
-                    aircraftStates[adminKey] = aircraft;
-                });
-                
-                const aircraftIds = Object.keys(aircraftStates);
-                if (aircraftIds.length > 0) {
-                    currentAircraftId = aircraftIds[0];
-                } else {
-                    currentAircraftId = null;
-                }
-                
-            } else {
-                // Seções normais - buscar do Firestore
-                const sectionName = user.email.split('@')[0].split('.')[0];
-                
+            ]
+        },
+        {
+            id: 10,
+            title: "CHECKS DE PISTA",
+            tasks: [
+                { id: "10.1", name: "Partida de motores", completed: false },
+                { id: "10.2", name: "Taxi check", completed: false },
+                { id: "10.3", name: "Verificação de freios", completed: false },
+                { id: "10.4", name: "Teste de comunicação", completed: false }
+            ]
+        },
+        {
+            id: 11,
+            title: "RESSELAGEM",
+            tasks: [
+                { id: "11.1", name: "Remover selante antigo", completed: false },
+                { id: "11.2", name: "Preparar superfícies", completed: false },
+                { id: "11.3", name: "Aplicar novo selante", completed: false },
+                { id: "11.4", name: "Tempo de cura", completed: false }
+            ]
+        },
+        {
+            id: 12,
+            title: "PINTURA/LAVAGEM",
+            tasks: [
+                { id: "12.1", name: "Preparação de superfície", completed: false },
+                { id: "12.2", name: "Aplicação de primer", completed: false },
+                { id: "12.3", name: "Pintura", completed: false },
+                { id: "12.4", name: "Lavagem final", completed: false }
+            ]
+        },
+        {
+            id: 13,
+            title: "PESAGEM",
+            tasks: [
+                { id: "13.1", name: "Drenar combustível", completed: false },
+                { id: "13.2", name: "Posicionar em balanças", completed: false },
+                { id: "13.3", name: "Registrar pesos", completed: false },
+                { id: "13.4", name: "Calcular CG", completed: false }
+            ]
+        },
+        {
+            id: 14,
+            title: "VOO DE EXPERIÊNCIA",
+            tasks: [
+                { id: "14.1", name: "Briefing com tripulação", completed: false },
+                { id: "14.2", name: "Execução do voo", completed: false },
+                { id: "14.3", name: "Análise de parâmetros", completed: false },
+                { id: "14.4", name: "Correção de discrepâncias", completed: false }
+            ]
+        },
+        {
+            id: 15,
+            title: "ENTREGA DA AERONAVE",
+            tasks: [
+                { id: "15.1", name: "Documentação completa", completed: false },
+                { id: "15.2", name: "Limpeza final", completed: false },
+                { id: "15.3", name: "Briefing de entrega", completed: false },
+                { id: "15.4", name: "Assinatura de recebimento", completed: false }
+            ]
+        }
+    ];
+
+    // Mapeamento de nomes de seção para exibição
+    function getDisplaySectionName(technicalName) {
+        const displayNames = {
+            'hidraulica': 'HIDRÁULICA',
+            'pneumatica': 'PNEUMÁTICA',
+            'celula': 'CÉLULA',
+            'comando': 'COMANDO DE VOO',
+            'eletrica': 'ELÉTRICA',
+            'motores': 'MOTORES',
+            'estrutura': 'ESTRUTURA',
+            'admin': 'ADMINISTRADOR'
+        };
+        
+        // Extrair o nome da seção do email
+        // Suporta formatos: hidraulica.fab@gmail.com, hidraulica@c105.fab, etc.
+        let cleanName = technicalName.toLowerCase();
+        
+        // Remover domínio
+        cleanName = cleanName.split('@')[0];
+        
+        // Remover .fab se existir
+        cleanName = cleanName.replace('.fab', '');
+        
+        // Pegar apenas a primeira parte (antes de qualquer ponto)
+        cleanName = cleanName.split('.')[0];
+        
+        return displayNames[cleanName] || technicalName.toUpperCase();
+    }
+    
+    // Estado da aplicação
+    let aircraftStates = {};
+    let currentAircraftId = null;
+    
+    // Estado padrão para nova aeronave
+    function createNewAircraftState() {
+        const user = firebase.auth().currentUser;
+        const userSection = user ? user.email.split('@')[0].toUpperCase() : 'SEÇÃO';
+        
+        return {
+            phases: JSON.parse(JSON.stringify(phases)), // Deep copy
+            aircraftId: '',
+            startDate: '',
+            blocks: {},
+            section: userSection // NOVA LINHA: Identificar seção
+        };
+    }
+    
+    // Compatibilidade com dados antigos
+    let appState = null;
+
+    // Carregar dados salvos
+    function loadData() {
+        initializeTabs();
+    }
+
+    // Gerenciamento de abas - ATUALIZADO PARA FIRESTORE
+    async function initializeTabs() {
+        const user = firebase.auth().currentUser;
+        if (!user) return;
+        
+        const isAdmin = user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com';
+        
+        if (isAdmin) {
+            // Admin: coletar TODAS as aeronaves de todas as seções do Firestore
+            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+            const allAircraftMap = new Map();
+            
+            for (const section of validSections) {
                 try {
-                    const doc = await db.collection('sections').doc(sectionName).get();
+                    const doc = await db.collection('sections').doc(section).get();
                     if (doc.exists) {
                         const data = doc.data();
                         if (data && data.aircraftStates) {
-                            aircraftStates = data.aircraftStates;
-                            const aircraftIds = Object.keys(aircraftStates);
-                            if (aircraftIds.length > 0) {
-                                currentAircraftId = aircraftIds[0];
-                            }
-                        } else {
-                            createNewTab();
+                            Object.entries(data.aircraftStates).forEach(([key, aircraft]) => {
+                                if (aircraft && 
+                                    typeof aircraft === 'object' && 
+                                    aircraft.aircraftId && 
+                                    aircraft.aircraftId.trim() !== '' &&
+                                    aircraft.phases && 
+                                    Array.isArray(aircraft.phases)) {
+                                    
+                                    const identifier = aircraft.aircraftId;
+                                    
+                                    if (!allAircraftMap.has(identifier)) {
+                                        allAircraftMap.set(identifier, {
+                                            phases: JSON.parse(JSON.stringify(phases)),
+                                            aircraftId: aircraft.aircraftId,
+                                            startDate: aircraft.startDate || '',
+                                            blocks: aircraft.blocks || {},
+                                            section: 'ADMINISTRADOR',
+                                            originalSection: section
+                                        });
+                                    }
+                                }
+                            });
                         }
                     } else {
                         // Fallback para localStorage se não existir no Firestore
-                        const sectionKey = `c105_${sectionName}_data`;
-                        const savedTabs = localStorage.getItem(sectionKey);
+                        const sectionKey = `c105_${section}_data`;
+                        const sectionData = localStorage.getItem(sectionKey);
                         
-                        if (savedTabs) {
-                            aircraftStates = JSON.parse(savedTabs);
-                            const aircraftIds = Object.keys(aircraftStates);
-                            if (aircraftIds.length > 0) {
-                                currentAircraftId = aircraftIds[0];
+                        if (sectionData) {
+                            try {
+                                const data = JSON.parse(sectionData);
+                                if (data && typeof data === 'object') {
+                                    Object.entries(data).forEach(([key, aircraft]) => {
+                                        if (aircraft && 
+                                            typeof aircraft === 'object' && 
+                                            aircraft.aircraftId && 
+                                            aircraft.aircraftId.trim() !== '' &&
+                                            aircraft.phases && 
+                                            Array.isArray(aircraft.phases)) {
+                                            
+                                            const identifier = aircraft.aircraftId;
+                                            
+                                            if (!allAircraftMap.has(identifier)) {
+                                                allAircraftMap.set(identifier, {
+                                                    phases: JSON.parse(JSON.stringify(phases)),
+                                                    aircraftId: aircraft.aircraftId,
+                                                    startDate: aircraft.startDate || '',
+                                                    blocks: aircraft.blocks || {},
+                                                    section: 'ADMINISTRADOR',
+                                                    originalSection: section
+                                                });
+                                            }
+                                        }
+                                    });
+                                }
+                            } catch (error) {
+                                console.error(`Erro ao processar localStorage ${section}:`, error);
                             }
-                            // Salvar no Firestore
-                            await saveAllData();
-                        } else {
-                            createNewTab();
                         }
                     }
                 } catch (error) {
-                    console.error('Erro ao buscar dados do Firestore:', error);
-                    // Fallback para localStorage
+                    console.error(`Erro ao buscar dados do Firestore para ${section}:`, error);
+                }
+            }
+            
+            // Converter Map para objeto aircraftStates
+            aircraftStates = {};
+            let index = 0;
+            allAircraftMap.forEach((aircraft, identifier) => {
+                const adminKey = 'admin-' + index++;
+                aircraftStates[adminKey] = aircraft;
+            });
+            
+            const aircraftIds = Object.keys(aircraftStates);
+            if (aircraftIds.length > 0) {
+                currentAircraftId = aircraftIds[0];
+            } else {
+                currentAircraftId = null;
+            }
+            
+        } else {
+            // Seções normais - buscar do Firestore
+            const sectionName = user.email.split('@')[0].split('.')[0];
+            
+            try {
+                const doc = await db.collection('sections').doc(sectionName).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data && data.aircraftStates) {
+                        aircraftStates = data.aircraftStates;
+                        const aircraftIds = Object.keys(aircraftStates);
+                        if (aircraftIds.length > 0) {
+                            currentAircraftId = aircraftIds[0];
+                        }
+                    } else {
+                        createNewTab();
+                    }
+                } else {
+                    // Fallback para localStorage se não existir no Firestore
                     const sectionKey = `c105_${sectionName}_data`;
                     const savedTabs = localStorage.getItem(sectionKey);
                     
@@ -1789,313 +1816,202 @@ window.logout = function() {
                         if (aircraftIds.length > 0) {
                             currentAircraftId = aircraftIds[0];
                         }
+                        // Salvar no Firestore
+                        await saveAllData();
                     } else {
                         createNewTab();
                     }
                 }
-            }
-            
-            renderTabs();
-            loadCurrentAircraft();
-        }
-
-        // Criar nova aba
-        function createNewTab() {
-            const newId = 'aircraft-' + Date.now();
-            aircraftStates[newId] = createNewAircraftState();
-            currentAircraftId = newId;
-            saveAllData();
-            renderTabs();
-            loadCurrentAircraft();
-        }
-
-        // Renderizar abas
-        function renderTabs() {
-            const tabsContainer = document.getElementById('aircraftTabs');
-            tabsContainer.innerHTML = '';
-            
-            const user = firebase.auth().currentUser;
-            const isAdmin = user && user.email === 'admin@c105.fab';
-            
-            // Se admin sem aeronaves, mostrar mensagem
-            if (isAdmin && Object.keys(aircraftStates).length === 0) {
-                tabsContainer.innerHTML = '<div style="padding: 10px; color: #666;">Nenhuma aeronave em manutenção</div>';
-                return;
-            }
-            
-            Object.keys(aircraftStates).forEach(aircraftId => {
-                const state = aircraftStates[aircraftId];
-                const tab = document.createElement('div');
-                tab.className = `tab ${aircraftId === currentAircraftId ? 'active' : ''}`;
+            } catch (error) {
+                console.error('Erro ao buscar dados do Firestore:', error);
+                // Fallback para localStorage
+                const sectionKey = `c105_${sectionName}_data`;
+                const savedTabs = localStorage.getItem(sectionKey);
                 
-                tab.innerHTML = `
-                    <span onclick="switchTab('${aircraftId}')">${state.aircraftId || 'Nova Aeronave'}</span>
-                    ${!isAdmin && Object.keys(aircraftStates).length > 1 ? `<span class="tab-close" onclick="closeTab('${aircraftId}')">×</span>` : ''}
-                `;
-                tabsContainer.appendChild(tab);
-            });
-            
-            if (!isAdmin) {
-                const newTabBtn = document.createElement('button');
-                newTabBtn.className = 'btn-new-tab';
-                newTabBtn.innerHTML = '+ Nova Aeronave';
-                newTabBtn.onclick = createNewTab;
-                tabsContainer.appendChild(newTabBtn);
+                if (savedTabs) {
+                    aircraftStates = JSON.parse(savedTabs);
+                    const aircraftIds = Object.keys(aircraftStates);
+                    if (aircraftIds.length > 0) {
+                        currentAircraftId = aircraftIds[0];
+                    }
+                } else {
+                    createNewTab();
+                }
             }
         }
+        
+        renderTabs();
+        loadCurrentAircraft();
+    }
 
-        // Mudar de aba
-        window.switchTab = function(aircraftId) {
-            if (aircraftId !== currentAircraftId) {
-                currentAircraftId = aircraftId;
+    // Criar nova aba
+    function createNewTab() {
+        const newId = 'aircraft-' + Date.now();
+        aircraftStates[newId] = createNewAircraftState();
+        currentAircraftId = newId;
+        saveAllData();
+        renderTabs();
+        loadCurrentAircraft();
+    }
+
+    // Renderizar abas
+    function renderTabs() {
+        const tabsContainer = document.getElementById('aircraftTabs');
+        tabsContainer.innerHTML = '';
+        
+        const user = firebase.auth().currentUser;
+        const isAdmin = user && user.email === 'admin@c105.fab';
+        
+        // Se admin sem aeronaves, mostrar mensagem
+        if (isAdmin && Object.keys(aircraftStates).length === 0) {
+            tabsContainer.innerHTML = '<div style="padding: 10px; color: #666;">Nenhuma aeronave em manutenção</div>';
+            return;
+        }
+        
+        Object.keys(aircraftStates).forEach(aircraftId => {
+            const state = aircraftStates[aircraftId];
+            const tab = document.createElement('div');
+            tab.className = `tab ${aircraftId === currentAircraftId ? 'active' : ''}`;
+            
+            tab.innerHTML = `
+                <span onclick="switchTab('${aircraftId}')">${state.aircraftId || 'Nova Aeronave'}</span>
+                ${!isAdmin && Object.keys(aircraftStates).length > 1 ? `<span class="tab-close" onclick="closeTab('${aircraftId}')">×</span>` : ''}
+            `;
+            tabsContainer.appendChild(tab);
+        });
+        
+        if (!isAdmin) {
+            const newTabBtn = document.createElement('button');
+            newTabBtn.className = 'btn-new-tab';
+            newTabBtn.innerHTML = '+ Nova Aeronave';
+            newTabBtn.onclick = createNewTab;
+            tabsContainer.appendChild(newTabBtn);
+        }
+    }
+
+    // Mudar de aba
+    window.switchTab = function(aircraftId) {
+        if (aircraftId !== currentAircraftId) {
+            currentAircraftId = aircraftId;
+            renderTabs();
+            loadCurrentAircraft();
+        }
+    }
+
+    // Fechar aba
+    window.closeTab = function(aircraftId) {
+        if (Object.keys(aircraftStates).length > 1) {
+            if (confirm('Tem certeza que deseja excluir esta aeronave e todos seus dados?')) {
+                delete aircraftStates[aircraftId];
+                
+                if (currentAircraftId === aircraftId) {
+                    currentAircraftId = Object.keys(aircraftStates)[0];
+                }
+                
+                saveAllData();
                 renderTabs();
                 loadCurrentAircraft();
             }
+        } else {
+            alert('Você precisa manter pelo menos uma aeronave.');
         }
+    }
 
-        // Fechar aba
-        window.closeTab = function(aircraftId) {
-            if (Object.keys(aircraftStates).length > 1) {
-                if (confirm('Tem certeza que deseja excluir esta aeronave e todos seus dados?')) {
-                    delete aircraftStates[aircraftId];
-                    
-                    if (currentAircraftId === aircraftId) {
-                        currentAircraftId = Object.keys(aircraftStates)[0];
-                    }
-                    
-                    saveAllData();
-                    renderTabs();
-                    loadCurrentAircraft();
-                }
-            } else {
-                alert('Você precisa manter pelo menos uma aeronave.');
-            }
-        }
-
-        // Carregar aeronave atual
-        function loadCurrentAircraft() {
-            const user = firebase.auth().currentUser;
-            const isAdmin = user && user.email === 'admin@c105.fab';
+    // Carregar aeronave atual
+    function loadCurrentAircraft() {
+        const user = firebase.auth().currentUser;
+        const isAdmin = user && user.email === 'admin@c105.fab';
+        
+        // Se não há aeronave atual
+        if (!currentAircraftId || !aircraftStates[currentAircraftId]) {
+            document.getElementById('aircraftId').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('daysElapsed').textContent = '0 dias';
             
-            // Se não há aeronave atual
-            if (!currentAircraftId || !aircraftStates[currentAircraftId]) {
-                document.getElementById('aircraftId').value = '';
-                document.getElementById('startDate').value = '';
-                document.getElementById('daysElapsed').textContent = '0 dias';
-                
-                if (isAdmin) {
-                    // Admin sem aeronaves - mostrar mensagem
-                    renderAdminPhases();
-                    updateProgress();
-                } else {
-                    // Seção técnica - criar nova aeronave
-                    createNewTab();
-                }
-                return;
-            }
-            
-            appState = aircraftStates[currentAircraftId];
-            document.getElementById('aircraftId').value = appState.aircraftId || '';
-            document.getElementById('startDate').value = appState.startDate || '';
-            
-            // Desabilitar inputs para admin
             if (isAdmin) {
-                document.getElementById('aircraftId').disabled = true;
-                document.getElementById('startDate').disabled = true;
+                // Admin sem aeronaves - mostrar mensagem
+                renderAdminPhases();
+                updateProgress();
+            } else {
+                // Seção técnica - criar nova aeronave
+                createNewTab();
             }
-            
-            renderPhases();
-            updateProgress();
-            updateDaysElapsed();
-        }
-
-        // Salvar todos os dados - ATUALIZADO PARA FIRESTORE
-        async function saveAllData() {
-            const user = firebase.auth().currentUser;
-            if (user && !user.email.includes('admin')) {
-                const sectionName = user.email.split('@')[0].split('.')[0];
-                try {
-                    await db.collection('sections').doc(sectionName).set({
-                        aircraftStates: aircraftStates,
-                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-                        updatedBy: user.email
-                    });
-                    console.log('Dados salvos no Firestore com sucesso');
-                } catch (error) {
-                    console.error('Erro ao salvar no Firestore, usando fallback:', error);
-                    // Fallback para localStorage
-                    const sectionKey = `c105_${sectionName}_data`;
-                    localStorage.setItem(sectionKey, JSON.stringify(aircraftStates));
-                }
-            }
-        }
-
-        // Salvar dados
-        function saveData() {
-            if (appState && currentAircraftId) {
-                appState.aircraftId = document.getElementById('aircraftId').value;
-                appState.startDate = document.getElementById('startDate').value;
-                aircraftStates[currentAircraftId] = appState;
-                saveAllData();
-                renderTabs(); // Atualizar nome na aba
-            }
-        }
-
-        // Renderizar fases para administrador - ATUALIZADO PARA FIRESTORE
-        async function renderAdminPhases() {
-            const container = document.getElementById('phasesContainer');
-            container.innerHTML = '';
-            
-            // Se não há aeronaves, mostrar mensagem
-            if (!appState || !appState.aircraftId || appState.aircraftId.trim() === '') {
-                container.innerHTML = `
-                    <div style="background: #f8f9fa; padding: 40px; text-align: center; border-radius: 10px; margin: 20px 0;">
-                        <h3 style="color: #666; margin-bottom: 10px;">Nenhuma aeronave em manutenção</h3>
-                        <p style="color: #999;">As aeronaves aparecerão aqui quando forem adicionadas pelas seções técnicas.</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            const currentAircraftId = appState.aircraftId;
-            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-            
-            for (const phase of phases) {
-                // Calcular status da fase baseado em todas as seções
-                let hasBlocked = false;
-                let hasCompleted = false;
-                let hasInProgress = false;
-                
-                for (const section of validSections) {
-                    try {
-                        const doc = await db.collection('sections').doc(section).get();
-                        let sectionData = null;
-                        
-                        if (doc.exists) {
-                            sectionData = doc.data().aircraftStates;
-                        } else {
-                            // Fallback para localStorage
-                            const sectionKey = `c105_${section}_data`;
-                            const localData = localStorage.getItem(sectionKey);
-                            if (localData) {
-                                sectionData = JSON.parse(localData);
-                            }
-                        }
-                        
-                        if (sectionData) {
-                            Object.values(sectionData).forEach(aircraft => {
-                                if (aircraft && aircraft.aircraftId === currentAircraftId && aircraft.phases) {
-                                    const phaseData = aircraft.phases.find(p => p.id === phase.id);
-                                    if (phaseData) {
-                                        const completedCount = phaseData.tasks.filter(t => t.completed).length;
-                                        const totalCount = phaseData.tasks.length;
-                                        
-                                        if (aircraft.blocks) {
-                                            const phaseBlocks = phaseData.tasks.some(t => aircraft.blocks[t.id]);
-                                            if (phaseBlocks) hasBlocked = true;
-                                        }
-                                        
-                                        if (completedCount === totalCount && totalCount > 0) {
-                                            hasCompleted = true;
-                                        } else if (completedCount > 0) {
-                                            hasInProgress = true;
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                    } catch (error) {
-                        console.error(`Erro ao processar ${section}:`, error);
-                    }
-                }
-                
-                // Calcular totais para determinar status
-                let totalTasks = 0;
-                let totalCompleted = 0;
-                
-                for (const section of validSections) {
-                    try {
-                        const doc = await db.collection('sections').doc(section).get();
-                        let sectionData = null;
-                        
-                        if (doc.exists) {
-                            sectionData = doc.data().aircraftStates;
-                        } else {
-                            // Fallback para localStorage
-                            const sectionKey = `c105_${section}_data`;
-                            const localData = localStorage.getItem(sectionKey);
-                            if (localData) {
-                                sectionData = JSON.parse(localData);
-                            }
-                        }
-                        
-                        if (sectionData) {
-                            Object.values(sectionData).forEach(aircraft => {
-                                if (aircraft && aircraft.aircraftId === currentAircraftId && aircraft.phases) {
-                                    const phaseData = aircraft.phases.find(p => p.id === phase.id);
-                                    if (phaseData) {
-                                        totalTasks += phaseData.tasks.length;
-                                        totalCompleted += phaseData.tasks.filter(t => t.completed).length;
-                                    }
-                                }
-                            });
-                        }
-                    } catch (error) {
-                        console.error(`Erro ao processar ${section}:`, error);
-                    }
-                }
-                
-                // Determinar status final da fase
-                let phaseStatus = 'pending';
-                if (hasBlocked) phaseStatus = 'blocked';
-                else if (totalTasks > 0) {
-                    if (totalCompleted === totalTasks) {
-                        phaseStatus = 'completed';
-                    } else if (totalCompleted > 0) {
-                        phaseStatus = 'in-progress';
-                    }
-                }
-                
-                const phaseCard = document.createElement('div');
-                phaseCard.className = 'phase-card';
-                
-                phaseCard.innerHTML = `
-                    <div class="phase-header status-${phaseStatus}" onclick="togglePhase(${phase.id})">
-                        <div class="phase-title">
-                            <div class="phase-number">${phase.id}</div>
-                            <span>${phase.title}</span>
-                        </div>
-                        <div class="phase-status">
-                            <span class="status-badge status-${phaseStatus}">${getStatusText(phaseStatus)}</span>
-                            <span>▼</span>
-                        </div>
-                    </div>
-                    <div class="phase-content" id="phase-content-${phase.id}">
-                        <div class="tasks-list" style="padding: 20px;">
-                            ${await renderAdminSectionsProgress(phase.id, currentAircraftId)}
-                        </div>
-                    </div>
-                `;
-                
-                container.appendChild(phaseCard);
-            }
-            
-            setTimeout(setupScrollAnimations, 100);
+            return;
         }
         
-        // Renderizar progresso das seções para uma fase específica - ATUALIZADO PARA FIRESTORE
-        async function renderAdminSectionsProgress(phaseId, aircraftId) {
-            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-            let html = '<div style="display: grid; gap: 15px;">';
+        appState = aircraftStates[currentAircraftId];
+        document.getElementById('aircraftId').value = appState.aircraftId || '';
+        document.getElementById('startDate').value = appState.startDate || '';
+        
+        // Desabilitar inputs para admin
+        if (isAdmin) {
+            document.getElementById('aircraftId').disabled = true;
+            document.getElementById('startDate').disabled = true;
+        }
+        
+        renderPhases();
+        updateProgress();
+        updateDaysElapsed();
+    }
+
+    // Salvar todos os dados - ATUALIZADO PARA FIRESTORE
+    async function saveAllData() {
+        const user = firebase.auth().currentUser;
+        if (user && !user.email.includes('admin')) {
+            const sectionName = user.email.split('@')[0].split('.')[0];
+            try {
+                await db.collection('sections').doc(sectionName).set({
+                    aircraftStates: aircraftStates,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: user.email
+                });
+                console.log('Dados salvos no Firestore com sucesso');
+            } catch (error) {
+                console.error('Erro ao salvar no Firestore, usando fallback:', error);
+                // Fallback para localStorage
+                const sectionKey = `c105_${sectionName}_data`;
+                localStorage.setItem(sectionKey, JSON.stringify(aircraftStates));
+            }
+        }
+    }
+
+    // Salvar dados
+    function saveData() {
+        if (appState && currentAircraftId) {
+            appState.aircraftId = document.getElementById('aircraftId').value;
+            appState.startDate = document.getElementById('startDate').value;
+            aircraftStates[currentAircraftId] = appState;
+            saveAllData();
+            renderTabs(); // Atualizar nome na aba
+        }
+    }
+
+    // Renderizar fases para administrador - ATUALIZADO PARA FIRESTORE
+    async function renderAdminPhases() {
+        const container = document.getElementById('phasesContainer');
+        container.innerHTML = '';
+        
+        // Se não há aeronaves, mostrar mensagem
+        if (!appState || !appState.aircraftId || appState.aircraftId.trim() === '') {
+            container.innerHTML = `
+                <div style="background: #f8f9fa; padding: 40px; text-align: center; border-radius: 10px; margin: 20px 0;">
+                    <h3 style="color: #666; margin-bottom: 10px;">Nenhuma aeronave em manutenção</h3>
+                    <p style="color: #999;">As aeronaves aparecerão aqui quando forem adicionadas pelas seções técnicas.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const currentAircraftId = appState.aircraftId;
+        const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+        
+        for (const phase of phases) {
+            // Calcular status da fase baseado em todas as seções
+            let hasBlocked = false;
+            let hasCompleted = false;
+            let hasInProgress = false;
             
             for (const section of validSections) {
-                let sectionProgress = {
-                    total: 0,
-                    completed: 0,
-                    percentage: 0,
-                    hasData: false
-                };
-                
                 try {
                     const doc = await db.collection('sections').doc(section).get();
                     let sectionData = null;
@@ -2113,826 +2029,42 @@ window.logout = function() {
                     
                     if (sectionData) {
                         Object.values(sectionData).forEach(aircraft => {
-                            if (aircraft && aircraft.aircraftId === aircraftId && aircraft.phases) {
-                                const phase = aircraft.phases.find(p => p.id === phaseId);
-                                if (phase) {
-                                    sectionProgress.total = phase.tasks.length;
-                                    sectionProgress.completed = phase.tasks.filter(t => t.completed).length;
-                                    sectionProgress.percentage = sectionProgress.total > 0 ? 
-                                        Math.round((sectionProgress.completed / sectionProgress.total) * 100) : 0;
-                                    sectionProgress.hasData = true;
+                            if (aircraft && aircraft.aircraftId === currentAircraftId && aircraft.phases) {
+                                const phaseData = aircraft.phases.find(p => p.id === phase.id);
+                                if (phaseData) {
+                                    const completedCount = phaseData.tasks.filter(t => t.completed).length;
+                                    const totalCount = phaseData.tasks.length;
+                                    
+                                    if (aircraft.blocks) {
+                                        const phaseBlocks = phaseData.tasks.some(t => aircraft.blocks[t.id]);
+                                        if (phaseBlocks) hasBlocked = true;
+                                    }
+                                    
+                                    if (completedCount === totalCount && totalCount > 0) {
+                                        hasCompleted = true;
+                                    } else if (completedCount > 0) {
+                                        hasInProgress = true;
+                                    }
                                 }
                             }
                         });
                     }
                 } catch (error) {
-                    console.error(`Erro ao processar dados de ${section}:`, error);
-                }
-                
-                html += `
-                    <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #e0e0e0;">
-                        <h4 style="margin: 0 0 10px 0; color: #1a5490;">${getDisplaySectionName(section)}</h4>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <span>${sectionProgress.completed}/${sectionProgress.total} tarefas</span>
-                            <span style="font-weight: bold; color: ${sectionProgress.percentage === 100 ? '#4caf50' : '#1a5490'};">
-                                ${sectionProgress.percentage}%
-                            </span>
-                        </div>
-                        <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
-                            <div style="background: ${sectionProgress.percentage === 100 ? '#4caf50' : '#2196f3'}; 
-                                       height: 100%; width: ${sectionProgress.percentage}%; 
-                                       transition: width 0.3s ease;"></div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            html += '</div>';
-            return html;
-        }
-        
-        // Renderizar fases
-        function renderPhases() {
-            const container = document.getElementById('phasesContainer');
-            container.innerHTML = '';
-            
-            const user = firebase.auth().currentUser;
-            const isAdmin = user && user.email === 'admin@c105.fab';
-        
-            if (isAdmin) {
-                renderAdminPhases();
-                return;
-            }
-        
-            appState.phases.forEach(phase => {
-                const phaseStatus = getPhaseStatus(phase);
-                const phaseCard = document.createElement('div');
-                phaseCard.className = 'phase-card';
-                
-                phaseCard.innerHTML = `
-                    <div class="phase-header status-${phaseStatus}" onclick="togglePhase(${phase.id})">
-                        <div class="phase-title">
-                            <div class="phase-number">${phase.id}</div>
-                            <span>${phase.title}</span>
-                        </div>
-                        <div class="phase-status">
-                            <span class="status-badge status-${phaseStatus}">${getStatusText(phaseStatus)}</span>
-                            <span>▼</span>
-                        </div>
-                    </div>
-                    <div class="phase-content" id="phase-content-${phase.id}">
-                        <div class="tasks-list">
-                            ${phase.tasks.map(task => renderTask(phase.id, task)).join('')}
-                        </div>
-                        <button class="btn btn-add-task" onclick="showNewTaskForm(${phase.id})">
-                            <span style="font-size: 18px;">+</span> Adicionar Tarefa
-                        </button>
-                        <div class="new-task-form" id="new-task-form-${phase.id}">
-                            <input type="text" class="new-task-input" id="new-task-input-${phase.id}" 
-                                   placeholder="Nome da nova tarefa..." 
-                                   onkeypress="if(event.key==='Enter') addNewTask(${phase.id})">
-                            <button class="btn btn-success btn-small" onclick="addNewTask(${phase.id})">Adicionar</button>
-                            <button class="btn btn-small" onclick="hideNewTaskForm(${phase.id})">Cancelar</button>
-                        </div>
-                    </div>
-                `;
-                
-                container.appendChild(phaseCard);
-            });
-            
-            // ADICIONE ESTA LINHA:
-            setTimeout(setupScrollAnimations, 100);
-        }
-
-        // Renderizar tarefa
-        function renderTask(phaseId, task) {
-            const taskStatus = getTaskStatus(phaseId, task);
-            const isBlocked = appState.blocks[task.id];
-            
-            return `
-                <div class="task-item ${task.custom ? 'custom' : ''}">
-                    <div class="task-info">
-                        <input type="checkbox" 
-                               class="task-checkbox" 
-                               ${task.completed ? 'checked' : ''} 
-                               ${isBlocked ? 'disabled' : ''}
-                               onchange="toggleTask(${phaseId}, '${task.id}')">
-                        <span style="${task.completed ? 'text-decoration: line-through;' : ''}">${task.name}</span>
-                        <button class="btn btn-info" onclick="toggleTaskInfo('${task.id}')" title="Ver informações">ℹ</button>
-
-                    </div>
-                    <div class="task-actions">
-                        ${task.completed ? 
-                            `<button class="btn btn-success btn-small" style="cursor: default;">Concluído</button>` :
-                            isBlocked ? 
-                                `<button class="btn btn-danger btn-small" onclick="viewBlock('${task.id}')">Ver Impedimento</button>
-                                 <button class="btn btn-warning btn-small" onclick="removeBlock('${task.id}')">Remover Impedimento</button>` :
-                                `<button class="btn btn-danger btn-small" onclick="blockTask('${task.id}')">Impedimento</button>`
-                        }
-                    </div>
-                </div>
-                <div class="task-info-modal" id="info-${task.id}">
-                    <div class="info-section">
-                        <h4>🔧 Ferramentas Necessárias:</h4>
-                        <ul id="tools-${task.id}">
-                            ${task.info && task.info.tools && task.info.tools.length > 0 ? task.info.tools.map(tool => `<li>${tool}</li>`).join('') : '<li>Clique para adicionar ferramentas</li>'}
-                        </ul>
-                        <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'tools')">✏️ Editar</button>
-                    </div>
-                    <div class="info-section">
-                        <h4>📋 Materiais:</h4>
-                        <ul id="materials-${task.id}">
-                            ${task.info && task.info.materials && task.info.materials.length > 0 ? task.info.materials.map(material => `<li>${material}</li>`).join('') : '<li>Clique para adicionar materiais</li>'}
-                        </ul>
-                        <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'materials')">✏️ Editar</button>
-                    </div>
-                    <div class="info-section">
-                        <h4>⚠️ Segurança:</h4>
-                        <ul id="safety-${task.id}">
-                            ${task.info && task.info.safety && task.info.safety.length > 0 ? task.info.safety.map(safety => `<li>${safety}</li>`).join('') : '<li>Clique para adicionar informações de segurança</li>'}
-                        </ul>
-                        <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'safety')">✏️ Editar</button>
-                    </div>
-                    <div class="info-section">
-                        <h4>⏱️ Tempo Estimado:</h4>
-                        <p id="time-${task.id}">${task.info && task.info.time ? task.info.time : 'Clique para adicionar tempo estimado'}</p>
-                        <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'time')">✏️ Editar</button>
-                    </div>
-                    <div class="manual-ref">
-                        <strong>📖 Referência:</strong> <span id="manual-${task.id}">${task.info && task.info.manual ? task.info.manual : 'Clique para adicionar referência'}</span>
-                        <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'manual')">✏️ Editar</button>
-                    </div>
-                    <div class="info-section" style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
-                        <h4 style="color: #f44336;">🗑️ Excluir Tarefa:</h4>
-                        <p style="color: #666; margin-bottom: 10px;">Esta ação não pode ser desfeita</p>
-                        <button class="btn btn-danger btn-small" onclick="deleteTask(${phaseId}, '${task.id}')">🗑️ Excluir Esta Tarefa</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Obter status da fase
-        function getPhaseStatus(phase) {
-            const hasBlocked = phase.tasks.some(task => appState.blocks[task.id]);
-            if (hasBlocked) return 'blocked';
-            
-            const allCompleted = phase.tasks.every(task => task.completed);
-            const someCompleted = phase.tasks.some(task => task.completed);
-            
-            if (allCompleted && phase.tasks.length > 0) return 'completed';
-            if (someCompleted) return 'in-progress';
-            
-            return 'pending';
-        }
-
-        // Obter status da tarefa
-        function getTaskStatus(phaseId, task) {
-            if (appState.blocks[task.id]) return 'blocked';
-            if (task.completed) return 'completed';
-            return 'pending';
-        }
-
-        // Obter texto do status
-        function getStatusText(status) {
-            const texts = {
-                pending: 'Pendente',
-                'in-progress': 'Em Andamento',
-                completed: 'Concluído',
-                blocked: 'Impedimento'
-            };
-            return texts[status] || status;
-        }
-
-        // Toggle fase
-        window.togglePhase = function(phaseId) {
-            const content = document.getElementById(`phase-content-${phaseId}`);
-            content.classList.toggle('active');
-        }
-
-        // Toggle tarefa
-        window.toggleTask = function(phaseId, taskId) {
-            const phase = appState.phases.find(p => p.id === phaseId);
-            const task = phase.tasks.find(t => t.id === taskId);
-            task.completed = !task.completed;
-            
-            // Remover impedimento se existir ao marcar como concluído
-            if (task.completed && appState.blocks[taskId]) {
-                delete appState.blocks[taskId];
-            }
-            
-            saveData();
-            
-            // Salvar quais fases estão abertas
-            const openPhases = [];
-            document.querySelectorAll('.phase-content.active').forEach(content => {
-                const id = content.id.replace('phase-content-', '');
-                openPhases.push(id);
-            });
-            
-            renderPhases();
-            
-            // Reabrir as fases que estavam abertas
-            openPhases.forEach(id => {
-                document.getElementById(`phase-content-${id}`).classList.add('active');
-            });
-            
-            updateProgress();
-        }
-
-        // Bloquear tarefa
-        let currentTaskId = null;
-        window.blockTask = function(taskId) {
-            currentTaskId = taskId;
-            document.getElementById('blockModal').classList.add('active');
-        }
-
-        // Ver impedimento
-        window.viewBlock = function(taskId) {
-            const block = appState.blocks[taskId];
-            if (block) {
-                const message = `Impedimento: ${block.type}\nDescrição: ${block.description}\nAção: ${block.action}\n\nDeseja editar este impedimento?`;
-                
-                if (confirm(message)) {
-                    // Preencher o modal com os dados existentes
-                    currentTaskId = taskId;
-                    document.getElementById('blockType').value = block.type;
-                    document.getElementById('blockDescription').value = block.description;
-                    document.getElementById('blockAction').value = block.action || '';
-                    document.getElementById('blockModal').classList.add('active');
-                }
-            }
-        }
-        
-        // Remover impedimento
-        window.removeBlock = function(taskId) {
-            if (confirm('Deseja remover o impedimento desta tarefa?')) {
-                delete appState.blocks[taskId];
-                
-                saveData();
-                
-                // Manter fases abertas
-                const openPhases = [];
-                document.querySelectorAll('.phase-content.active').forEach(content => {
-                    const id = content.id.replace('phase-content-', '');
-                    openPhases.push(id);
-                });
-                
-                renderPhases();
-                
-                // Reabrir fases
-                openPhases.forEach(id => {
-                    document.getElementById(`phase-content-${id}`).classList.add('active');
-                });
-                
-                updateProgress();
-            }
-        }
-        // Toggle informações da tarefa
-        window.toggleTaskInfo = function(taskId) {
-            const infoModal = document.getElementById(`info-${taskId}`);
-            if (infoModal) {
-                infoModal.classList.toggle('active');
-            }
-        }
-                // Mostrar formulário de nova tarefa
-        window.showNewTaskForm = function(phaseId) {
-            const form = document.getElementById(`new-task-form-${phaseId}`);
-            const input = document.getElementById(`new-task-input-${phaseId}`);
-            if (form) {
-                form.classList.add('active');
-                input.focus();
-            }
-        }
-
-        // Esconder formulário de nova tarefa
-        window.hideNewTaskForm = function(phaseId) {
-            const form = document.getElementById(`new-task-form-${phaseId}`);
-            const input = document.getElementById(`new-task-input-${phaseId}`);
-            if (form) {
-                form.classList.remove('active');
-                input.value = '';
-            }
-        }
-
-        // Adicionar nova tarefa
-        window.addNewTask = function(phaseId) {
-            const input = document.getElementById(`new-task-input-${phaseId}`);
-            const taskName = input.value.trim();
-            
-            if (taskName) {
-                const phase = appState.phases.find(p => p.id === phaseId);
-                const newTaskNumber = phase.tasks.length + 1;
-                const newTaskId = `${phaseId}.${newTaskNumber}`;
-                
-                const newTask = {
-                    id: newTaskId,
-                    name: taskName,
-                    completed: false,
-                    custom: true,
-                    info: {
-                        tools: [],
-                        materials: [],
-                        safety: [],
-                        time: '',
-                        manual: ''
-                    }
-                };
-                
-                phase.tasks.push(newTask);
-                
-                saveData();
-                
-                // Manter fases abertas
-                const openPhases = [];
-                document.querySelectorAll('.phase-content.active').forEach(content => {
-                    const id = content.id.replace('phase-content-', '');
-                    openPhases.push(id);
-                });
-                
-                renderPhases();
-                
-                // Reabrir fases
-                openPhases.forEach(id => {
-                    document.getElementById(`phase-content-${id}`).classList.add('active');
-                });
-                
-                updateProgress();
-                
-                // Limpar e esconder formulário
-                hideNewTaskForm(phaseId);
-            }
-        }
-                // Excluir tarefa
-        window.deleteTask = function(phaseId, taskId) {
-            if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
-                const phase = appState.phases.find(p => p.id === phaseId);
-                phase.tasks = phase.tasks.filter(t => t.id !== taskId);
-                
-                // Remover impedimento se existir
-                if (appState.blocks[taskId]) {
-                    delete appState.blocks[taskId];
-                }
-                
-                saveData();
-                
-                // Manter fases abertas
-                const openPhases = [];
-                document.querySelectorAll('.phase-content.active').forEach(content => {
-                    const id = content.id.replace('phase-content-', '');
-                    openPhases.push(id);
-                });
-                
-                renderPhases();
-                
-                // Reabrir fases
-                openPhases.forEach(id => {
-                    document.getElementById(`phase-content-${id}`).classList.add('active');
-                });
-                
-                updateProgress();
-            }
-        }
-
-        // Editar informações da tarefa
-        window.editTaskInfo = function(taskId, field) {
-            let currentValue = '';
-            let prompt_text = '';
-            
-            // Encontrar a tarefa
-            let task = null;
-            for (let phase of appState.phases) {
-                task = phase.tasks.find(t => t.id === taskId);
-                if (task) break;
-            }
-            
-            if (!task) return;
-            
-            // Garantir que task.info existe
-            if (!task.info) {
-                task.info = {
-                    tools: [],
-                    materials: [],
-                    safety: [],
-                    time: '',
-                    manual: ''
-                };
-            }
-            
-            switch(field) {
-                case 'tools':
-                    currentValue = task.info.tools ? task.info.tools.join('\n') : '';
-                    prompt_text = 'Ferramentas (uma por linha):';
-                    break;
-                case 'materials':
-                    currentValue = task.info.materials ? task.info.materials.join('\n') : '';
-                    prompt_text = 'Materiais (um por linha):';
-                    break;
-                case 'safety':
-                    currentValue = task.info.safety ? task.info.safety.join('\n') : '';
-                    prompt_text = 'Informações de segurança (uma por linha):';
-                    break;
-                case 'time':
-                    currentValue = task.info.time || '';
-                    prompt_text = 'Tempo estimado:';
-                    break;
-                case 'manual':
-                    currentValue = task.info.manual || '';
-                    prompt_text = 'Referência do manual:';
-                    break;
-            }
-            
-            const newValue = prompt(prompt_text, currentValue);
-            
-            if (newValue !== null) {
-                switch(field) {
-                    case 'tools':
-                    case 'materials':
-                    case 'safety':
-                        task.info[field] = newValue.split('\n').filter(line => line.trim() !== '');
-                        break;
-                    case 'time':
-                    case 'manual':
-                        task.info[field] = newValue;
-                        break;
-                }
-                
-                saveData();
-                renderPhases();
-                
-                // Reabrir a modal
-                setTimeout(() => {
-                    toggleTaskInfo(taskId);
-                }, 100);
-            }
-        }
-
-        // Salvar impedimento
-        window.saveBlock = function() {
-            const type = document.getElementById('blockType').value;
-            const description = document.getElementById('blockDescription').value;
-            const action = document.getElementById('blockAction').value;
-            
-            if (type && description) {
-                appState.blocks[currentTaskId] = {
-                    type,
-                    description,
-                    action,
-                    date: new Date().toISOString()
-                };
-                
-                saveData();
-                renderPhases();
-                closeModal();
-            }
-        }
-
-        // Fechar modal
-        window.closeModal = function() {
-            document.getElementById('blockModal').classList.remove('active');
-            document.getElementById('blockType').value = '';
-            document.getElementById('blockDescription').value = '';
-            document.getElementById('blockAction').value = '';
-        }
-
-        // Atualizar progresso - ATUALIZADO PARA FIRESTORE
-        async function updateProgress() {
-            const user = firebase.auth().currentUser;
-            const isAdmin = user && user.email === 'admin@c105.fab';
-            
-            // Se não há dados, zerar tudo
-            if (!appState || !appState.phases) {
-                document.getElementById('progressFill').style.width = '0%';
-                document.getElementById('progressFill').textContent = '0%';
-                document.getElementById('completedCount').textContent = '0';
-                document.getElementById('pendingCount').textContent = '0';
-                document.getElementById('blockedCount').textContent = '0';
-                return;
-            }
-            
-            if (isAdmin && appState.aircraftId) {
-                // Para admin, calcular com base na média de todas as seções
-                const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-                let totalTasks = 0;
-                let totalCompleted = 0;
-                let totalBlocked = 0;
-                
-                for (const section of validSections) {
-                    try {
-                        const doc = await db.collection('sections').doc(section).get();
-                        let sectionData = null;
-                        
-                        if (doc.exists) {
-                            sectionData = doc.data().aircraftStates;
-                        } else {
-                            // Fallback para localStorage
-                            const sectionKey = `c105_${section}_data`;
-                            const localData = localStorage.getItem(sectionKey);
-                            if (localData) {
-                                sectionData = JSON.parse(localData);
-                            }
-                        }
-                        
-                        if (sectionData) {
-                            Object.values(sectionData).forEach(aircraft => {
-                                if (aircraft && aircraft.aircraftId === appState.aircraftId && aircraft.phases) {
-                                    aircraft.phases.forEach(phase => {
-                                        totalTasks += phase.tasks.length;
-                                        totalCompleted += phase.tasks.filter(t => t.completed).length;
-                                        if (aircraft.blocks) {
-                                            totalBlocked += Object.keys(aircraft.blocks).length;
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    } catch (error) {
-                        console.error(`Erro ao processar ${section}:`, error);
-                    }
-                }
-                
-                const pendingTasks = totalTasks - totalCompleted - totalBlocked;
-                const percentage = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
-                
-                document.getElementById('progressFill').style.width = percentage + '%';
-                document.getElementById('progressFill').textContent = percentage + '%';
-                document.getElementById('completedCount').textContent = totalCompleted;
-                document.getElementById('pendingCount').textContent = pendingTasks;
-                document.getElementById('blockedCount').textContent = totalBlocked;
-                
-            } else {
-                // Seções normais - código original
-                const totalTasks = appState.phases.reduce((sum, phase) => sum + phase.tasks.length, 0);
-                const completedTasks = appState.phases.reduce((sum, phase) => 
-                    sum + phase.tasks.filter(task => task.completed).length, 0);
-                const blockedTasks = Object.keys(appState.blocks || {}).length;
-                const pendingTasks = totalTasks - completedTasks - blockedTasks;
-                
-                const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-                const progressFill = document.getElementById('progressFill');
-                progressFill.style.width = percentage + '%';
-                progressFill.textContent = percentage + '%';
-                
-                document.getElementById('completedCount').textContent = completedTasks;
-                document.getElementById('pendingCount').textContent = pendingTasks;
-                document.getElementById('blockedCount').textContent = blockedTasks;
-            }
-        }
-
-        // Atualizar dias decorridos
-        function updateDaysElapsed() {
-            if (appState && appState.startDate) {
-                const startDate = appState.startDate;
-                if (startDate) {
-                    const start = new Date(startDate);
-                    const today = new Date();
-                    const diffTime = Math.abs(today - start);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    document.getElementById('daysElapsed').textContent = `${diffDays} dias`;
-                }
-            } else {
-                document.getElementById('daysElapsed').textContent = '0 dias';
-            }
-        }
-
-        // Expandir tudo
-        window.expandAll = function() {
-            document.querySelectorAll('.phase-content').forEach(content => {
-                content.classList.add('active');
-            });
-        }
-
-        // Recolher tudo
-        window.collapseAll = function() {
-            document.querySelectorAll('.phase-content').forEach(content => {
-                content.classList.remove('active');
-            });
-        }
-
-        // Exportar dados
-        window.exportData = function() {
-            const dataStr = JSON.stringify(appState, null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `c105_maintenance_${appState.aircraftId}_${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-        }
-
-        // Limpar dados
-        window.clearData = function() {
-            if (confirm('Tem certeza que deseja limpar todos os dados desta aeronave?')) {
-                // CRIAR BACKUP ANTES DE LIMPAR
-                createBackup();
-                
-                // Limpar apenas a aeronave atual
-                aircraftStates[currentAircraftId] = createNewAircraftState();
-                appState = aircraftStates[currentAircraftId];
-                
-                // Limpar campos de input
-                document.getElementById('aircraftId').value = '';
-                document.getElementById('startDate').value = '';
-                
-                // Salvar e recarregar
-                saveAllData();
-                renderTabs();
-                renderPhases();
-                updateProgress();
-                updateDaysElapsed(); // CERTIFIQUE-SE QUE ESTA LINHA ESTÁ AQUI
-            }
-        }
-
-        // ADICIONE ESTAS NOVAS FUNÇÕES AQUI:
-        
-        // Função de backup antes de operações críticas
-        function createBackup() {
-            const backup = {
-                date: new Date().toISOString(),
-                data: JSON.stringify(aircraftStates)
-            };
-            localStorage.setItem('c105Backup', JSON.stringify(backup));
-        }
-
-        // Função para restaurar backup (caso precise)
-        function restoreBackup() {
-            const backup = localStorage.getItem('c105Backup');
-            if (backup) {
-                const backupData = JSON.parse(backup);
-                if (confirm(`Restaurar backup de ${new Date(backupData.date).toLocaleString()}?`)) {
-                    aircraftStates = JSON.parse(backupData.data);
-                    currentAircraftId = Object.keys(aircraftStates)[0];
-                    saveAllData();
-                    location.reload();
-                }
-            } else {
-                alert('Nenhum backup encontrado.');
-            }
-        }
-
-        // Event listeners
-        document.getElementById('aircraftId').addEventListener('input', saveData);
-
-        // Event listeners
-        document.getElementById('aircraftId').addEventListener('input', saveData);
-        document.getElementById('startDate').addEventListener('change', () => {
-            saveData();
-            updateDaysElapsed();
-        });
-
-        // Remova este trecho duplicado - já está sendo tratado no onAuthStateChanged principal
-
-        // Animação de Fade no Scroll
-        function setupScrollAnimations() {
-            const observerOptions = {
-                threshold: 0.05,
-                rootMargin: '0px 0px 50px 0px'
-            };
-        
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                    } else {
-                        // Remove visible quando elemento sair completamente da tela
-                        entry.target.classList.remove('visible');
-                    }
-                });
-            }, observerOptions);
-        
-            // Observar cards de fase
-            document.querySelectorAll('.phase-card').forEach(card => {
-                observer.observe(card);
-            });
-        
-            // Observar outros elementos
-            document.querySelectorAll('.progress-info, .controls, .legend').forEach(el => {
-                el.classList.add('fade-element');
-                observer.observe(el);
-            });
-        }
-        
-        // Chamar após renderizar as fases
-        setTimeout(setupScrollAnimations, 100);
-        
-        // Botão voltar ao topo
-        window.addEventListener('scroll', () => {
-            const backToTop = document.getElementById('backToTop');
-            if (backToTop && window.scrollY > 300) {
-                backToTop.style.opacity = '1';
-            } else if (backToTop) {
-                backToTop.style.opacity = '0';
-            }
-        });
-        
-        const backToTopBtn = document.getElementById('backToTop');
-        if (backToTopBtn) {
-            backToTopBtn.addEventListener('click', () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
-        }
-
-        // ========== SISTEMA ADMINISTRATIVO ==========
-
-        // Função de limpeza de dados órfãos (para debug)
-        window.cleanOrphanData = function() {
-            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-            const allKeys = Object.keys(localStorage);
-            
-            allKeys.forEach(key => {
-                if (key.startsWith('c105_') && key.endsWith('_data')) {
-                    const sectionName = key.replace('c105_', '').replace('_data', '');
-                    if (!validSections.includes(sectionName)) {
-                        console.log(`Removendo chave inválida: ${key}`);
-                        localStorage.removeItem(key);
-                    }
-                }
-            });
-            
-            console.log('Limpeza de dados órfãos concluída');
-        }
-
-        // Função de debug para verificar dados (útil para diagnóstico)
-        window.debugC105Data = async function() {
-            console.log('=== DEBUG C-105 ===');
-            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-            
-            for (const section of validSections) {
-                try {
-                    const doc = await db.collection('sections').doc(section).get();
-                    if (doc.exists) {
-                        const data = doc.data();
-                        const aircraftIds = data.aircraftStates ? 
-                            Object.values(data.aircraftStates)
-                                .filter(a => a && a.aircraftId)
-                                .map(a => a.aircraftId) : [];
-                        
-                        console.log(`${section.toUpperCase()} (Firestore): ${aircraftIds.length > 0 ? aircraftIds.join(', ') : 'Sem aeronaves'}`);
-                    } else {
-                        // Verificar localStorage
-                        const key = `c105_${section}_data`;
-                        const localData = localStorage.getItem(key);
-                        
-                        if (localData) {
-                            try {
-                                const parsed = JSON.parse(localData);
-                                const aircraftIds = Object.values(parsed)
-                                    .filter(a => a && a.aircraftId)
-                                    .map(a => a.aircraftId);
-                                
-                                console.log(`${section.toUpperCase()} (localStorage): ${aircraftIds.length > 0 ? aircraftIds.join(', ') : 'Sem aeronaves'}`);
-                            } catch (e) {
-                                console.log(`${section.toUpperCase()}: Erro ao processar dados localStorage`);
-                            }
-                        } else {
-                            console.log(`${section.toUpperCase()}: Sem dados`);
-                        }
-                    }
-                } catch (error) {
-                    console.error(`Erro ao verificar ${section}:`, error);
+                    console.error(`Erro ao processar ${section}:`, error);
                 }
             }
             
-            // Verificar chaves órfãs no localStorage
-            const allKeys = Object.keys(localStorage).filter(key => key.startsWith('c105_') && key.endsWith('_data'));
-            const orphanKeys = allKeys.filter(key => {
-                const sectionName = key.replace('c105_', '').replace('_data', '');
-                return !validSections.includes(sectionName);
-            });
+            // Calcular totais para determinar status
+            let totalTasks = 0;
+            let totalCompleted = 0;
             
-            if (orphanKeys.length > 0) {
-                console.log('\nCHAVES ÓRFÃS ENCONTRADAS:', orphanKeys);
-                console.log('Execute cleanOrphanData() para removê-las');
-            }
-            
-            console.log('==================');
-        }
-
-        // Verificar se é administrador
-        function checkIfAdmin() {
-            const user = firebase.auth().currentUser;
-            if (user && (user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com')) {
-                document.getElementById('btnAdmin').style.display = 'inline-flex';
-            } else {
-                document.getElementById('btnAdmin').style.display = 'none';
-            }
-        }
-        
-        // Mostrar dashboard administrativo - ATUALIZADO PARA FIRESTORE
-        window.showAdminDashboard = async function() {
-            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-            const allAircraftMap = new Map();
-            
-            // Coletar todas as aeronaves únicas
             for (const section of validSections) {
                 try {
                     const doc = await db.collection('sections').doc(section).get();
                     let sectionData = null;
                     
                     if (doc.exists) {
-                        const data = doc.data();
-                        if (data && data.aircraftStates) {
-                            sectionData = data.aircraftStates;
-                        }
+                        sectionData = doc.data().aircraftStates;
                     } else {
                         // Fallback para localStorage
                         const sectionKey = `c105_${section}_data`;
@@ -2944,13 +2076,11 @@ window.logout = function() {
                     
                     if (sectionData) {
                         Object.values(sectionData).forEach(aircraft => {
-                            if (aircraft && aircraft.aircraftId && aircraft.aircraftId.trim() !== '') {
-                                if (!allAircraftMap.has(aircraft.aircraftId)) {
-                                    allAircraftMap.set(aircraft.aircraftId, {
-                                        aircraftId: aircraft.aircraftId,
-                                        startDate: aircraft.startDate || '',
-                                        phases: JSON.parse(JSON.stringify(phases))
-                                    });
+                            if (aircraft && aircraft.aircraftId === currentAircraftId && aircraft.phases) {
+                                const phaseData = aircraft.phases.find(p => p.id === phase.id);
+                                if (phaseData) {
+                                    totalTasks += phaseData.tasks.length;
+                                    totalCompleted += phaseData.tasks.filter(t => t.completed).length;
                                 }
                             }
                         });
@@ -2960,221 +2090,978 @@ window.logout = function() {
                 }
             }
             
-            // Se não há aeronaves
-            if (allAircraftMap.size === 0) {
-                document.getElementById('adminDashboard').innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #666;">
-                        <h3>Nenhuma aeronave em manutenção</h3>
-                        <p>As aeronaves aparecerão aqui quando forem adicionadas pelas seções técnicas.</p>
-                    </div>
-                `;
-                document.getElementById('adminModal').classList.add('active');
-                return;
-            }
-            
-            // Criar HTML com abas
-            let dashboardHTML = `
-                <div class="admin-tabs-container">
-                    <div class="admin-tabs">
-            `;
-            
-            // Adicionar abas para cada aeronave
-            let firstAircraft = true;
-            allAircraftMap.forEach((aircraft, aircraftId) => {
-                dashboardHTML += `
-                    <div class="admin-tab ${firstAircraft ? 'active' : ''}" onclick="switchAdminTab('${aircraftId}')">
-                        ${aircraftId}
-                    </div>
-                `;
-                firstAircraft = false;
-            });
-            
-            dashboardHTML += `
-                    </div>
-                    <div class="admin-content">
-            `;
-            
-            // Adicionar conteúdo para cada aeronave
-            firstAircraft = true;
-            for (const [aircraftId, aircraft] of allAircraftMap) {
-                dashboardHTML += `
-                    <div class="admin-aircraft-content" id="admin-content-${aircraftId}" style="${firstAircraft ? '' : 'display: none;'}">
-                        <h3>Aeronave: ${aircraftId}</h3>
-                        <div class="admin-phases-grid">
-                `;
-                
-                // Para cada fase, calcular a média de progresso entre todas as seções
-                for (const phase of phases) {
-                    let totalCompleted = 0;
-                    let totalTasks = 0;
-                    let sectionDetails = [];
-                    
-                    // Garantir que todas as seções apareçam
-                    for (const section of validSections) {
-                        let sectionInfo = {
-                            section: getDisplaySectionName(section),
-                            completed: 0,
-                            total: 0,
-                            percentage: 0,
-                            hasData: false
-                        };
-                        
-                        try {
-                            const doc = await db.collection('sections').doc(section).get();
-                            let sectionData = null;
-                            
-                            if (doc.exists) {
-                                const data = doc.data();
-                                if (data && data.aircraftStates) {
-                                    sectionData = data.aircraftStates;
-                                }
-                            } else {
-                                // Fallback para localStorage
-                                const sectionKey = `c105_${section}_data`;
-                                const localData = localStorage.getItem(sectionKey);
-                                if (localData) {
-                                    sectionData = JSON.parse(localData);
-                                }
-                            }
-                            
-                            if (sectionData) {
-                                Object.values(sectionData).forEach(sectionAircraft => {
-                                    if (sectionAircraft && sectionAircraft.aircraftId === aircraftId && sectionAircraft.phases) {
-                                        const phaseData = sectionAircraft.phases.find(p => p.id === phase.id);
-                                        if (phaseData && phaseData.tasks.length > 0) {
-                                            sectionInfo.completed = phaseData.tasks.filter(t => t.completed).length;
-                                            sectionInfo.total = phaseData.tasks.length;
-                                            sectionInfo.percentage = Math.round((sectionInfo.completed / sectionInfo.total) * 100);
-                                            sectionInfo.hasData = true;
-                                            
-                                            // Somar para cálculo da média ponderada
-                                            totalCompleted += sectionInfo.completed;
-                                            totalTasks += sectionInfo.total;
-                                        }
-                                    }
-                                });
-                            }
-                        } catch (error) {
-                            console.error(`Erro ao processar ${section}:`, error);
-                        }
-                        
-                        sectionDetails.push(sectionInfo);
-                    }
-                    
-                    // Média ponderada: total de tarefas concluídas / total de tarefas
-                    const averageProgress = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
-                    
-                    dashboardHTML += `
-                        <div class="admin-phase-card">
-                            <div class="admin-phase-header" style="background: linear-gradient(to right, ${averageProgress === 100 ? '#4caf50' : '#2196f3'} 0%, ${averageProgress === 100 ? '#4caf50' : '#2196f3'} ${averageProgress}%, #e0e0e0 ${averageProgress}%, #e0e0e0 100%);">
-                                <div class="admin-phase-number">${phase.id}</div>
-                                <div class="admin-phase-title">${phase.title}</div>
-                                <div class="admin-phase-progress">${averageProgress}%</div>
-                            </div>
-                            <div class="admin-phase-details">
-                    `;
-                    
-                    // Mostrar detalhes por seção
-                    sectionDetails.forEach(detail => {
-                        const isComplete = detail.total > 0 && detail.completed === detail.total;
-                        dashboardHTML += `
-                            <div class="admin-section-detail" style="${isComplete ? 'background: #d4edda;' : ''}">
-                                <span class="section-name">${detail.section}:</span>
-                                <span class="section-progress">${detail.completed}/${detail.total} (${detail.percentage}%)</span>
-                            </div>
-                        `;
-                    });
-                    
-                    dashboardHTML += `
-                            </div>
-                        </div>
-                    `;
+            // Determinar status final da fase
+            let phaseStatus = 'pending';
+            if (hasBlocked) phaseStatus = 'blocked';
+            else if (totalTasks > 0) {
+                if (totalCompleted === totalTasks) {
+                    phaseStatus = 'completed';
+                } else if (totalCompleted > 0) {
+                    phaseStatus = 'in-progress';
                 }
-                
-                dashboardHTML += `
-                        </div>
-                    </div>
-                `;
-                firstAircraft = false;
             }
             
-            dashboardHTML += `
+            const phaseCard = document.createElement('div');
+            phaseCard.className = 'phase-card';
+            
+            phaseCard.innerHTML = `
+                <div class="phase-header status-${phaseStatus}" onclick="togglePhase(${phase.id})">
+                    <div class="phase-title">
+                        <div class="phase-number">${phase.id}</div>
+                        <span>${phase.title}</span>
+                    </div>
+                    <div class="phase-status">
+                        <span class="status-badge status-${phaseStatus}">${getStatusText(phaseStatus)}</span>
+                        <span>▼</span>
+                    </div>
+                </div>
+                <div class="phase-content" id="phase-content-${phase.id}">
+                    <div class="tasks-list" style="padding: 20px;">
+                        ${await renderAdminSectionsProgress(phase.id, currentAircraftId)}
                     </div>
                 </div>
             `;
             
-            // Adicionar estilos específicos do admin
-            dashboardHTML += `
-                <style>
-                    .admin-tabs-container {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 20px;
+            container.appendChild(phaseCard);
+        }
+        
+        setTimeout(setupScrollAnimations, 100);
+    }
+    
+    // Renderizar progresso das seções para uma fase específica - ATUALIZADO PARA FIRESTORE
+    async function renderAdminSectionsProgress(phaseId, aircraftId) {
+        const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+        let html = '<div style="display: grid; gap: 15px;">';
+        
+        for (const section of validSections) {
+            let sectionProgress = {
+                total: 0,
+                completed: 0,
+                percentage: 0,
+                hasData: false
+            };
+            
+            try {
+                const doc = await db.collection('sections').doc(section).get();
+                let sectionData = null;
+                
+                if (doc.exists) {
+                    sectionData = doc.data().aircraftStates;
+                } else {
+                    // Fallback para localStorage
+                    const sectionKey = `c105_${section}_data`;
+                    const localData = localStorage.getItem(sectionKey);
+                    if (localData) {
+                        sectionData = JSON.parse(localData);
+                    }
+                }
+                
+                if (sectionData) {
+                    Object.values(sectionData).forEach(aircraft => {
+                        if (aircraft && aircraft.aircraftId === aircraftId && aircraft.phases) {
+                            const phase = aircraft.phases.find(p => p.id === phaseId);
+                            if (phase) {
+                                sectionProgress.total = phase.tasks.length;
+                                sectionProgress.completed = phase.tasks.filter(t => t.completed).length;
+                                sectionProgress.percentage = sectionProgress.total > 0 ? 
+                                    Math.round((sectionProgress.completed / sectionProgress.total) * 100) : 0;
+                                sectionProgress.hasData = true;
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error(`Erro ao processar dados de ${section}:`, error);
+            }
+            
+            html += `
+                <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #e0e0e0;">
+                    <h4 style="margin: 0 0 10px 0; color: #1a5490;">${getDisplaySectionName(section)}</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span>${sectionProgress.completed}/${sectionProgress.total} tarefas</span>
+                        <span style="font-weight: bold; color: ${sectionProgress.percentage === 100 ? '#4caf50' : '#1a5490'};">
+                            ${sectionProgress.percentage}%
+                        </span>
+                    </div>
+                    <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
+                        <div style="background: ${sectionProgress.percentage === 100 ? '#4caf50' : '#2196f3'}; 
+                                   height: 100%; width: ${sectionProgress.percentage}%; 
+                                   transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        html += '</div>';
+        return html;
+    }
+    
+    // Renderizar fases
+    function renderPhases() {
+        const container = document.getElementById('phasesContainer');
+        container.innerHTML = '';
+        
+        const user = firebase.auth().currentUser;
+        const isAdmin = user && user.email === 'admin@c105.fab';
+    
+        if (isAdmin) {
+            renderAdminPhases();
+            return;
+        }
+    
+        appState.phases.forEach(phase => {
+            const phaseStatus = getPhaseStatus(phase);
+            const phaseCard = document.createElement('div');
+            phaseCard.className = 'phase-card';
+            
+            phaseCard.innerHTML = `
+                <div class="phase-header status-${phaseStatus}" onclick="togglePhase(${phase.id})">
+                    <div class="phase-title">
+                        <div class="phase-number">${phase.id}</div>
+                        <span>${phase.title}</span>
+                    </div>
+                    <div class="phase-status">
+                        <span class="status-badge status-${phaseStatus}">${getStatusText(phaseStatus)}</span>
+                        <span>▼</span>
+                    </div>
+                </div>
+                <div class="phase-content" id="phase-content-${phase.id}">
+                    <div class="tasks-list">
+                        ${phase.tasks.map(task => renderTask(phase.id, task)).join('')}
+                    </div>
+                    <button class="btn btn-add-task" onclick="showNewTaskForm(${phase.id})">
+                        <span style="font-size: 18px;">+</span> Adicionar Tarefa
+                    </button>
+                    <div class="new-task-form" id="new-task-form-${phase.id}">
+                        <input type="text" class="new-task-input" id="new-task-input-${phase.id}" 
+                               placeholder="Nome da nova tarefa..." 
+                               onkeypress="if(event.key==='Enter') addNewTask(${phase.id})">
+                        <button class="btn btn-success btn-small" onclick="addNewTask(${phase.id})">Adicionar</button>
+                        <button class="btn btn-small" onclick="hideNewTaskForm(${phase.id})">Cancelar</button>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(phaseCard);
+        });
+        
+        // ADICIONE ESTA LINHA:
+        setTimeout(setupScrollAnimations, 100);
+    }
+
+    // Renderizar tarefa
+    function renderTask(phaseId, task) {
+        const taskStatus = getTaskStatus(phaseId, task);
+        const isBlocked = appState.blocks[task.id];
+        
+        return `
+            <div class="task-item ${task.custom ? 'custom' : ''}">
+                <div class="task-info">
+                    <input type="checkbox" 
+                           class="task-checkbox" 
+                           ${task.completed ? 'checked' : ''} 
+                           ${isBlocked ? 'disabled' : ''}
+                           onchange="toggleTask(${phaseId}, '${task.id}')">
+                    <span style="${task.completed ? 'text-decoration: line-through;' : ''}">${task.name}</span>
+                    <button class="btn btn-info" onclick="toggleTaskInfo('${task.id}')" title="Ver informações">ℹ</button>
+
+                </div>
+                <div class="task-actions">
+                    ${task.completed ? 
+                        `<button class="btn btn-success btn-small" style="cursor: default;">Concluído</button>` :
+                        isBlocked ? 
+                            `<button class="btn btn-danger btn-small" onclick="viewBlock('${task.id}')">Ver Impedimento</button>
+                             <button class="btn btn-warning btn-small" onclick="removeBlock('${task.id}')">Remover Impedimento</button>` :
+                            `<button class="btn btn-danger btn-small" onclick="blockTask('${task.id}')">Impedimento</button>`
+                    }
+                </div>
+            </div>
+            <div class="task-info-modal" id="info-${task.id}">
+                <div class="info-section">
+                    <h4>🔧 Ferramentas Necessárias:</h4>
+                    <ul id="tools-${task.id}">
+                        ${task.info && task.info.tools && task.info.tools.length > 0 ? task.info.tools.map(tool => `<li>${tool}</li>`).join('') : '<li>Clique para adicionar ferramentas</li>'}
+                    </ul>
+                    <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'tools')">✏️ Editar</button>
+                </div>
+                <div class="info-section">
+                    <h4>📋 Materiais:</h4>
+                    <ul id="materials-${task.id}">
+                        ${task.info && task.info.materials && task.info.materials.length > 0 ? task.info.materials.map(material => `<li>${material}</li>`).join('') : '<li>Clique para adicionar materiais</li>'}
+                    </ul>
+                    <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'materials')">✏️ Editar</button>
+                </div>
+                <div class="info-section">
+                    <h4>⚠️ Segurança:</h4>
+                    <ul id="safety-${task.id}">
+                        ${task.info && task.info.safety && task.info.safety.length > 0 ? task.info.safety.map(safety => `<li>${safety}</li>`).join('') : '<li>Clique para adicionar informações de segurança</li>'}
+                    </ul>
+                    <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'safety')">✏️ Editar</button>
+                </div>
+                <div class="info-section">
+                    <h4>⏱️ Tempo Estimado:</h4>
+                    <p id="time-${task.id}">${task.info && task.info.time ? task.info.time : 'Clique para adicionar tempo estimado'}</p>
+                    <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'time')">✏️ Editar</button>
+                </div>
+                <div class="manual-ref">
+                    <strong>📖 Referência:</strong> <span id="manual-${task.id}">${task.info && task.info.manual ? task.info.manual : 'Clique para adicionar referência'}</span>
+                    <button class="btn btn-small" onclick="editTaskInfo('${task.id}', 'manual')">✏️ Editar</button>
+                </div>
+                <div class="info-section" style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+                    <h4 style="color: #f44336;">🗑️ Excluir Tarefa:</h4>
+                    <p style="color: #666; margin-bottom: 10px;">Esta ação não pode ser desfeita</p>
+                    <button class="btn btn-danger btn-small" onclick="deleteTask(${phaseId}, '${task.id}')">🗑️ Excluir Esta Tarefa</button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Obter status da fase
+    function getPhaseStatus(phase) {
+        const hasBlocked = phase.tasks.some(task => appState.blocks[task.id]);
+        if (hasBlocked) return 'blocked';
+        
+        const allCompleted = phase.tasks.every(task => task.completed);
+        const someCompleted = phase.tasks.some(task => task.completed);
+        
+        if (allCompleted && phase.tasks.length > 0) return 'completed';
+        if (someCompleted) return 'in-progress';
+        
+        return 'pending';
+    }
+
+    // Obter status da tarefa
+    function getTaskStatus(phaseId, task) {
+        if (appState.blocks[task.id]) return 'blocked';
+        if (task.completed) return 'completed';
+        return 'pending';
+    }
+
+    // Obter texto do status
+    function getStatusText(status) {
+        const texts = {
+            pending: 'Pendente',
+            'in-progress': 'Em Andamento',
+            completed: 'Concluído',
+            blocked: 'Impedimento'
+        };
+        return texts[status] || status;
+    }
+
+    // Toggle fase
+    window.togglePhase = function(phaseId) {
+        const content = document.getElementById(`phase-content-${phaseId}`);
+        content.classList.toggle('active');
+    }
+
+    // Toggle tarefa
+    window.toggleTask = function(phaseId, taskId) {
+        const phase = appState.phases.find(p => p.id === phaseId);
+        const task = phase.tasks.find(t => t.id === taskId);
+        task.completed = !task.completed;
+        
+        // Remover impedimento se existir ao marcar como concluído
+        if (task.completed && appState.blocks[taskId]) {
+            delete appState.blocks[taskId];
+        }
+        
+        saveData();
+        
+        // Salvar quais fases estão abertas
+        const openPhases = [];
+        document.querySelectorAll('.phase-content.active').forEach(content => {
+            const id = content.id.replace('phase-content-', '');
+            openPhases.push(id);
+        });
+        
+        renderPhases();
+        
+        // Reabrir as fases que estavam abertas
+        openPhases.forEach(id => {
+            document.getElementById(`phase-content-${id}`).classList.add('active');
+        });
+        
+        updateProgress();
+    }
+
+    // Bloquear tarefa
+    let currentTaskId = null;
+    window.blockTask = function(taskId) {
+        currentTaskId = taskId;
+        document.getElementById('blockModal').classList.add('active');
+    }
+
+    // Ver impedimento
+    window.viewBlock = function(taskId) {
+        const block = appState.blocks[taskId];
+        if (block) {
+            const message = `Impedimento: ${block.type}\nDescrição: ${block.description}\nAção: ${block.action}\n\nDeseja editar este impedimento?`;
+            
+            if (confirm(message)) {
+                // Preencher o modal com os dados existentes
+                currentTaskId = taskId;
+                document.getElementById('blockType').value = block.type;
+                document.getElementById('blockDescription').value = block.description;
+                document.getElementById('blockAction').value = block.action || '';
+                document.getElementById('blockModal').classList.add('active');
+            }
+        }
+    }
+    
+    // Remover impedimento
+    window.removeBlock = function(taskId) {
+        if (confirm('Deseja remover o impedimento desta tarefa?')) {
+            delete appState.blocks[taskId];
+            
+            saveData();
+            
+            // Manter fases abertas
+            const openPhases = [];
+            document.querySelectorAll('.phase-content.active').forEach(content => {
+                const id = content.id.replace('phase-content-', '');
+                openPhases.push(id);
+            });
+            
+            renderPhases();
+            
+            // Reabrir fases
+            openPhases.forEach(id => {
+                document.getElementById(`phase-content-${id}`).classList.add('active');
+            });
+            
+            updateProgress();
+        }
+    }
+    
+    // Toggle informações da tarefa
+    window.toggleTaskInfo = function(taskId) {
+        const infoModal = document.getElementById(`info-${taskId}`);
+        if (infoModal) {
+            infoModal.classList.toggle('active');
+        }
+    }
+    
+    // Mostrar formulário de nova tarefa
+    window.showNewTaskForm = function(phaseId) {
+        const form = document.getElementById(`new-task-form-${phaseId}`);
+        const input = document.getElementById(`new-task-input-${phaseId}`);
+        if (form) {
+            form.classList.add('active');
+            input.focus();
+        }
+    }
+
+    // Esconder formulário de nova tarefa
+    window.hideNewTaskForm = function(phaseId) {
+        const form = document.getElementById(`new-task-form-${phaseId}`);
+        const input = document.getElementById(`new-task-input-${phaseId}`);
+        if (form) {
+            form.classList.remove('active');
+            input.value = '';
+        }
+    }
+
+    // Adicionar nova tarefa
+    window.addNewTask = function(phaseId) {
+        const input = document.getElementById(`new-task-input-${phaseId}`);
+        const taskName = input.value.trim();
+        
+        if (taskName) {
+            const phase = appState.phases.find(p => p.id === phaseId);
+            const newTaskNumber = phase.tasks.length + 1;
+            const newTaskId = `${phaseId}.${newTaskNumber}`;
+            
+            const newTask = {
+                id: newTaskId,
+                name: taskName,
+                completed: false,
+                custom: true,
+                info: {
+                    tools: [],
+                    materials: [],
+                    safety: [],
+                    time: '',
+                    manual: ''
+                }
+            };
+            
+            phase.tasks.push(newTask);
+            
+            saveData();
+            
+            // Manter fases abertas
+            const openPhases = [];
+            document.querySelectorAll('.phase-content.active').forEach(content => {
+                const id = content.id.replace('phase-content-', '');
+                openPhases.push(id);
+            });
+            
+            renderPhases();
+            
+            // Reabrir fases
+            openPhases.forEach(id => {
+                document.getElementById(`phase-content-${id}`).classList.add('active');
+            });
+            
+            updateProgress();
+            
+            // Limpar e esconder formulário
+            hideNewTaskForm(phaseId);
+        }
+    }
+    
+    // Excluir tarefa
+    window.deleteTask = function(phaseId, taskId) {
+        if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
+            const phase = appState.phases.find(p => p.id === phaseId);
+            phase.tasks = phase.tasks.filter(t => t.id !== taskId);
+            
+            // Remover impedimento se existir
+            if (appState.blocks[taskId]) {
+                delete appState.blocks[taskId];
+            }
+            
+            saveData();
+            
+            // Manter fases abertas
+            const openPhases = [];
+            document.querySelectorAll('.phase-content.active').forEach(content => {
+                const id = content.id.replace('phase-content-', '');
+                openPhases.push(id);
+            });
+            
+            renderPhases();
+            
+            // Reabrir fases
+            openPhases.forEach(id => {
+                document.getElementById(`phase-content-${id}`).classList.add('active');
+            });
+            
+            updateProgress();
+        }
+    }
+
+    // Editar informações da tarefa
+    window.editTaskInfo = function(taskId, field) {
+        let currentValue = '';
+        let prompt_text = '';
+        
+        // Encontrar a tarefa
+        let task = null;
+        for (let phase of appState.phases) {
+            task = phase.tasks.find(t => t.id === taskId);
+            if (task) break;
+        }
+        
+        if (!task) return;
+        
+        // Garantir que task.info existe
+        if (!task.info) {
+            task.info = {
+                tools: [],
+                materials: [],
+                safety: [],
+                time: '',
+                manual: ''
+            };
+        }
+        
+        switch(field) {
+            case 'tools':
+                currentValue = task.info.tools ? task.info.tools.join('\n') : '';
+                prompt_text = 'Ferramentas (uma por linha):';
+                break;
+            case 'materials':
+                currentValue = task.info.materials ? task.info.materials.join('\n') : '';
+                prompt_text = 'Materiais (um por linha):';
+                break;
+            case 'safety':
+                currentValue = task.info.safety ? task.info.safety.join('\n') : '';
+                prompt_text = 'Informações de segurança (uma por linha):';
+                break;
+            case 'time':
+                currentValue = task.info.time || '';
+                prompt_text = 'Tempo estimado:';
+                break;
+            case 'manual':
+                currentValue = task.info.manual || '';
+                prompt_text = 'Referência do manual:';
+                break;
+        }
+        
+        const newValue = prompt(prompt_text, currentValue);
+        
+        if (newValue !== null) {
+            switch(field) {
+                case 'tools':
+                case 'materials':
+                case 'safety':
+                    task.info[field] = newValue.split('\n').filter(line => line.trim() !== '');
+                    break;
+                case 'time':
+                case 'manual':
+                    task.info[field] = newValue;
+                    break;
+            }
+            
+            saveData();
+            renderPhases();
+            
+            // Reabrir a modal
+            setTimeout(() => {
+                toggleTaskInfo(taskId);
+            }, 100);
+        }
+    }
+
+    // Salvar impedimento
+    window.saveBlock = function() {
+        const type = document.getElementById('blockType').value;
+        const description = document.getElementById('blockDescription').value;
+        const action = document.getElementById('blockAction').value;
+        
+        if (type && description) {
+            appState.blocks[currentTaskId] = {
+                type,
+                description,
+                action,
+                date: new Date().toISOString()
+            };
+            
+            saveData();
+            renderPhases();
+            closeModal();
+        }
+    }
+
+    // Fechar modal
+    window.closeModal = function() {
+        document.getElementById('blockModal').classList.remove('active');
+        document.getElementById('blockType').value = '';
+        document.getElementById('blockDescription').value = '';
+        document.getElementById('blockAction').value = '';
+    }
+
+    // Atualizar progresso - ATUALIZADO PARA FIRESTORE
+    async function updateProgress() {
+        const user = firebase.auth().currentUser;
+        const isAdmin = user && user.email === 'admin@c105.fab';
+        
+        // Se não há dados, zerar tudo
+        if (!appState || !appState.phases) {
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressFill').textContent = '0%';
+            document.getElementById('completedCount').textContent = '0';
+            document.getElementById('pendingCount').textContent = '0';
+            document.getElementById('blockedCount').textContent = '0';
+            return;
+        }
+        
+        if (isAdmin && appState.aircraftId) {
+            // Para admin, calcular com base na média de todas as seções
+            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+            let totalTasks = 0;
+            let totalCompleted = 0;
+            let totalBlocked = 0;
+            
+            for (const section of validSections) {
+                try {
+                    const doc = await db.collection('sections').doc(section).get();
+                    let sectionData = null;
+                    
+                    if (doc.exists) {
+                        sectionData = doc.data().aircraftStates;
+                    } else {
+                        // Fallback para localStorage
+                        const sectionKey = `c105_${section}_data`;
+                        const localData = localStorage.getItem(sectionKey);
+                        if (localData) {
+                            sectionData = JSON.parse(localData);
+                        }
                     }
                     
-                    .admin-tabs {
-                        display: flex;
-                        gap: 10px;
-                        border-bottom: 2px solid #e0e0e0;
-                        padding-bottom: 10px;
+                    if (sectionData) {
+                        Object.values(sectionData).forEach(aircraft => {
+                            if (aircraft && aircraft.aircraftId === appState.aircraftId && aircraft.phases) {
+                                aircraft.phases.forEach(phase => {
+                                    totalTasks += phase.tasks.length;
+                                    totalCompleted += phase.tasks.filter(t => t.completed).length;
+                                    if (aircraft.blocks) {
+                                        totalBlocked += Object.keys(aircraft.blocks).length;
+                                    }
+                                });
+                            }
+                        });
                     }
+                } catch (error) {
+                    console.error(`Erro ao processar ${section}:`, error);
+                }
+            }
+            
+            const pendingTasks = totalTasks - totalCompleted - totalBlocked;
+            const percentage = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
+            
+            document.getElementById('progressFill').style.width = percentage + '%';
+            document.getElementById('progressFill').textContent = percentage + '%';
+            document.getElementById('completedCount').textContent = totalCompleted;
+            document.getElementById('pendingCount').textContent = pendingTasks;
+            document.getElementById('blockedCount').textContent = totalBlocked;
+            
+        } else {
+            // Seções normais - código original
+            const totalTasks = appState.phases.reduce((sum, phase) => sum + phase.tasks.length, 0);
+            const completedTasks = appState.phases.reduce((sum, phase) => 
+                sum + phase.tasks.filter(task => task.completed).length, 0);
+            const blockedTasks = Object.keys(appState.blocks || {}).length;
+            const pendingTasks = totalTasks - completedTasks - blockedTasks;
+            
+            const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            const progressFill = document.getElementById('progressFill');
+            progressFill.style.width = percentage + '%';
+            progressFill.textContent = percentage + '%';
+            
+            document.getElementById('completedCount').textContent = completedTasks;
+            document.getElementById('pendingCount').textContent = pendingTasks;
+            document.getElementById('blockedCount').textContent = blockedTasks;
+        }
+    }
+
+    // Atualizar dias decorridos
+    function updateDaysElapsed() {
+        if (appState && appState.startDate) {
+            const startDate = appState.startDate;
+            if (startDate) {
+                const start = new Date(startDate);
+                const today = new Date();
+                const diffTime = Math.abs(today - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                document.getElementById('daysElapsed').textContent = `${diffDays} dias`;
+            }
+        } else {
+            document.getElementById('daysElapsed').textContent = '0 dias';
+        }
+    }
+
+    // Expandir tudo
+    window.expandAll = function() {
+        document.querySelectorAll('.phase-content').forEach(content => {
+            content.classList.add('active');
+        });
+    }
+
+    // Recolher tudo
+    window.collapseAll = function() {
+        document.querySelectorAll('.phase-content').forEach(content => {
+            content.classList.remove('active');
+        });
+    }
+
+    // Exportar dados
+    window.exportData = function() {
+        const dataStr = JSON.stringify(appState, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `c105_maintenance_${appState.aircraftId}_${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+    }
+
+    // Limpar dados
+    window.clearData = function() {
+        if (confirm('Tem certeza que deseja limpar todos os dados desta aeronave?')) {
+            // CRIAR BACKUP ANTES DE LIMPAR
+            createBackup();
+            
+            // Limpar apenas a aeronave atual
+            aircraftStates[currentAircraftId] = createNewAircraftState();
+            appState = aircraftStates[currentAircraftId];
+            
+            // Limpar campos de input
+            document.getElementById('aircraftId').value = '';
+            document.getElementById('startDate').value = '';
+            
+            // Salvar e recarregar
+            saveAllData();
+            renderTabs();
+            renderPhases();
+            updateProgress();
+            updateDaysElapsed(); // CERTIFIQUE-SE QUE ESTA LINHA ESTÁ AQUI
+        }
+    }
+
+    // ADICIONE ESTAS NOVAS FUNÇÕES AQUI:
+    
+    // Função de backup antes de operações críticas
+    function createBackup() {
+        const backup = {
+            date: new Date().toISOString(),
+            data: JSON.stringify(aircraftStates)
+        };
+        localStorage.setItem('c105Backup', JSON.stringify(backup));
+    }
+
+    // Função para restaurar backup (caso precise)
+    function restoreBackup() {
+        const backup = localStorage.getItem('c105Backup');
+        if (backup) {
+            const backupData = JSON.parse(backup);
+            if (confirm(`Restaurar backup de ${new Date(backupData.date).toLocaleString()}?`)) {
+                aircraftStates = JSON.parse(backupData.data);
+                currentAircraftId = Object.keys(aircraftStates)[0];
+                saveAllData();
+                location.reload();
+            }
+        } else {
+            alert('Nenhum backup encontrado.');
+        }
+    }
+
+    // Event listeners
+    document.getElementById('aircraftId').addEventListener('input', saveData);
+    document.getElementById('startDate').addEventListener('change', () => {
+        saveData();
+        updateDaysElapsed();
+    });
+
+    // Animação de Fade no Scroll
+    function setupScrollAnimations() {
+        const observerOptions = {
+            threshold: 0.05,
+            rootMargin: '0px 0px 50px 0px'
+        };
+    
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                } else {
+                    // Remove visible quando elemento sair completamente da tela
+                    entry.target.classList.remove('visible');
+                }
+            });
+        }, observerOptions);
+    
+        // Observar cards de fase
+        document.querySelectorAll('.phase-card').forEach(card => {
+            observer.observe(card);
+        });
+    
+        // Observar outros elementos
+        document.querySelectorAll('.progress-info, .controls, .legend').forEach(el => {
+            el.classList.add('fade-element');
+            observer.observe(el);
+        });
+    }
+    
+    // Botão voltar ao topo
+    window.addEventListener('scroll', () => {
+        const backToTop = document.getElementById('backToTop');
+        if (backToTop && window.scrollY > 300) {
+            backToTop.style.opacity = '1';
+        } else if (backToTop) {
+            backToTop.style.opacity = '0';
+        }
+    });
+    
+    const backToTopBtn = document.getElementById('backToTop');
+    if (backToTopBtn) {
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    // ========== SISTEMA ADMINISTRATIVO ==========
+
+    // Função de limpeza de dados órfãos (para debug)
+    window.cleanOrphanData = function() {
+        const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+        const allKeys = Object.keys(localStorage);
+        
+        allKeys.forEach(key => {
+            if (key.startsWith('c105_') && key.endsWith('_data')) {
+                const sectionName = key.replace('c105_', '').replace('_data', '');
+                if (!validSections.includes(sectionName)) {
+                    console.log(`Removendo chave inválida: ${key}`);
+                    localStorage.removeItem(key);
+                }
+            }
+        });
+        
+        console.log('Limpeza de dados órfãos concluída');
+    }
+
+    // Função de debug para verificar dados (útil para diagnóstico)
+    window.debugC105Data = async function() {
+        console.log('=== DEBUG C-105 ===');
+        const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+        
+        for (const section of validSections) {
+            try {
+                const doc = await db.collection('sections').doc(section).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    const aircraftIds = data.aircraftStates ? 
+                        Object.values(data.aircraftStates)
+                            .filter(a => a && a.aircraftId)
+                            .map(a => a.aircraftId) : [];
                     
-                    .admin-tab {
-                        padding: 10px 20px;
-                        background: #f0f0f0;
-                        border-radius: 8px 8px 0 0;
-                        cursor: pointer;
-                        font-weight: 600;
-                        transition: all 0.3s;
-                    }
+                    console.log(`${section.toUpperCase()} (Firestore): ${aircraftIds.length > 0 ? aircraftIds.join(', ') : 'Sem aeronaves'}`);
+                } else {
+                    // Verificar localStorage
+                    const key = `c105_${section}_data`;
+                    const localData = localStorage.getItem(key);
                     
-                    .admin-tab:hover {
-                        background: #e0e0e0;
+                    if (localData) {
+                        try {
+                            const parsed = JSON.parse(localData);
+                            const aircraftIds = Object.values(parsed)
+                                .filter(a => a && a.aircraftId)
+                                .map(a => a.aircraftId);
+                            
+                            console.log(`${section.toUpperCase()} (localStorage): ${aircraftIds.length > 0 ? aircraftIds.join(', ') : 'Sem aeronaves'}`);
+                        } catch (e) {
+                            console.log(`${section.toUpperCase()}: Erro ao processar dados localStorage`);
+                        }
+                    } else {
+                        console.log(`${section.toUpperCase()}: Sem dados`);
                     }
-                    
-                    .admin-tab.active {
-                        background: #1a5490;
-                        color: white;
-                    }
-                    
-                    .admin-phases-grid {
-                        display: grid;
-                        gap: 15px;
-                        margin-top: 20px;
-                    }
-                    
-                    .admin-phase-card {
-                        border: 1px solid #ddd;
-                        border-radius: 8px;
-                        overflow: hidden;
-                    }
-                    
-                    .admin-phase-header {
-                        padding: 15px;
-                        display: flex;
-                        align-items: center;
-                        gap: 15px;
-                        position: relative;
-                        min-height: 60px;
-                    }
-                    
-                    .admin-phase-number {
-                        background: rgba(26, 84, 144, 0.9);
-                        color: white;
-                        width: 35px;
-                        height: 35px;
-                        border-radius: 50%;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-weight: bold;
-                        font-size: 14px;
-                        z-index: 1;
-                    }
-                    
-                    .admin-phase-title {
-                        flex: 1;
-                        font-weight: 600;
-                        color: #333;
-                        z-index: 1;
-                    }
+                }
+            } catch (error) {
+                console.error(`Erro ao verificar ${section}:`, error);
+            }
+        }
+        
+        // Verificar chaves órfãs no localStorage
+        const allKeys = Object.keys(localStorage).filter(key => key.startsWith('c105_') && key.endsWith('_data'));
+        const orphanKeys = allKeys.filter(key => {
+            const sectionName = key.replace('c105_', '').replace('_data', '');
+            return !validSections.includes(sectionName);
+        });
+        
+        if (orphanKeys.length > 0) {
+            console.log('\nCHAVES ÓRFÃS ENCONTRADAS:', orphanKeys);
+            console.log('Execute cleanOrphanData() para removê-las');
+        }
+        
+        console.log('==================');
+    }
+
+    // Verificar se é administrador
+    function checkIfAdmin() {
+        const user = firebase.auth().currentUser;
+        if (user && (user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com')) {
+            document.getElementById('btnAdmin').style.display = 'inline-flex';
+        } else {
+            document.getElementById('btnAdmin').style.display = 'none';
+        }
+    }
+    
+    // Mostrar dashboard administrativo
+    window.showAdminDashboard = async function() {
+        // Implementação completa do dashboard admin aqui
+        document.getElementById('adminModal').classList.add('active');
+        // ... resto da implementação
+    }
+    
+    // Fechar modal admin
+    window.closeAdminModal = function() {
+        document.getElementById('adminModal').classList.remove('active');
+    }
+    
+    // Exportar relatório de todas as seções
+    window.exportAllSections = function() {
+        // Implementação da exportação aqui
+        alert('Função de exportação será implementada');
+    }
+    
+    // Switch entre abas do admin
+    window.switchAdminTab = function(aircraftId) {
+        // Esconder todos os conteúdos
+        document.querySelectorAll('.admin-aircraft-content').forEach(content => {
+            content.style.display = 'none';
+        });
+        
+        // Remover active de todas as abas
+        document.querySelectorAll('.admin-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Mostrar conteúdo selecionado
+        const selectedContent = document.getElementById(`admin-content-${aircraftId}`);
+        if (selectedContent) {
+            selectedContent.style.display = 'block';
+        }
+        
+        // Marcar aba como ativa
+        event.target.classList.add('active');
+    }
+
+    // ============================================
+    // LOGIN - MOVIDO PARA O FINAL DO SCRIPT
+    // ============================================
+    
+    // Como agora tudo está dentro do window.load, o DOM já está carregado
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        console.log('Anexando listener ao formulário de login...');
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            console.log('FORMULÁRIO ENVIADO!');
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            const loading = document.getElementById('loading');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            console.log('Tentando login com:', email);
+            
+            showError(''); // Limpar erros anteriores
+            loading.style.display = 'block';
+            loginBtn.disabled = true;
+
+            try {
+                console.log('Iniciando autenticação...');
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                console.log('Login bem-sucedido:', userCredential.user.email);
+                // onAuthStateChanged cuidará da navegação
+            } catch (error) {
+                console.error('Erro detalhado de login:', error);
+                
+                let mensagem = 'Erro ao fazer login';
+                
+                switch(error.code) {
+                    case 'auth/user-not-found':
+                        mensagem = 'Usuário não autorizado';
+                        break;
+                    case 'auth/wrong-password':
+                        mensagem = 'Senha incorreta';
+                        break;
+                    case 'auth/invalid-email':
+                        mensagem = 'E-mail inválido';
+                        break;
+                    case 'auth/too-many-requests':
+                        mensagem = 'Muitas tentativas. Tente novamente mais tarde';
+                        break;
+                    default:
+                        mensagem = `Erro: ${error.message}`;
+                }
+                
+                showError(mensagem);
+            } finally {
+                loading.style.display = 'none';
+                loginBtn.disabled = false;
+            }
+        });
+    } else {
+        console.error('Formulário de login não encontrado!');
+    }
+    
+    console.log('Sistema C-105 carregado com sucesso!');
+
+}); // Fim do window.addEventListener('load')
+</script>
+</body>
+</html>
