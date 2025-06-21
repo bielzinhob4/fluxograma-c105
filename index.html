@@ -1656,7 +1656,7 @@
                 
         } else {
                 // Seções normais
-                const sectionKey = `c105_${user.email.split('@')[0]}_data`;
+                const sectionKey = `c105_${user.email.split('@')[0].split('.')[0]}_data`;
                 const savedTabs = localStorage.getItem(sectionKey);
                 
                 if (savedTabs) {
@@ -1789,7 +1789,7 @@
         function saveAllData() {
             const user = firebase.auth().currentUser;
             if (user) {
-                const sectionKey = `c105_${user.email.split('@')[0]}_data`;
+                const sectionKey = `c105_${user.email.split('@')[0].split('.')[0]}_data`;
                 localStorage.setItem(sectionKey, JSON.stringify(aircraftStates));
             }
         }
