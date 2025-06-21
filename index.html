@@ -359,6 +359,7 @@
         .btn-primary:hover {
             background: #2a6ab0;
             transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(26, 84, 144, 0.3);
         }
 
         .btn-success {
@@ -822,6 +823,25 @@
             max-height: 90vh;
             overflow-y: auto;
         }
+        
+        #adminModal .modal-content {
+            max-width: 1200px;
+            width: 90%;
+        }
+        
+        #adminDashboard {
+            width: 100%;
+            overflow-x: auto;
+        }
+        
+        #adminDashboard h3 {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        #adminDashboard p {
+            color: #999;
+        }
 
         .modal-header {
             margin-bottom: 20px;
@@ -829,6 +849,8 @@
 
         .modal-header h2 {
             color: #333;
+            font-size: 24px;
+            font-weight: 600;
         }
 
         .modal-body .form-group {
@@ -862,6 +884,24 @@
             gap: 10px;
             justify-content: flex-end;
             margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
         }
 
         .legend {
@@ -972,6 +1012,21 @@
             color: white;
         }
         
+        .admin-content {
+            margin-top: 20px;
+            min-height: 400px;
+        }
+        
+        .admin-aircraft-content {
+            display: none;
+        }
+        
+        .admin-aircraft-content h3 {
+            margin-bottom: 20px;
+            color: #1a5490;
+            font-size: 24px;
+        }
+        
         .admin-phases-grid {
             display: grid;
             gap: 15px;
@@ -1024,6 +1079,9 @@
         .admin-phase-details {
             padding: 15px;
             background: #f8f9fa;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
         }
         
         .admin-section-detail {
@@ -1034,6 +1092,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+        
+        .admin-section-detail:hover {
+            border-color: #1a5490;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
         .section-name {
@@ -1086,6 +1151,20 @@
             .logout-btn {
                 width: 100%;
                 justify-content: center;
+            }
+            
+            .admin-tabs {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .admin-tab {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .admin-phase-details {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -1230,18 +1309,18 @@
         <button id="backToTop" style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1a5490; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; opacity: 0; transition: all 0.3s; z-index: 100;">↑</button>
         <!-- Modal Dashboard Administrativo -->
         <div class="modal" id="adminModal">
-            <div class="modal-content" style="max-width: 1500px;">
+            <div class="modal-content" style="max-width: 1200px; width: 90%;">
                 <div class="modal-header">
                     <h2>Painel Administrativo - Todas as Seções</h2>
                 </div>
                 <div class="modal-body">
-                    <div id="adminDashboard">
+                    <div id="adminDashboard" style="min-height: 400px;">
                         <!-- Dados serão carregados aqui -->
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-primary" onclick="exportAllSections()">Exportar Relatório Geral</button>
-                    <button class="btn" onclick="closeAdminModal()">Fechar</button>
+                    <button class="btn btn-primary" onclick="exportAllSections()">📥 Exportar Relatório Geral</button>
+                    <button class="btn btn-secondary" onclick="closeAdminModal()">Fechar</button>
                 </div>
             </div>
         </div>
@@ -1860,7 +1939,7 @@ window.addEventListener('load', function() {
         tabsContainer.innerHTML = '';
         
         const user = firebase.auth().currentUser;
-        const isAdmin = user && user.email === 'admin@c105.fab';
+                    const isAdmin = user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com';
         
         // Se admin sem aeronaves, mostrar mensagem
         if (isAdmin && Object.keys(aircraftStates).length === 0) {
@@ -1920,7 +1999,7 @@ window.addEventListener('load', function() {
     // Carregar aeronave atual
     function loadCurrentAircraft() {
         const user = firebase.auth().currentUser;
-        const isAdmin = user && user.email === 'admin@c105.fab';
+        const isAdmin = user && (user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com');
         
         // Se não há aeronave atual
         if (!currentAircraftId || !aircraftStates[currentAircraftId]) {
@@ -2202,7 +2281,7 @@ window.addEventListener('load', function() {
         container.innerHTML = '';
         
         const user = firebase.auth().currentUser;
-        const isAdmin = user && user.email === 'admin@c105.fab';
+        const isAdmin = user && (user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com');
     
         if (isAdmin) {
             renderAdminPhases();
@@ -2645,7 +2724,7 @@ window.addEventListener('load', function() {
     // Atualizar progresso - ATUALIZADO PARA FIRESTORE
     async function updateProgress() {
         const user = firebase.auth().currentUser;
-        const isAdmin = user && user.email === 'admin@c105.fab';
+        const isAdmin = user && (user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com');
         
         // Se não há dados, zerar tudo
         if (!appState || !appState.phases) {
@@ -2952,16 +3031,219 @@ window.addEventListener('load', function() {
         const user = firebase.auth().currentUser;
         if (user && (user.email === 'admin@c105.fab' || user.email === 'admin.fab@gmail.com')) {
             document.getElementById('btnAdmin').style.display = 'inline-flex';
+            console.log('Usuário admin detectado:', user.email);
         } else {
             document.getElementById('btnAdmin').style.display = 'none';
         }
     }
     
-    // Mostrar dashboard administrativo
+    // Mostrar dashboard administrativo - ATUALIZADO PARA FIRESTORE
     window.showAdminDashboard = async function() {
-        // Implementação completa do dashboard admin aqui
+        console.log('Abrindo dashboard administrativo...');
+        const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+        const allAircraftMap = new Map();
+        
+        // Coletar todas as aeronaves únicas
+        for (const section of validSections) {
+            try {
+                const doc = await db.collection('sections').doc(section).get();
+                let sectionData = null;
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data && data.aircraftStates) {
+                        sectionData = data.aircraftStates;
+                    }
+                } else {
+                    // Fallback para localStorage
+                    const sectionKey = `c105_${section}_data`;
+                    const localData = localStorage.getItem(sectionKey);
+                    if (localData) {
+                        sectionData = JSON.parse(localData);
+                    }
+                }
+                
+                if (sectionData) {
+                    Object.values(sectionData).forEach(aircraft => {
+                        if (aircraft && aircraft.aircraftId && aircraft.aircraftId.trim() !== '') {
+                            if (!allAircraftMap.has(aircraft.aircraftId)) {
+                                allAircraftMap.set(aircraft.aircraftId, {
+                                    aircraftId: aircraft.aircraftId,
+                                    startDate: aircraft.startDate || '',
+                                    phases: JSON.parse(JSON.stringify(phases))
+                                });
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error(`Erro ao processar ${section}:`, error);
+            }
+        }
+        
+        console.log(`Total de aeronaves encontradas: ${allAircraftMap.size}`);
+        
+        // Se não há aeronaves
+        if (allAircraftMap.size === 0) {
+            document.getElementById('adminDashboard').innerHTML = `
+                <div style="text-align: center; padding: 60px 20px; color: #666; background: #f8f9fa; border-radius: 10px;">
+                    <h3 style="font-size: 28px; margin-bottom: 15px;">📋 Nenhuma aeronave em manutenção</h3>
+                    <p style="font-size: 16px;">As aeronaves aparecerão aqui quando forem adicionadas pelas seções técnicas.</p>
+                </div>
+            `;
+            document.getElementById('adminModal').classList.add('active');
+            return;
+        }
+        
+        // Criar HTML com abas
+        let dashboardHTML = `
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h4 style="margin: 0 0 10px 0; color: #1a5490;">📊 Resumo Geral</h4>
+                <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                    <div>
+                        <span style="font-size: 24px; font-weight: bold; color: #1a5490;">${allAircraftMap.size}</span>
+                        <span style="color: #666;"> aeronave${allAircraftMap.size !== 1 ? 's' : ''} em manutenção</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 24px; font-weight: bold; color: #2196f3;">${validSections.length}</span>
+                        <span style="color: #666;"> seções técnicas</span>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-tabs-container">
+                <div class="admin-tabs">
+        `;
+        
+        // Adicionar abas para cada aeronave
+        let firstAircraft = true;
+        allAircraftMap.forEach((aircraft, aircraftId) => {
+            dashboardHTML += `
+                <div class="admin-tab ${firstAircraft ? 'active' : ''}" onclick="switchAdminTab('${aircraftId}')">
+                    ${aircraftId}
+                </div>
+            `;
+            firstAircraft = false;
+        });
+        
+        dashboardHTML += `
+                </div>
+                <div class="admin-content">
+        `;
+        
+        // Adicionar conteúdo para cada aeronave
+        firstAircraft = true;
+        for (const [aircraftId, aircraft] of allAircraftMap) {
+            dashboardHTML += `
+                <div class="admin-aircraft-content" id="admin-content-${aircraftId}" style="${firstAircraft ? '' : 'display: none;'}">
+                    <h3>✈️ Aeronave: ${aircraftId}</h3>
+                    ${aircraft.startDate ? `<p style="color: #666; margin-bottom: 20px;">📅 Em manutenção desde: ${new Date(aircraft.startDate).toLocaleDateString('pt-BR')}</p>` : ''}
+                    <div class="admin-phases-grid">
+            `;
+            
+            // Para cada fase, calcular a média de progresso entre todas as seções
+            for (const phase of phases) {
+                let totalCompleted = 0;
+                let totalTasks = 0;
+                let sectionDetails = [];
+                
+                // Garantir que todas as seções apareçam
+                for (const section of validSections) {
+                    let sectionInfo = {
+                        section: getDisplaySectionName(section),
+                        completed: 0,
+                        total: 0,
+                        percentage: 0,
+                        hasData: false
+                    };
+                    
+                    try {
+                        const doc = await db.collection('sections').doc(section).get();
+                        let sectionData = null;
+                        
+                        if (doc.exists) {
+                            const data = doc.data();
+                            if (data && data.aircraftStates) {
+                                sectionData = data.aircraftStates;
+                            }
+                        } else {
+                            // Fallback para localStorage
+                            const sectionKey = `c105_${section}_data`;
+                            const localData = localStorage.getItem(sectionKey);
+                            if (localData) {
+                                sectionData = JSON.parse(localData);
+                            }
+                        }
+                        
+                        if (sectionData) {
+                            Object.values(sectionData).forEach(sectionAircraft => {
+                                if (sectionAircraft && sectionAircraft.aircraftId === aircraftId && sectionAircraft.phases) {
+                                    const phaseData = sectionAircraft.phases.find(p => p.id === phase.id);
+                                    if (phaseData && phaseData.tasks.length > 0) {
+                                        sectionInfo.completed = phaseData.tasks.filter(t => t.completed).length;
+                                        sectionInfo.total = phaseData.tasks.length;
+                                        sectionInfo.percentage = Math.round((sectionInfo.completed / sectionInfo.total) * 100);
+                                        sectionInfo.hasData = true;
+                                        
+                                        // Somar para cálculo da média ponderada
+                                        totalCompleted += sectionInfo.completed;
+                                        totalTasks += sectionInfo.total;
+                                    }
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.error(`Erro ao processar ${section}:`, error);
+                    }
+                    
+                    sectionDetails.push(sectionInfo);
+                }
+                
+                // Média ponderada: total de tarefas concluídas / total de tarefas
+                const averageProgress = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
+                
+                dashboardHTML += `
+                    <div class="admin-phase-card">
+                        <div class="admin-phase-header" style="background: linear-gradient(to right, ${averageProgress === 100 ? '#4caf50' : '#2196f3'} 0%, ${averageProgress === 100 ? '#4caf50' : '#2196f3'} ${averageProgress}%, #e0e0e0 ${averageProgress}%, #e0e0e0 100%);">
+                            <div class="admin-phase-number">${phase.id}</div>
+                            <div class="admin-phase-title">${phase.title}</div>
+                            <div class="admin-phase-progress">${averageProgress === 100 ? '✅ ' : ''}${averageProgress}%</div>
+                        </div>
+                        <div class="admin-phase-details">
+                `;
+                
+                // Mostrar detalhes por seção
+                sectionDetails.forEach(detail => {
+                    const isComplete = detail.total > 0 && detail.completed === detail.total;
+                    const hasNoData = detail.total === 0;
+                    dashboardHTML += `
+                        <div class="admin-section-detail" style="${isComplete ? 'background: #d4edda;' : hasNoData ? 'background: #f8f9fa;' : ''}">
+                            <span class="section-name">${detail.section}:</span>
+                            <span class="section-progress">${hasNoData ? 'Sem dados' : `${detail.completed}/${detail.total} (${detail.percentage}%)`}</span>
+                        </div>
+                    `;
+                });
+                
+                dashboardHTML += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            dashboardHTML += `
+                    </div>
+                </div>
+            `;
+            firstAircraft = false;
+        }
+        
+        dashboardHTML += `
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('adminDashboard').innerHTML = dashboardHTML;
         document.getElementById('adminModal').classList.add('active');
-        // ... resto da implementação
+        console.log('Dashboard administrativo carregado com sucesso');
     }
     
     // Fechar modal admin
@@ -2970,9 +3252,65 @@ window.addEventListener('load', function() {
     }
     
     // Exportar relatório de todas as seções
-    window.exportAllSections = function() {
-        // Implementação da exportação aqui
-        alert('Função de exportação será implementada');
+    window.exportAllSections = async function() {
+        const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+        const exportData = {
+            dataExport: new Date().toISOString(),
+            aeronaves: {}
+        };
+        
+        // Coletar dados de todas as aeronaves
+        for (const section of validSections) {
+            try {
+                const doc = await db.collection('sections').doc(section).get();
+                let sectionData = null;
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data && data.aircraftStates) {
+                        sectionData = data.aircraftStates;
+                    }
+                } else {
+                    // Fallback para localStorage
+                    const sectionKey = `c105_${section}_data`;
+                    const localData = localStorage.getItem(sectionKey);
+                    if (localData) {
+                        sectionData = JSON.parse(localData);
+                    }
+                }
+                
+                if (sectionData) {
+                    Object.values(sectionData).forEach(aircraft => {
+                        if (aircraft && aircraft.aircraftId) {
+                            if (!exportData.aeronaves[aircraft.aircraftId]) {
+                                exportData.aeronaves[aircraft.aircraftId] = {
+                                    matricula: aircraft.aircraftId,
+                                    dataInicio: aircraft.startDate || '',
+                                    secoes: {}
+                                };
+                            }
+                            exportData.aeronaves[aircraft.aircraftId].secoes[section] = {
+                                fases: aircraft.phases,
+                                impedimentos: aircraft.blocks || {}
+                            };
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error(`Erro ao processar ${section}:`, error);
+            }
+        }
+        
+        // Gerar arquivo JSON
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `relatorio_geral_c105_${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        
+        alert('Relatório exportado com sucesso!');
     }
     
     // Switch entre abas do admin
@@ -3060,6 +3398,7 @@ window.addEventListener('load', function() {
     }
     
     console.log('Sistema C-105 carregado com sucesso!');
+    console.log('Versão: 2.0 - Firestore integrado');
 
 }); // Fim do window.addEventListener('load')
 </script>
