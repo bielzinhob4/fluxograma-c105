@@ -243,9 +243,9 @@
         /* NOVO ESTILO - Botão de logout reposicionado */
 .logout-container {
     position: absolute;
-    right: 50%;  
+    right: 150px;  
     top: 50%;     
-    transform: translate(250px, -50%);  /* Ajusta para ficar entre os campos e o logo */
+    transform: translateY(-50%);  
     background: #dc3545;
     border-radius: 8px;
     padding: 2px;
@@ -1243,7 +1243,7 @@
                 // Atualizar nome da seção
                 const sectionNameElement = document.getElementById('sectionName');
                 if (sectionNameElement) {
-                    const sectionName = user.email.split('@')[0].toUpperCase();
+                    const sectionName = user.email.split('@')[0].split('.')[0].toUpperCase();
                     sectionNameElement.textContent = sectionName;
                 }
                 
