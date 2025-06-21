@@ -1313,63 +1313,62 @@
         });
 
 // Login
-document.addEventListener('DOMContentLoaded', () => {
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            console.log('FORMULÁRIO ENVIADO!');
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const errorMsg = document.getElementById('errorMsg');
-            const loading = document.getElementById('loading');
-            const loginBtn = document.getElementById('loginBtn');
-            
-            console.log('Tentando login com:', email);
-            
-            showError('');
-            loading.style.display = 'block';
-            loginBtn.disabled = true;
+const loginForm = document.getElementById('loginForm');
+if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        console.log('FORMULÁRIO ENVIADO!');
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorMsg = document.getElementById('errorMsg');
+        const loading = document.getElementById('loading');
+        const loginBtn = document.getElementById('loginBtn');
+        
+        console.log('Tentando login com:', email);
+        
+        // showError('');  // Mantenha comentado por enquanto
+        loading.style.display = 'block';
+        loginBtn.disabled = true;
 
-            try {
-                console.log('Iniciando autenticação...');
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                console.log('Login bem-sucedido:', userCredential.user.email);
-                // onAuthStateChanged cuidará da navegação
-            } catch (error) {
-                console.error('Erro detalhado de login:', error);
-                console.error('Código do erro:', error.code);
-                console.error('Mensagem do erro:', error.message);
-                
-                let mensagem = 'Erro ao fazer login';
-                
-                switch(error.code) {
-                    case 'auth/user-not-found':
-                        mensagem = 'Usuário não autorizado';
-                        break;
-                    case 'auth/wrong-password':
-                        mensagem = 'Senha incorreta';
-                        break;
-                    case 'auth/invalid-email':
-                        mensagem = 'E-mail inválido';
-                        break;
-                    case 'auth/too-many-requests':
-                        mensagem = 'Muitas tentativas. Tente novamente mais tarde';
-                        break;
-                    default:
-                        mensagem = `Erro: ${error.message}`;
-                }
-                
-                showError(mensagem);
-            } finally {
-                loading.style.display = 'none';
-                loginBtn.disabled = false;
+        try {
+            console.log('Iniciando autenticação...');
+            const userCredential = await auth.signInWithEmailAndPassword(email, password);
+            console.log('Login bem-sucedido:', userCredential.user.email);
+            // onAuthStateChanged cuidará da navegação
+        } catch (error) {
+            console.error('Erro detalhado de login:', error);
+            console.error('Código do erro:', error.code);
+            console.error('Mensagem do erro:', error.message);
+            
+            let mensagem = 'Erro ao fazer login';
+            
+            switch(error.code) {
+                case 'auth/user-not-found':
+                    mensagem = 'Usuário não autorizado';
+                    break;
+                case 'auth/wrong-password':
+                    mensagem = 'Senha incorreta';
+                    break;
+                case 'auth/invalid-email':
+                    mensagem = 'E-mail inválido';
+                    break;
+                case 'auth/too-many-requests':
+                    mensagem = 'Muitas tentativas. Tente novamente mais tarde';
+                    break;
+                default:
+                    mensagem = `Erro: ${error.message}`;
             }
-        });
-    }
-});
+            
+            // showError(mensagem);  // Mantenha comentado por enquanto
+            alert(mensagem);  // Temporariamente usar alert
+        } finally {
+            loading.style.display = 'none';
+            loginBtn.disabled = false;
+        }
+    });
+}
 
 // Logout
 window.logout = function() {
