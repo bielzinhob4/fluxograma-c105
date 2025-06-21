@@ -1127,7 +1127,7 @@
         <button id="backToTop" style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1a5490; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; opacity: 0; transition: all 0.3s; z-index: 100;">↑</button>
         <!-- Modal Dashboard Administrativo -->
         <div class="modal" id="adminModal">
-            <div class="modal-content" style="max-width: 1400px;">
+            <div class="modal-content" style="max-width: 1500px;">
                 <div class="modal-header">
                     <h2>Painel Administrativo - Todas as Seções</h2>
                 </div>
@@ -2877,8 +2877,9 @@
                     
                     // Mostrar detalhes por seção
                     sectionDetails.forEach(detail => {
+                        const isComplete = detail.total > 0 && detail.completed === detail.total;
                         dashboardHTML += `
-                            <div class="admin-section-detail">
+                            <div class="admin-section-detail" style="${isComplete ? 'background: #d4edda;' : ''}">
                                 <span class="section-name">${detail.section}:</span>
                                 <span class="section-progress">${detail.completed}/${detail.total} (${detail.percentage}%)</span>
                             </div>
@@ -3002,6 +3003,8 @@
                         background: white;
                         border-radius: 4px;
                         font-size: 12px;
+                        white-space: nowrap;
+                        min-width: 140px;
                     }
                     
                     .section-name {
