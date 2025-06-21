@@ -2770,8 +2770,8 @@
                 
                 // Para cada fase, calcular a média de progresso entre todas as seções
                 phases.forEach(phase => {
-                    let totalProgress = 0;
-                    let sectionsWithData = 0;
+                    let totalCompleted = 0;
+                    let totalTasks = 0;
                     let sectionDetails = [];
                     
                     // Garantir que todas as seções apareçam
@@ -2793,14 +2793,15 @@
                                 Object.values(data).forEach(sectionAircraft => {
                                     if (sectionAircraft && sectionAircraft.aircraftId === aircraftId && sectionAircraft.phases) {
                                         const phaseData = sectionAircraft.phases.find(p => p.id === phase.id);
-                                        if (phaseData) {
+                                        if (phaseData && phaseData.tasks.length > 0) {
                                             sectionInfo.completed = phaseData.tasks.filter(t => t.completed).length;
                                             sectionInfo.total = phaseData.tasks.length;
-                                            sectionInfo.percentage = sectionInfo.total > 0 ? Math.round((sectionInfo.completed / sectionInfo.total) * 100) : 0;
+                                            sectionInfo.percentage = Math.round((sectionInfo.completed / sectionInfo.total) * 100);
                                             sectionInfo.hasData = true;
                                             
-                                            totalProgress += sectionInfo.percentage;
-                                            sectionsWithData++;
+                                            // Somar para cálculo da média ponderada
+                                            totalCompleted += sectionInfo.completed;
+                                            totalTasks += sectionInfo.total;
                                         }
                                     }
                                 });
@@ -2812,7 +2813,8 @@
                         sectionDetails.push(sectionInfo);
                     });
                     
-                    const averageProgress = sectionsWithData > 0 ? Math.round(totalProgress / sectionsWithData) : 0;
+                    // Média ponderada: total de tarefas concluídas / total de tarefas
+                    const averageProgress = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
                     
                     dashboardHTML += `
                         <div class="admin-phase-card">
