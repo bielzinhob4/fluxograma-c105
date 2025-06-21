@@ -1577,8 +1577,10 @@
                         const data = JSON.parse(sectionData);
                         // Percorrer cada aeronave da seção
                         Object.entries(data).forEach(([key, aircraft]) => {
-                            // Se tem matrícula, usar como chave. Senão, usar o ID original
-                            const identifier = aircraft.aircraftId || key;
+                            
+                        // Só adicionar aeronaves que têm matrícula preenchida
+                        if (aircraft.aircraftId && aircraft.aircraftId.trim() !== '') {
+                            const identifier = aircraft.aircraftId;
                             
                             // Se já não existe essa aeronave no Map, adicionar
                             if (!allAircraftMap.has(identifier)) {
@@ -1648,9 +1650,12 @@
                 const state = aircraftStates[aircraftId];
                 const tab = document.createElement('div');
                 tab.className = `tab ${aircraftId === currentAircraftId ? 'active' : ''}`;
+                const user = firebase.auth().currentUser;
+                const isAdmin = user && user.email === 'admin@c105.fab';
+                
                 tab.innerHTML = `
                     <span onclick="switchTab('${aircraftId}')">${state.aircraftId || 'Nova Aeronave'}</span>
-                    ${Object.keys(aircraftStates).length > 1 ? `<span class="tab-close" onclick="closeTab('${aircraftId}')">×</span>` : ''}
+                    ${!isAdmin && Object.keys(aircraftStates).length > 1 ? `<span class="tab-close" onclick="closeTab('${aircraftId}')">×</span>` : ''}
                 `;
                 tabsContainer.appendChild(tab);
             });
