@@ -1265,7 +1265,8 @@
                     sectionNameElement.textContent = sectionName === 'ADMIN' ? 'ADMINISTRADOR' : sectionName;
                 }
                 
-                // NOVA LINHA: Verificar se é admin
+                // NOVA LINHA: Verificar se é admin (mas primeiro limpar)
+                document.getElementById('btnAdmin').style.display = 'none';
                 checkIfAdmin();
                 
                 // Configurar interface para admin
@@ -1595,9 +1596,19 @@
                     const sectionData = localStorage.getItem(sectionKey);
                     
                     if (sectionData) {
-                        const data = JSON.parse(sectionData);
-                        // Percorrer cada aeronave da seção
-                        Object.entries(data).forEach(([key, aircraft]) => {
+                        try {
+                            const data = JSON.parse(sectionData);
+                            // Verificar se data é um objeto válido
+                            if (data && typeof data === 'object') {
+                                // Percorrer cada aeronave da seção
+                                Object.entries(data).forEach(([key, aircraft]) => {
+                                    // Verificar se aircraft é válido e tem estrutura correta
+                                    if (aircraft && 
+                                        typeof aircraft === 'object' && 
+                                        aircraft.aircraftId && 
+                                        aircraft.aircraftId.trim() !== '' &&
+                                        aircraft.phases && 
+                                        Array.isArray(aircraft.phases)) {
                             
                         // Só adicionar aeronaves que têm matrícula preenchida
                         if (aircraft.aircraftId && aircraft.aircraftId.trim() !== '') {
@@ -2474,6 +2485,8 @@
             const user = firebase.auth().currentUser;
             if (user && user.email === 'admin@c105.fab') {
                 document.getElementById('btnAdmin').style.display = 'inline-flex';
+            } else {
+                document.getElementById('btnAdmin').style.display = 'none';
             }
         }
         
