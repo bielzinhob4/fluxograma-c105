@@ -1860,11 +1860,16 @@ window.addEventListener('load', function() {
                 aircraftStates[adminKey] = aircraft;
             });
             
+            // Se não houver aeronaves, não criar abas vazias
             const aircraftIds = Object.keys(aircraftStates);
             if (aircraftIds.length > 0) {
                 currentAircraftId = aircraftIds[0];
+                // Para admin, garantir que appState seja configurado
+                appState = aircraftStates[currentAircraftId];
             } else {
+                // Admin sem aeronaves para visualizar
                 currentAircraftId = null;
+                appState = null;
             }
             
         } else {
