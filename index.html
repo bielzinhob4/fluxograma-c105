@@ -1263,8 +1263,8 @@
                 // Atualizar nome da seção
                 const sectionNameElement = document.getElementById('sectionName');
                 if (sectionNameElement) {
-                    const sectionName = user.email.split('@')[0].split('.')[0].toUpperCase();
-                    sectionNameElement.textContent = sectionName === 'ADMIN' ? 'ADMINISTRADOR' : sectionName;
+                    const sectionName = user.email.split('@')[0].split('.')[0];
+                    sectionNameElement.textContent = getDisplaySectionName(sectionName);
                 }
                 
                 // NOVA LINHA: Verificar se é admin (mas primeiro limpar)
@@ -1558,6 +1558,23 @@
             }
         ];
 
+        // Mapeamento de nomes de seção para exibição
+        function getDisplaySectionName(technicalName) {
+            const displayNames = {
+                'hidraulica': 'HIDRÁULICA',
+                'pneumatica': 'PNEUMÁTICA',
+                'celula': 'CÉLULA',
+                'comando': 'COMANDO DE VOO',
+                'eletrica': 'ELÉTRICA',
+                'motores': 'MOTORES',
+                'estrutura': 'ESTRUTURA',
+                'admin': 'ADMINISTRADOR'
+            };
+            
+            const cleanName = technicalName.toLowerCase().split('@')[0].split('.')[0];
+            return displayNames[cleanName] || technicalName.toUpperCase();
+        }
+        
         // Estado da aplicação
         let aircraftStates = {};
         let currentAircraftId = null;
@@ -1865,6 +1882,32 @@
                     }
                 });
                 
+                // Calcular totais para determinar status
+                let totalTasks = 0;
+                let totalCompleted = 0;
+                
+                validSections.forEach(section => {
+                    const sectionKey = `c105_${section}_data`;
+                    const sectionData = localStorage.getItem(sectionKey);
+                    
+                    if (sectionData) {
+                        try {
+                            const data = JSON.parse(sectionData);
+                            Object.values(data).forEach(aircraft => {
+                                if (aircraft && aircraft.aircraftId === currentAircraftId && aircraft.phases) {
+                                    const phaseData = aircraft.phases.find(p => p.id === phase.id);
+                                    if (phaseData) {
+                                        totalTasks += phaseData.tasks.length;
+                                        totalCompleted += phaseData.tasks.filter(t => t.completed).length;
+                                    }
+                                }
+                            });
+                        } catch (error) {
+                            console.error(`Erro ao processar ${section}:`, error);
+                        }
+                    }
+                });
+                
                 // Determinar status final da fase
                 let phaseStatus = 'pending';
                 if (hasBlocked) phaseStatus = 'blocked';
@@ -1941,7 +1984,7 @@
                 
                 html += `
                     <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #e0e0e0;">
-                        <h4 style="margin: 0 0 10px 0; color: #1a5490;">${section.toUpperCase()}</h4>
+                        <h4 style="margin: 0 0 10px 0; color: #1a5490;">${getDisplaySectionName(section)}</h4>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                             <span>${sectionProgress.completed}/${sectionProgress.total} tarefas</span>
                             <span style="font-weight: bold; color: ${sectionProgress.percentage === 100 ? '#4caf50' : '#1a5490'};">
@@ -2783,7 +2826,7 @@
                     // Garantir que todas as seções apareçam
                     validSections.forEach(section => {
                         let sectionInfo = {
-                            section: section.toUpperCase(),
+                            section: getDisplaySectionName(section),
                             completed: 0,
                             total: 0,
                             percentage: 0,
