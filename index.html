@@ -1391,7 +1391,6 @@
                 const sectionName = user.email.split('@')[0].split('.')[0];
                 const unsubscribe = db.collection('sections').doc(sectionName)
                     .onSnapshot((doc) => {
-                        console.log('Atualização em tempo real recebida:', sectionName);
                         if (doc.exists) {
                             const data = doc.data().data;
                             aircraftStates = data;
@@ -1697,9 +1696,7 @@
                 const sectionName = user.email.split('@')[0].split('.')[0];
                 try {
                     const doc = await db.collection('sections').doc(sectionName).get();
-                    console.log('Documento do Firestore:', doc.exists ? 'existe' : 'não existe');
                     if (doc.exists) {
-                        console.log('Dados do Firestore:', doc.data());
                         const firestoreData = doc.data().data;
                         const localKey = `c105_${sectionName}_data`;
                         localStorage.setItem(localKey, JSON.stringify(firestoreData));
@@ -1941,7 +1938,6 @@
                 
                 // Salvar no Firestore
                 const sectionName = user.email.split('@')[0].split('.')[0];
-                console.log('Salvando no Firestore:', sectionName, aircraftStates);
                 db.collection('sections').doc(sectionName).set({
                     data: aircraftStates,
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
