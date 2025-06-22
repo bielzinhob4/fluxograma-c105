@@ -1202,6 +1202,11 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+        // PROTEÇÕES CONTRA DADOS CORROMPIDOS
+        const SAFETY_LIMITS = {
+            MAX_AIRCRAFT: 10,
+            MAX_PHASES: 20
+        };
 
         // IMPORTANTE: Configurar persistência para SESSION
         auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
@@ -1796,6 +1801,15 @@
                     // Parse dos dados locais primeiro
                     const localData = JSON.parse(savedTabs);
                     
+                    // VERIFICAÇÃO DE SANIDADE
+                    if (Object.keys(localData).length > SAFETY_LIMITS.MAX_AIRCRAFT) {
+                        console.error('Muitas aeronaves detectadas:', Object.keys(localData).length);
+                        alert('Erro detectado. Criando sessão limpa.');
+                        localStorage.removeItem(sectionKey);
+                        createNewTab();
+                        return;
+                    }
+                    
                     // Verificar se tem dados válidos
                     if (Object.keys(localData).length > 0 && Object.values(localData).some(aircraft => aircraft.aircraftId)) {
                         aircraftStates = localData;
@@ -1819,6 +1833,12 @@
 
         // Criar nova aba
         function createNewTab() {
+            // PROTEÇÃO CONTRA LOOP
+            if (Object.keys(aircraftStates).length >= SAFETY_LIMITS.MAX_AIRCRAFT) {
+                alert('Limite máximo de 10 aeronaves atingido!');
+                return;
+            }
+            
             const newId = 'aircraft-' + Date.now();
             aircraftStates[newId] = createNewAircraftState();
             currentAircraftId = newId;
