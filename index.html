@@ -1793,13 +1793,22 @@
                 const savedTabs = localStorage.getItem(sectionKey);
                 
                 if (savedTabs) {
-                    aircraftStates = JSON.parse(savedTabs);
-                    const aircraftIds = Object.keys(aircraftStates);
-                    if (aircraftIds.length > 0) {
-                        currentAircraftId = aircraftIds[0];
+                    // Parse dos dados locais primeiro
+                    const localData = JSON.parse(savedTabs);
+                    
+                    // Verificar se tem dados válidos
+                    if (Object.keys(localData).length > 0 && Object.values(localData).some(aircraft => aircraft.aircraftId)) {
+                        aircraftStates = localData;
+                        const aircraftIds = Object.keys(aircraftStates);
+                        if (aircraftIds.length > 0) {
+                            currentAircraftId = aircraftIds[0];
+                        }
+                    } else {
+                        // Dados locais vazios, criar nova aba
+                        createNewTab();
                     }
                 } else {
-                    // Criar primeira aba
+                    // Não há dados locais, criar primeira aba
                     createNewTab();
                 }
             }
