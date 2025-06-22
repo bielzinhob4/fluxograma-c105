@@ -1182,7 +1182,6 @@
 <!-- Firebase Scripts -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script>
     // Aguardar página carregar
@@ -1201,7 +1200,6 @@
         // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-        const database = firebase.database();
 
         // IMPORTANTE: Configurar persistência para SESSION
         auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
@@ -1287,23 +1285,6 @@
                 
                 // Carregar dados específicos da seção
                 loadData();
-                
-                // Adicionar listener de mudanças em tempo real
-                if (user.email !== 'admin@c105.fab') {
-                    const dbRef = database.ref(`sections/${user.email.split('@')[0].split('.')[0]}`);
-                    dbRef.on('value', (snapshot) => {
-                        const newData = snapshot.val();
-                        if (newData && JSON.stringify(newData) !== JSON.stringify(aircraftStates)) {
-                            aircraftStates = newData;
-                            const aircraftIds = Object.keys(aircraftStates);
-                            if (aircraftIds.length > 0 && !aircraftStates[currentAircraftId]) {
-                                currentAircraftId = aircraftIds[0];
-                            }
-                            renderTabs();
-                            loadCurrentAircraft();
-                        }
-                    });
-                }
                 
                 // Registrar acesso
                 console.log(`Acesso autorizado: ${user.email} em ${new Date().toLocaleString('pt-BR')}`);
@@ -1693,43 +1674,8 @@
                 }
                 
         } else {
-            // Seções normais
-            const sectionKey = `c105_${user.email.split('@')[0].split('.')[0]}_data`;
-            const dbRef = database.ref(`sections/${user.email.split('@')[0].split('.')[0]}`);
-            
-            // Tentar carregar do Firebase primeiro
-            dbRef.once('value').then((snapshot) => {
-                const firebaseData = snapshot.val();
-                
-                if (firebaseData) {
-                    aircraftStates = firebaseData;
-                    const aircraftIds = Object.keys(aircraftStates);
-                    if (aircraftIds.length > 0) {
-                        currentAircraftId = aircraftIds[0];
-                    }
-                } else {
-                    // Se não houver dados no Firebase, verificar localStorage
-                    const savedTabs = localStorage.getItem(sectionKey);
-                    
-                    if (savedTabs) {
-                        aircraftStates = JSON.parse(savedTabs);
-                        const aircraftIds = Object.keys(aircraftStates);
-                        if (aircraftIds.length > 0) {
-                            currentAircraftId = aircraftIds[0];
-                        }
-                        // Sincronizar com Firebase
-                        saveAllData();
-                    } else {
-                        // Criar primeira aba
-                        createNewTab();
-                    }
-                }
-                
-                renderTabs();
-                loadCurrentAircraft();
-            }).catch(error => {
-                console.error('Erro ao carregar do Firebase:', error);
-                // Fallback para localStorage
+                // Seções normais
+                const sectionKey = `c105_${user.email.split('@')[0].split('.')[0]}_data`;
                 const savedTabs = localStorage.getItem(sectionKey);
                 
                 if (savedTabs) {
@@ -1739,15 +1685,10 @@
                         currentAircraftId = aircraftIds[0];
                     }
                 } else {
+                    // Criar primeira aba
                     createNewTab();
                 }
-                
-                renderTabs();
-                loadCurrentAircraft();
-            });
-            
-            return; // Importante: retornar aqui para evitar duplicação
-        }
+            }
             
             renderTabs();
             loadCurrentAircraft();
@@ -1868,14 +1809,7 @@
             const user = firebase.auth().currentUser;
             if (user) {
                 const sectionKey = `c105_${user.email.split('@')[0].split('.')[0]}_data`;
-                // Salvar no localStorage como backup
                 localStorage.setItem(sectionKey, JSON.stringify(aircraftStates));
-                
-                // Salvar no Firebase Database
-                const dbRef = database.ref(`sections/${user.email.split('@')[0].split('.')[0]}`);
-                dbRef.set(aircraftStates).catch(error => {
-                    console.error('Erro ao salvar no Firebase:', error);
-                });
             }
         }
 
@@ -1909,152 +1843,108 @@
             const currentAircraftId = appState.aircraftId;
             const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
             
-            // Mostrar loading enquanto carrega
-            container.innerHTML = '<div style="text-align: center; padding: 40px;">Carregando dados do Firebase...</div>';
-            
-            // Criar array de promises para buscar todas as seções
-            const sectionPromises = validSections.map(section => {
-                return database.ref(`sections/${section}`).once('value')
-                    .then(snapshot => ({
-                        section: section,
-                        data: snapshot.val()
-                    }))
-                    .catch(error => {
-                        console.error(`Erro ao buscar ${section}:`, error);
-                        return {
-                            section: section,
-                            data: null
-                        };
-                    });
-            });
-            
-            // Aguardar todas as promises
-            Promise.all(sectionPromises).then(results => {
-                // Limpar container
-                container.innerHTML = '';
+            phases.forEach(phase => {
+                // Calcular status da fase baseado em todas as seções
+                let hasBlocked = false;
+                let hasCompleted = false;
+                let hasInProgress = false;
                 
-                // Organizar dados por seção
-                const sectionDataMap = {};
-                results.forEach(result => {
-                    if (result.data) {
-                        sectionDataMap[result.section] = result.data;
-                    }
-                });
-                
-                // Renderizar cada fase
-                phases.forEach(phase => {
-                    // Calcular status da fase baseado em todas as seções
-                    let hasBlocked = false;
-                    let totalTasks = 0;
-                    let totalCompleted = 0;
+                validSections.forEach(section => {
+                    const sectionKey = `c105_${section}_data`;
+                    const sectionData = localStorage.getItem(sectionKey);
                     
-                    validSections.forEach(section => {
-                        const sectionData = sectionDataMap[section];
-                        if (sectionData) {
-                            Object.values(sectionData).forEach(aircraft => {
+                    if (sectionData) {
+                        try {
+                            const data = JSON.parse(sectionData);
+                            Object.values(data).forEach(aircraft => {
                                 if (aircraft && aircraft.aircraftId === currentAircraftId && aircraft.phases) {
                                     const phaseData = aircraft.phases.find(p => p.id === phase.id);
                                     if (phaseData) {
                                         const completedCount = phaseData.tasks.filter(t => t.completed).length;
-                                        totalTasks += phaseData.tasks.length;
-                                        totalCompleted += completedCount;
+                                        const totalCount = phaseData.tasks.length;
                                         
                                         if (aircraft.blocks) {
                                             const phaseBlocks = phaseData.tasks.some(t => aircraft.blocks[t.id]);
                                             if (phaseBlocks) hasBlocked = true;
                                         }
+                                        
+                                        if (completedCount === totalCount && totalCount > 0) {
+                                            hasCompleted = true;
+                                        } else if (completedCount > 0) {
+                                            hasInProgress = true;
+                                        }
                                     }
                                 }
                             });
-                        }
-                    });
-                    
-                    // Determinar status final da fase
-                    let phaseStatus = 'pending';
-                    if (hasBlocked) phaseStatus = 'blocked';
-                    else if (totalTasks > 0) {
-                        if (totalCompleted === totalTasks) {
-                            phaseStatus = 'completed';
-                        } else if (totalCompleted > 0) {
-                            phaseStatus = 'in-progress';
+                        } catch (error) {
+                            console.error(`Erro ao processar ${section}:`, error);
                         }
                     }
-                    
-                    const phaseCard = document.createElement('div');
-                    phaseCard.className = 'phase-card';
-                    
-                    phaseCard.innerHTML = `
-                        <div class="phase-header status-${phaseStatus}" onclick="togglePhase(${phase.id})">
-                            <div class="phase-title">
-                                <div class="phase-number">${phase.id}</div>
-                                <span>${phase.title}</span>
-                            </div>
-                            <div class="phase-status">
-                                <span class="status-badge status-${phaseStatus}">${getStatusText(phaseStatus)}</span>
-                                <span>▼</span>
-                            </div>
-                        </div>
-                        <div class="phase-content" id="phase-content-${phase.id}">
-                            <div class="tasks-list" style="padding: 20px;">
-                                ${renderAdminSectionsProgressWithData(phase.id, currentAircraftId, sectionDataMap)}
-                            </div>
-                        </div>
-                    `;
-                    
-                    container.appendChild(phaseCard);
                 });
                 
-                setTimeout(setupScrollAnimations, 100);
-            });
-        }
-        
-        // Renderizar progresso com dados já carregados
-        function renderAdminSectionsProgressWithData(phaseId, aircraftId, sectionDataMap) {
-            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-            let html = '<div style="display: grid; gap: 15px;">';
-            
-            validSections.forEach(section => {
-                let sectionProgress = {
-                    total: 0,
-                    completed: 0,
-                    percentage: 0
-                };
+                // Calcular totais para determinar status
+                let totalTasks = 0;
+                let totalCompleted = 0;
                 
-                const sectionData = sectionDataMap[section];
-                if (sectionData) {
-                    Object.values(sectionData).forEach(aircraft => {
-                        if (aircraft && aircraft.aircraftId === aircraftId && aircraft.phases) {
-                            const phase = aircraft.phases.find(p => p.id === phaseId);
-                            if (phase) {
-                                sectionProgress.total = phase.tasks.length;
-                                sectionProgress.completed = phase.tasks.filter(t => t.completed).length;
-                                sectionProgress.percentage = sectionProgress.total > 0 ? 
-                                    Math.round((sectionProgress.completed / sectionProgress.total) * 100) : 0;
-                            }
+                validSections.forEach(section => {
+                    const sectionKey = `c105_${section}_data`;
+                    const sectionData = localStorage.getItem(sectionKey);
+                    
+                    if (sectionData) {
+                        try {
+                            const data = JSON.parse(sectionData);
+                            Object.values(data).forEach(aircraft => {
+                                if (aircraft && aircraft.aircraftId === currentAircraftId && aircraft.phases) {
+                                    const phaseData = aircraft.phases.find(p => p.id === phase.id);
+                                    if (phaseData) {
+                                        totalTasks += phaseData.tasks.length;
+                                        totalCompleted += phaseData.tasks.filter(t => t.completed).length;
+                                    }
+                                }
+                            });
+                        } catch (error) {
+                            console.error(`Erro ao processar ${section}:`, error);
                         }
-                    });
+                    }
+                });
+                
+                // Determinar status final da fase
+                let phaseStatus = 'pending';
+                if (hasBlocked) phaseStatus = 'blocked';
+                else if (totalTasks > 0) {
+                    // Só marca como concluído se TODAS as tarefas estiverem completas
+                    if (totalCompleted === totalTasks) {
+                        phaseStatus = 'completed';
+                    } else if (totalCompleted > 0) {
+                        phaseStatus = 'in-progress';
+                    }
                 }
                 
-                html += `
-                    <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #e0e0e0;">
-                        <h4 style="margin: 0 0 10px 0; color: #1a5490;">${getDisplaySectionName(section)}</h4>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <span>${sectionProgress.completed}/${sectionProgress.total} tarefas</span>
-                            <span style="font-weight: bold; color: ${sectionProgress.percentage === 100 ? '#4caf50' : '#1a5490'};">
-                                ${sectionProgress.percentage}%
-                            </span>
+                const phaseCard = document.createElement('div');
+                phaseCard.className = 'phase-card';
+                
+                phaseCard.innerHTML = `
+                    <div class="phase-header status-${phaseStatus}" onclick="togglePhase(${phase.id})">
+                        <div class="phase-title">
+                            <div class="phase-number">${phase.id}</div>
+                            <span>${phase.title}</span>
                         </div>
-                        <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
-                            <div style="background: ${sectionProgress.percentage === 100 ? '#4caf50' : '#2196f3'}; 
-                                       height: 100%; width: ${sectionProgress.percentage}%; 
-                                       transition: width 0.3s ease;"></div>
+                        <div class="phase-status">
+                            <span class="status-badge status-${phaseStatus}">${getStatusText(phaseStatus)}</span>
+                            <span>▼</span>
+                        </div>
+                    </div>
+                    <div class="phase-content" id="phase-content-${phase.id}">
+                        <div class="tasks-list" style="padding: 20px;">
+                            ${renderAdminSectionsProgress(phase.id, currentAircraftId)}
                         </div>
                     </div>
                 `;
+                
+                container.appendChild(phaseCard);
             });
             
-            html += '</div>';
-            return html;
+            setTimeout(setupScrollAnimations, 100);
         }
         
         // Renderizar progresso das seções para uma fase específica
@@ -2573,27 +2463,19 @@
             }
             
             if (isAdmin && appState.aircraftId) {
-                // Para admin, buscar dados do Firebase
+                // Para admin, calcular com base na média de todas as seções
                 const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+                let totalTasks = 0;
+                let totalCompleted = 0;
+                let totalBlocked = 0;
                 
-                // Criar promises para buscar todas as seções
-                const sectionPromises = validSections.map(section => {
-                    return database.ref(`sections/${section}`).once('value')
-                        .then(snapshot => snapshot.val())
-                        .catch(error => {
-                            console.error(`Erro ao buscar ${section}:`, error);
-                            return null;
-                        });
-                });
-                
-                // Aguardar todas as promises
-                Promise.all(sectionPromises).then(results => {
-                    let totalTasks = 0;
-                    let totalCompleted = 0;
-                    let totalBlocked = 0;
+                validSections.forEach(section => {
+                    const sectionKey = `c105_${section}_data`;
+                    const sectionData = localStorage.getItem(sectionKey);
                     
-                    results.forEach((data, index) => {
-                        if (data) {
+                    if (sectionData) {
+                        try {
+                            const data = JSON.parse(sectionData);
                             Object.values(data).forEach(aircraft => {
                                 if (aircraft && aircraft.aircraftId === appState.aircraftId && aircraft.phases) {
                                     aircraft.phases.forEach(phase => {
@@ -2605,18 +2487,20 @@
                                     });
                                 }
                             });
+                        } catch (error) {
+                            console.error(`Erro ao processar ${section}:`, error);
                         }
-                    });
-                    
-                    const pendingTasks = totalTasks - totalCompleted - totalBlocked;
-                    const percentage = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
-                    
-                    document.getElementById('progressFill').style.width = percentage + '%';
-                    document.getElementById('progressFill').textContent = percentage + '%';
-                    document.getElementById('completedCount').textContent = totalCompleted;
-                    document.getElementById('pendingCount').textContent = pendingTasks;
-                    document.getElementById('blockedCount').textContent = totalBlocked;
+                    }
                 });
+                
+                const pendingTasks = totalTasks - totalCompleted - totalBlocked;
+                const percentage = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
+                
+                document.getElementById('progressFill').style.width = percentage + '%';
+                document.getElementById('progressFill').textContent = percentage + '%';
+                document.getElementById('completedCount').textContent = totalCompleted;
+                document.getElementById('pendingCount').textContent = pendingTasks;
+                document.getElementById('blockedCount').textContent = totalBlocked;
                 
             } else {
                 // Seções normais - código original
