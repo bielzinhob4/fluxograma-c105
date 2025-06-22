@@ -1202,10 +1202,12 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+        
         // PROTEÇÕES CONTRA DADOS CORROMPIDOS
         const SAFETY_LIMITS = {
             MAX_AIRCRAFT: 10,
-            MAX_PHASES: 20
+            MAX_PHASES: 20,
+            MAX_TASKS_PER_PHASE: 100
         };
 
         // IMPORTANTE: Configurar persistência para SESSION
@@ -1948,13 +1950,21 @@
         }
 
         // Salvar todos os dados
-        function saveAllData() {
+         function saveAllData() {
             const user = firebase.auth().currentUser;
             if (user) {
                 const sectionKey = `c105_${user.email.split('@')[0].split('.')[0]}_data`;
                 
+                // VERIFICAR TAMANHO DOS DADOS
+                const dataString = JSON.stringify(aircraftStates);
+                if (dataString.length > 5000000) { // 5MB limite
+                    alert('Dados muito grandes! Entre em contato com o administrador.');
+                    console.error('Dados excedem 5MB:', dataString.length);
+                    return;
+                }
+                
                 // Salvar no localStorage
-                localStorage.setItem(sectionKey, JSON.stringify(aircraftStates));
+                localStorage.setItem(sectionKey, dataString);
                 
                 // Salvar no Firestore
                 const sectionName = user.email.split('@')[0].split('.')[0];
@@ -2429,6 +2439,12 @@
             
             if (taskName) {
                 const phase = appState.phases.find(p => p.id === phaseId);
+                
+                // PROTEÇÃO CONTRA MUITAS TAREFAS
+                if (phase.tasks.length >= SAFETY_LIMITS.MAX_TASKS_PER_PHASE) {
+                    alert('Limite máximo de 100 tarefas por fase atingido!');
+                    return;
+                }
                 const newTaskNumber = phase.tasks.length + 1;
                 const newTaskId = `${phaseId}.${newTaskNumber}`;
                 
