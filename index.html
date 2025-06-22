@@ -1182,6 +1182,7 @@
 <!-- Firebase Scripts -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
     // Aguardar página carregar
@@ -1200,6 +1201,7 @@
         // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const db = firebase.firestore();
 
         // IMPORTANTE: Configurar persistência para SESSION
         auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
@@ -1286,6 +1288,9 @@
                 // Carregar dados específicos da seção
                 loadData();
                 
+                // Configurar listener para atualizações em tempo real
+                setupRealtimeListeners();
+                
                 // Registrar acesso
                 console.log(`Acesso autorizado: ${user.email} em ${new Date().toLocaleString('pt-BR')}`);
             } else {
@@ -1344,7 +1349,64 @@
         // Logout
         window.logout = function() {
             if (confirm('Deseja sair do sistema?')) {
+                // Remover listeners antes de sair
+                if (window.firestoreUnsubscribe) {
+                    window.firestoreUnsubscribe.forEach(unsubscribe => unsubscribe());
+                }
                 auth.signOut();
+            }
+        }
+        
+        // Configurar listeners em tempo real
+        function setupRealtimeListeners() {
+            const user = firebase.auth().currentUser;
+            if (!user) return;
+            
+            window.firestoreUnsubscribe = [];
+            
+            const isAdmin = user.email === 'admin@c105.fab';
+            
+            if (isAdmin) {
+                // Admin: escutar todas as seções
+                const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+                
+                validSections.forEach(section => {
+                    const unsubscribe = db.collection('sections').doc(section)
+                        .onSnapshot((doc) => {
+                            if (doc.exists) {
+                                const data = doc.data().data;
+                                const localKey = `c105_${section}_data`;
+                                localStorage.setItem(localKey, JSON.stringify(data));
+                                
+                                // Se estiver visualizando esta aeronave, recarregar
+                                if (currentAircraftId) {
+                                    loadCurrentAircraft();
+                                }
+                            }
+                        });
+                    window.firestoreUnsubscribe.push(unsubscribe);
+                });
+            } else {
+                // Seção normal: escutar apenas sua seção
+                const sectionName = user.email.split('@')[0].split('.')[0];
+                const unsubscribe = db.collection('sections').doc(sectionName)
+                    .onSnapshot((doc) => {
+                        if (doc.exists) {
+                            const data = doc.data().data;
+                            aircraftStates = data;
+                            
+                            // Salvar no localStorage também
+                            const localKey = `c105_${sectionName}_data`;
+                            localStorage.setItem(localKey, JSON.stringify(data));
+                            
+                            // Recarregar interface
+                            renderTabs();
+                            if (currentAircraftId) {
+                                loadCurrentAircraft();
+                            }
+                        }
+                    });
+                window.firestoreUnsubscribe.push(unsubscribe);
             }
         }
 
@@ -1596,6 +1658,55 @@
         // Compatibilidade com dados antigos
         let appState = null;
 
+        // Sincronizar com Firestore
+        async function syncWithFirestore() {
+            const user = firebase.auth().currentUser;
+            if (!user) return;
+            
+            const isAdmin = user.email === 'admin@c105.fab';
+            
+            if (isAdmin) {
+                // Admin: sincronizar todas as seções
+                const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
+                
+                for (const section of validSections) {
+                    try {
+                        const doc = await db.collection('sections').doc(section).get();
+                        if (doc.exists) {
+                            const firestoreData = doc.data().data;
+                            const localKey = `c105_${section}_data`;
+                            const localData = localStorage.getItem(localKey);
+                            
+                            if (localData) {
+                                // Comparar timestamps e usar o mais recente
+                                const localParsed = JSON.parse(localData);
+                                // Por simplicidade, sempre usar dados do Firestore se existirem
+                                localStorage.setItem(localKey, JSON.stringify(firestoreData));
+                            } else {
+                                // Não há dados locais, usar Firestore
+                                localStorage.setItem(localKey, JSON.stringify(firestoreData));
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Erro ao sincronizar ${section}:`, error);
+                    }
+                }
+            } else {
+                // Seção normal: sincronizar apenas sua própria seção
+                const sectionName = user.email.split('@')[0].split('.')[0];
+                try {
+                    const doc = await db.collection('sections').doc(sectionName).get();
+                    if (doc.exists) {
+                        const firestoreData = doc.data().data;
+                        const localKey = `c105_${sectionName}_data`;
+                        localStorage.setItem(localKey, JSON.stringify(firestoreData));
+                    }
+                } catch (error) {
+                    console.error('Erro ao sincronizar com Firestore:', error);
+                }
+            }
+        }
+
         // Carregar dados salvos
         // Carregar dados salvos
         function loadData() {
@@ -1603,11 +1714,14 @@
         }
 
         // Gerenciamento de abas
-        function initializeTabs() {
+        async function initializeTabs() {
             const user = firebase.auth().currentUser;
             if (!user) return;
             
             const isAdmin = user.email === 'admin@c105.fab';
+            
+            // Primeiro, tentar sincronizar com Firestore
+            await syncWithFirestore();
             
             if (isAdmin) {
                 // Admin: coletar TODAS as aeronaves de todas as seções
@@ -1809,7 +1923,19 @@
             const user = firebase.auth().currentUser;
             if (user) {
                 const sectionKey = `c105_${user.email.split('@')[0].split('.')[0]}_data`;
+                
+                // Salvar no localStorage
                 localStorage.setItem(sectionKey, JSON.stringify(aircraftStates));
+                
+                // Salvar no Firestore
+                const sectionName = user.email.split('@')[0].split('.')[0];
+                db.collection('sections').doc(sectionName).set({
+                    data: aircraftStates,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: user.email
+                }).catch(error => {
+                    console.error('Erro ao salvar no Firestore:', error);
+                });
             }
         }
 
