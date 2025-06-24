@@ -1001,10 +1001,22 @@
             scroll-behavior: smooth;
         }
 
+/* CSS do logout-container já definido anteriormente, removendo duplicação */
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
                 padding: 0 40px;
+            }
+        
+            .header-layout {
+                position: static;
+                transform: none;
+                flex-direction: column;
+                gap: 10px;
+                padding: 20px;
+                left: 0;
+                right: 0;
             }
         
             .header-logos {
@@ -1014,6 +1026,10 @@
             .aircraft-info {
                 width: 100%;
                 justify-content: center;
+            }
+        
+            .header-spacer {
+                display: none;
             }
         
             .phase-header {
