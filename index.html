@@ -807,12 +807,23 @@
         .phase-content {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease;
+            transition: max-height 0.5s ease;
             background: #f8f9fa;
         }
-
+        
         .phase-content.active {
-            max-height: 1000px;
+            max-height: none;
+            overflow: visible;
+            animation: expandPhase 0.5s ease-out;
+        }
+        
+        @keyframes expandPhase {
+            from {
+                max-height: 0;
+            }
+            to {
+                max-height: 2000px; /* Valor alto para a animação */
+            }
         }
 
         .tasks-list {
@@ -1696,29 +1707,47 @@
             loadCurrentAircraft();
         }
 
-        // Renderizar abas
-        function renderTabs() {
-            const tabsContainer = document.getElementById('aircraftTabs');
-            tabsContainer.innerHTML = '';
+// Renderizar abas
+function renderTabs() {
+    const tabsContainer = document.getElementById('aircraftTabs');
+    tabsContainer.innerHTML = '';
+    
+    // Ordenar as chaves baseado no número da matrícula
+    const sortedKeys = Object.keys(aircraftStates).sort((a, b) => {
+        const matriculaA = aircraftStates[a].aircraftId;
+        const matriculaB = aircraftStates[b].aircraftId;
+        
+        // Se uma não tem matrícula, colocar no final
+        if (!matriculaA && !matriculaB) return 0;
+        if (!matriculaA) return 1;
+        if (!matriculaB) return -1;
+        
+        // Converter para número e comparar
+        const numA = parseInt(matriculaA) || 0;
+        const numB = parseInt(matriculaB) || 0;
+        
+        return numA - numB;
+    });
+    
+        // Renderizar as abas na ordem correta
+        sortedKeys.forEach(aircraftId => {
+            const state = aircraftStates[aircraftId];
+            const tab = document.createElement('div');
+            tab.className = `tab ${aircraftId === currentAircraftId ? 'active' : ''}`;
             
-            Object.keys(aircraftStates).forEach(aircraftId => {
-                const state = aircraftStates[aircraftId];
-                const tab = document.createElement('div');
-                tab.className = `tab ${aircraftId === currentAircraftId ? 'active' : ''}`;
-                
-                tab.innerHTML = `
-                    <span onclick="switchTab('${aircraftId}')">${state.aircraftId || 'Nova Aeronave'}</span>
-                    ${Object.keys(aircraftStates).length > 1 ? `<span class="tab-close" onclick="closeTab('${aircraftId}')">×</span>` : ''}
-                `;
-                tabsContainer.appendChild(tab);
-            });
-            
-            const newTabBtn = document.createElement('button');
-            newTabBtn.className = 'btn-new-tab';
-            newTabBtn.innerHTML = '+ Nova Aeronave';
-            newTabBtn.onclick = createNewTab;
-            tabsContainer.appendChild(newTabBtn);
-        }
+            tab.innerHTML = `
+                <span onclick="switchTab('${aircraftId}')">${state.aircraftId || 'Nova Aeronave'}</span>
+                ${Object.keys(aircraftStates).length > 1 ? `<span class="tab-close" onclick="closeTab('${aircraftId}')">×</span>` : ''}
+            `;
+            tabsContainer.appendChild(tab);
+        });
+        
+        const newTabBtn = document.createElement('button');
+        newTabBtn.className = 'btn-new-tab';
+        newTabBtn.innerHTML = '+ Nova Aeronave';
+        newTabBtn.onclick = createNewTab;
+        tabsContainer.appendChild(newTabBtn);
+    }
 
         // Mudar de aba
         window.switchTab = function(aircraftId) {
