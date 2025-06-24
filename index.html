@@ -360,9 +360,18 @@
             color: white;
             padding: 10px 15px;
             border-radius: 6px;
-            width: 150px;
             font-size: 14px;
             font-weight: 500;
+        }
+        
+        #aircraftId {
+            width: 80px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        
+        #startDate {
+            width: 140px;
         }
 
         .aircraft-info input::placeholder {
@@ -1099,7 +1108,7 @@
             <div class="header-content">
                 <h1 id="sectionTitle">FLUXOGRAMA - <span id="sectionName">CARREGANDO...</span>: C-105 AMAZONAS</h1>
                 <div class="aircraft-info">
-                    <input type="text" id="aircraftId" placeholder="Matrícula da Aeronave" title="Ex: FAB 2855" />
+                    <input type="text" id="aircraftId" placeholder="2855" title="Ex: 2855" maxlength="4" />
                     <div class="date-info">
                         <input type="date" id="startDate" title="Data de entrada da aeronave na linha de revisão" />
                         <span class="date-tooltip">Data de entrada na linha de revisão</span>
