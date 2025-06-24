@@ -1000,17 +1000,7 @@
                 html {
                     scroll-behavior: smooth;
                 }
-        
-                /* DEBUG - Forçar botão a aparecer */
-                .logout-container {
-                    position: absolute !important;
-                    right: 150px !important;
-                    top: 40px !important;
-                    z-index: 9999 !important;
-                    display: block !important;
-                    background: red !important;
-                    padding: 5px !important;
-                }
+
         
                 .logout-btn {
                     display: block !important;
@@ -2342,19 +2332,40 @@
             const logoRight = document.querySelector('.logo-right');
             const logoutContainer = document.querySelector('.logout-container');
             
-            if (aircraftInfo && logoRight && logoutContainer) {
-                const aircraftRight = aircraftInfo.getBoundingClientRect().right;
-                const logoLeft = logoRight.getBoundingClientRect().left;
-                const centerPoint = aircraftRight + ((logoLeft - aircraftRight) / 2);
+            if (aircraftInfo && logoRight && logoutContainer && window.innerWidth > 768) {
+                const aircraftRect = aircraftInfo.getBoundingClientRect();
+                const logoRect = logoRight.getBoundingClientRect();
                 
+                // Calcular o ponto médio entre o fim da caixa e início do logo
+                const gapStart = aircraftRect.right;
+                const gapEnd = logoRect.left;
+                const centerPoint = gapStart + ((gapEnd - gapStart) / 2);
+                
+                // Remover right e aplicar left
+                logoutContainer.style.right = 'auto';
                 logoutContainer.style.left = centerPoint + 'px';
                 logoutContainer.style.transform = 'translateX(-50%) translateY(-50%)';
             }
         }
         
-        // Executar ao carregar e ao redimensionar
-        window.addEventListener('load', positionLogoutButton);
+        // Chamar a função quando tudo estiver carregado
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(positionLogoutButton, 500);
+            });
+        } else {
+            setTimeout(positionLogoutButton, 500);
+        }
+        
+        // Reposicionar ao redimensionar
         window.addEventListener('resize', positionLogoutButton);
+        
+        // Reposicionar quando o usuário fizer login
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                setTimeout(positionLogoutButton, 1000);
+            }
+        });
         document.getElementById('startDate').addEventListener('change', () => {
             saveData();
             updateDaysElapsed();
