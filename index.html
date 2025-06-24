@@ -242,7 +242,7 @@
 
         .logout-container {
             position: absolute;
-            right: 136px;  /* Meio termo entre o logo (60px) e os campos */
+            right: 136px;
             top: 50%;     
             transform: translateY(-50%);  
             background: #dc3545;
@@ -324,7 +324,7 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
-            padding-top: 40px; /* Adicionar espaço para o botão de logout */
+            padding-top: 40px;
         }
 
         .controls {
@@ -366,11 +366,6 @@
             color: white;
         }
 
-        .btn-danger {
-            background: #f44336;
-            color: white;
-        }
-        
         .btn-danger {
             background: #f44336;
             color: white;
@@ -444,6 +439,7 @@
         .btn-new-tab:hover {
             background: #45a049;
         }
+
         .btn-info {
             background: #2196f3;
             color: white;
@@ -915,6 +911,7 @@
         .date-info:hover .date-tooltip {
             display: block;
         }
+
         /* Animações de Fade */
         .fade-element {
             opacity: 0;
@@ -942,6 +939,7 @@
         html {
             scroll-behavior: smooth;
         }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -1028,7 +1026,7 @@
     <!-- Aplicação Principal (Fluxograma) -->
     <div id="mainApp">
         <header class="header">
-            <!-- Botão de logout reposicionado -->
+            <!-- Botão de logout -->
             <div class="logout-container">
                 <button class="logout-btn" onclick="logout()">SAIR</button>
             </div>
@@ -1071,7 +1069,6 @@
                 <button class="btn btn-primary" onclick="collapseAll()">📁 Recolher Tudo</button>
                 <button class="btn btn-success" onclick="exportData()" id="btnExport">💾 Exportar Dados</button>
                 <button class="btn btn-danger" onclick="clearData()" id="btnClear">🗑️ Limpar Tudo</button>
-                <button class="btn btn-warning" onclick="showAdminDashboard()" id="btnAdmin" style="display: none;">👨‍💼 Painel Admin</button>
             </div>
 
             <div class="progress-info">
@@ -1125,23 +1122,6 @@
                 </div>
             </div>
         <button id="backToTop" style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1a5490; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; opacity: 0; transition: all 0.3s; z-index: 100;">↑</button>
-        <!-- Modal Dashboard Administrativo -->
-        <div class="modal" id="adminModal">
-            <div class="modal-content" style="max-width: 1500px;">
-                <div class="modal-header">
-                    <h2>Painel Administrativo - Todas as Seções</h2>
-                </div>
-                <div class="modal-body">
-                    <div id="adminDashboard">
-                        <!-- Dados serão carregados aqui -->
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-primary" onclick="exportAllSections()">Exportar Relatório Geral</button>
-                    <button class="btn" onclick="closeAdminModal()">Fechar</button>
-                </div>
-            </div>
-        </div>
         </main>
 
         <!-- Modal para impedimentos -->
@@ -1179,10 +1159,9 @@
         </div>
     </div>
 
-<!-- Firebase Scripts -->
+<!-- Firebase Scripts - APENAS AUTH -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
     // Aguardar página carregar
@@ -1198,19 +1177,11 @@
             appId: "1:309539238622:web:004d67de0c799d8cb6c84f"
         };
         
-        // Inicializar Firebase
+        // Inicializar Firebase (apenas Auth)
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-        const db = firebase.firestore();
         
-        // PROTEÇÕES CONTRA DADOS CORROMPIDOS
-        const SAFETY_LIMITS = {
-            MAX_AIRCRAFT: 10,
-            MAX_PHASES: 20,
-            MAX_TASKS_PER_PHASE: 100
-        };
-
-        // IMPORTANTE: Configurar persistência para SESSION
+        // Configurar persistência para SESSION
         auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
             .then(() => {
                 console.log('Persistência configurada para SESSION');
@@ -1227,7 +1198,7 @@
         const loading = document.getElementById('loading');
         const loginBtn = document.getElementById('loginBtn');
 
-        // NOVO: Verificar se deve forçar logout ao carregar
+        // Verificar se deve forçar logout ao carregar
         window.addEventListener('load', () => {
             // Se a página foi recarregada ou veio de um favorito/atalho
             if (performance.navigation.type === 1 || !document.referrer) {
@@ -1241,7 +1212,7 @@
         // Verificar autenticação
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // Limpar estados anteriores E FORÇAR RESET COMPLETO
+                // Limpar estados anteriores
                 aircraftStates = {};
                 currentAircraftId = null;
                 appState = null;
@@ -1276,27 +1247,8 @@
                     sectionNameElement.textContent = getDisplaySectionName(sectionName);
                 }
                 
-                // NOVA LINHA: Verificar se é admin (mas primeiro limpar)
-                document.getElementById('btnAdmin').style.display = 'none';
-                
-                // Se for admin, executar limpeza automática de dados órfãos
-                if (user.email === 'admin@c105.fab') {
-                    window.cleanOrphanData();
-                }
-                
-                checkIfAdmin();
-                
-                // Configurar interface para admin
-                if (user.email === 'admin@c105.fab') {
-                    document.getElementById('btnExport').style.display = 'none';
-                    document.getElementById('btnClear').style.display = 'none';
-                }
-                
                 // Carregar dados específicos da seção
                 loadData();
-                
-                // Configurar listener para atualizações em tempo real
-                setupRealtimeListeners();
                 
                 // Registrar acesso
                 console.log(`Acesso autorizado: ${user.email} em ${new Date().toLocaleString('pt-BR')}`);
@@ -1356,64 +1308,7 @@
         // Logout
         window.logout = function() {
             if (confirm('Deseja sair do sistema?')) {
-                // Remover listeners antes de sair
-                if (window.firestoreUnsubscribe) {
-                    window.firestoreUnsubscribe.forEach(unsubscribe => unsubscribe());
-                }
                 auth.signOut();
-            }
-        }
-        
-        // Configurar listeners em tempo real
-        function setupRealtimeListeners() {
-            const user = firebase.auth().currentUser;
-            if (!user) return;
-            
-            window.firestoreUnsubscribe = [];
-            
-            const isAdmin = user.email === 'admin@c105.fab';
-            
-            if (isAdmin) {
-                // Admin: escutar todas as seções
-                const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-                
-                validSections.forEach(section => {
-                    const unsubscribe = db.collection('sections').doc(section)
-                        .onSnapshot((doc) => {
-                            if (doc.exists) {
-                                const data = doc.data().data;
-                                const localKey = `c105_${section}_data`;
-                                localStorage.setItem(localKey, JSON.stringify(data));
-                                
-                                // Se estiver visualizando esta aeronave, recarregar
-                                if (currentAircraftId) {
-                                    loadCurrentAircraft();
-                                }
-                            }
-                        });
-                    window.firestoreUnsubscribe.push(unsubscribe);
-                });
-            } else {
-                // Seção normal: escutar apenas sua seção
-                const sectionName = user.email.split('@')[0].split('.')[0];
-                const unsubscribe = db.collection('sections').doc(sectionName)
-                    .onSnapshot((doc) => {
-                        if (doc.exists) {
-                            const data = doc.data().data;
-                            aircraftStates = data;
-                            
-                            // Salvar no localStorage também
-                            const localKey = `c105_${sectionName}_data`;
-                            localStorage.setItem(localKey, JSON.stringify(data));
-                            
-                            // Recarregar interface
-                            renderTabs();
-                            if (currentAircraftId) {
-                                loadCurrentAircraft();
-                            }
-                        }
-                    });
-                window.firestoreUnsubscribe.push(unsubscribe);
             }
         }
 
@@ -1658,175 +1553,43 @@
                 aircraftId: '',
                 startDate: '',
                 blocks: {},
-                section: userSection // NOVA LINHA: Identificar seção
+                section: userSection
             };
         }
         
         // Compatibilidade com dados antigos
         let appState = null;
 
-        // Sincronizar com Firestore
-        async function syncWithFirestore() {
-            const user = firebase.auth().currentUser;
-            if (!user) return;
-            
-            const isAdmin = user.email === 'admin@c105.fab';
-            
-            if (isAdmin) {
-                // Admin: sincronizar todas as seções
-                const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-                
-                for (const section of validSections) {
-                    try {
-                        const doc = await db.collection('sections').doc(section).get();
-                        if (doc.exists) {
-                            const firestoreData = doc.data().data;
-                            const localKey = `c105_${section}_data`;
-                            const localData = localStorage.getItem(localKey);
-                            
-                            if (localData) {
-                                // Comparar timestamps e usar o mais recente
-                                const localParsed = JSON.parse(localData);
-                                // Por simplicidade, sempre usar dados do Firestore se existirem
-                                localStorage.setItem(localKey, JSON.stringify(firestoreData));
-                            } else {
-                                // Não há dados locais, usar Firestore
-                                localStorage.setItem(localKey, JSON.stringify(firestoreData));
-                            }
-                        }
-                    } catch (error) {
-                        console.error(`Erro ao sincronizar ${section}:`, error);
-                    }
-                }
-            } else {
-                // Seção normal: sincronizar apenas sua própria seção
-                const sectionName = user.email.split('@')[0].split('.')[0];
-                try {
-                    const doc = await db.collection('sections').doc(sectionName).get();
-                    if (doc.exists) {
-                        const firestoreData = doc.data().data;
-                        const localKey = `c105_${sectionName}_data`;
-                        localStorage.setItem(localKey, JSON.stringify(firestoreData));
-                    }
-                } catch (error) {
-                    console.error('Erro ao sincronizar com Firestore:', error);
-                }
-            }
-        }
-
-        // Carregar dados salvos
         // Carregar dados salvos
         function loadData() {
             initializeTabs();
         }
 
         // Gerenciamento de abas
-        async function initializeTabs() {
+        function initializeTabs() {
             const user = firebase.auth().currentUser;
             if (!user) return;
             
-            const isAdmin = user.email === 'admin@c105.fab';
+            const sectionKey = `c105_${user.email.split('@')[0].split('.')[0]}_data`;
+            const savedTabs = localStorage.getItem(sectionKey);
             
-            // Primeiro, tentar sincronizar com Firestore
-            await syncWithFirestore();
-            
-            if (isAdmin) {
-                // Admin: coletar TODAS as aeronaves de todas as seções
-                const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-                const allAircraftMap = new Map(); // Usar Map para evitar duplicatas por matrícula
+            if (savedTabs) {
+                const localData = JSON.parse(savedTabs);
                 
-                // Processar apenas seções válidas
-                validSections.forEach(section => {
-                    const sectionKey = `c105_${section}_data`;
-                    const sectionData = localStorage.getItem(sectionKey);
-                    
-                    if (sectionData) {
-                        try {
-                            const data = JSON.parse(sectionData);
-                            // Verificar se data é um objeto válido
-                            if (data && typeof data === 'object') {
-                                // Percorrer cada aeronave da seção
-                                Object.entries(data).forEach(([key, aircraft]) => {
-                                    // Verificar se aircraft é válido e tem estrutura correta
-                                    if (aircraft && 
-                                        typeof aircraft === 'object' && 
-                                        aircraft.aircraftId && 
-                                        aircraft.aircraftId.trim() !== '' &&
-                                        aircraft.phases && 
-                                        Array.isArray(aircraft.phases)) {
-                                        
-                                        const identifier = aircraft.aircraftId;
-                                        
-                                        // Se já não existe essa aeronave no Map, adicionar
-                                        if (!allAircraftMap.has(identifier)) {
-                                            allAircraftMap.set(identifier, {
-                                                phases: JSON.parse(JSON.stringify(phases)),
-                                                aircraftId: aircraft.aircraftId,
-                                                startDate: aircraft.startDate || '',
-                                                blocks: aircraft.blocks || {},
-                                                section: 'ADMINISTRADOR',
-                                                originalSection: section
-                                            });
-                                        }
-                                    }
-                                });
-                            }
-                        } catch (error) {
-                            console.error(`Erro ao processar ${section}:`, error);
-                        }
-                    }
-                });
-                
-                // Converter Map para objeto aircraftStates
-                aircraftStates = {};
-                let index = 0;
-                allAircraftMap.forEach((aircraft, identifier) => {
-                    const adminKey = 'admin-' + index++;
-                    aircraftStates[adminKey] = aircraft;
-                });
-                
-                // Se não houver aeronaves, não criar abas vazias
-                const aircraftIds = Object.keys(aircraftStates);
-                if (aircraftIds.length > 0) {
-                    currentAircraftId = aircraftIds[0];
-                } else {
-                    // Admin sem aeronaves para visualizar
-                    currentAircraftId = null;
-                }
-                
-        } else {
-                // Seções normais
-                const sectionKey = `c105_${user.email.split('@')[0].split('.')[0]}_data`;
-                const savedTabs = localStorage.getItem(sectionKey);
-                
-                if (savedTabs) {
-                    // Parse dos dados locais primeiro
-                    const localData = JSON.parse(savedTabs);
-                    
-                    // VERIFICAÇÃO DE SANIDADE
-                    if (Object.keys(localData).length > SAFETY_LIMITS.MAX_AIRCRAFT) {
-                        console.error('Muitas aeronaves detectadas:', Object.keys(localData).length);
-                        alert('Erro detectado. Criando sessão limpa.');
-                        localStorage.removeItem(sectionKey);
-                        createNewTab();
-                        return;
-                    }
-                    
-                    // Verificar se tem dados válidos
-                    if (Object.keys(localData).length > 0 && Object.values(localData).some(aircraft => aircraft.aircraftId)) {
-                        aircraftStates = localData;
-                        const aircraftIds = Object.keys(aircraftStates);
-                        if (aircraftIds.length > 0) {
-                            currentAircraftId = aircraftIds[0];
-                        }
-                    } else {
-                        // Dados locais vazios, criar nova aba
-                        createNewTab();
+                // Verificar se tem dados válidos
+                if (Object.keys(localData).length > 0 && Object.values(localData).some(aircraft => aircraft.aircraftId)) {
+                    aircraftStates = localData;
+                    const aircraftIds = Object.keys(aircraftStates);
+                    if (aircraftIds.length > 0) {
+                        currentAircraftId = aircraftIds[0];
                     }
                 } else {
-                    // Não há dados locais, criar primeira aba
+                    // Dados locais vazios, criar nova aba
                     createNewTab();
                 }
+            } else {
+                // Não há dados locais, criar primeira aba
+                createNewTab();
             }
             
             renderTabs();
@@ -1835,12 +1598,6 @@
 
         // Criar nova aba
         function createNewTab() {
-            // PROTEÇÃO CONTRA LOOP
-            if (Object.keys(aircraftStates).length >= SAFETY_LIMITS.MAX_AIRCRAFT) {
-                alert('Limite máximo de 10 aeronaves atingido!');
-                return;
-            }
-            
             const newId = 'aircraft-' + Date.now();
             aircraftStates[newId] = createNewAircraftState();
             currentAircraftId = newId;
@@ -1854,15 +1611,6 @@
             const tabsContainer = document.getElementById('aircraftTabs');
             tabsContainer.innerHTML = '';
             
-            const user = firebase.auth().currentUser;
-            const isAdmin = user && user.email === 'admin@c105.fab';
-            
-            // Se admin sem aeronaves, mostrar mensagem
-            if (isAdmin && Object.keys(aircraftStates).length === 0) {
-                tabsContainer.innerHTML = '<div style="padding: 10px; color: #666;">Nenhuma aeronave em manutenção</div>';
-                return;
-            }
-            
             Object.keys(aircraftStates).forEach(aircraftId => {
                 const state = aircraftStates[aircraftId];
                 const tab = document.createElement('div');
@@ -1870,18 +1618,16 @@
                 
                 tab.innerHTML = `
                     <span onclick="switchTab('${aircraftId}')">${state.aircraftId || 'Nova Aeronave'}</span>
-                    ${!isAdmin && Object.keys(aircraftStates).length > 1 ? `<span class="tab-close" onclick="closeTab('${aircraftId}')">×</span>` : ''}
+                    ${Object.keys(aircraftStates).length > 1 ? `<span class="tab-close" onclick="closeTab('${aircraftId}')">×</span>` : ''}
                 `;
                 tabsContainer.appendChild(tab);
             });
             
-            if (!isAdmin) {
-                const newTabBtn = document.createElement('button');
-                newTabBtn.className = 'btn-new-tab';
-                newTabBtn.innerHTML = '+ Nova Aeronave';
-                newTabBtn.onclick = createNewTab;
-                tabsContainer.appendChild(newTabBtn);
-            }
+            const newTabBtn = document.createElement('button');
+            newTabBtn.className = 'btn-new-tab';
+            newTabBtn.innerHTML = '+ Nova Aeronave';
+            newTabBtn.onclick = createNewTab;
+            tabsContainer.appendChild(newTabBtn);
         }
 
         // Mudar de aba
@@ -1914,23 +1660,11 @@
 
         // Carregar aeronave atual
         function loadCurrentAircraft() {
-            const user = firebase.auth().currentUser;
-            const isAdmin = user && user.email === 'admin@c105.fab';
-            
-            // Se não há aeronave atual
             if (!currentAircraftId || !aircraftStates[currentAircraftId]) {
                 document.getElementById('aircraftId').value = '';
                 document.getElementById('startDate').value = '';
                 document.getElementById('daysElapsed').textContent = '0 dias';
-                
-                if (isAdmin) {
-                    // Admin sem aeronaves - mostrar mensagem
-                    renderAdminPhases();
-                    updateProgress();
-                } else {
-                    // Seção técnica - criar nova aeronave
-                    createNewTab();
-                }
+                createNewTab();
                 return;
             }
             
@@ -1938,43 +1672,17 @@
             document.getElementById('aircraftId').value = appState.aircraftId || '';
             document.getElementById('startDate').value = appState.startDate || '';
             
-            // Desabilitar inputs para admin
-            if (isAdmin) {
-                document.getElementById('aircraftId').disabled = true;
-                document.getElementById('startDate').disabled = true;
-            }
-            
             renderPhases();
             updateProgress();
             updateDaysElapsed();
         }
 
         // Salvar todos os dados
-         function saveAllData() {
+        function saveAllData() {
             const user = firebase.auth().currentUser;
             if (user) {
                 const sectionKey = `c105_${user.email.split('@')[0].split('.')[0]}_data`;
-                
-                // VERIFICAR TAMANHO DOS DADOS
-                const dataString = JSON.stringify(aircraftStates);
-                if (dataString.length > 5000000) { // 5MB limite
-                    alert('Dados muito grandes! Entre em contato com o administrador.');
-                    console.error('Dados excedem 5MB:', dataString.length);
-                    return;
-                }
-                
-                // Salvar no localStorage
-                localStorage.setItem(sectionKey, dataString);
-                
-                // Salvar no Firestore
-                const sectionName = user.email.split('@')[0].split('.')[0];
-                db.collection('sections').doc(sectionName).set({
-                    data: aircraftStates,
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedBy: user.email
-                }).catch(error => {
-                    console.error('Erro ao salvar no Firestore:', error);
-                });
+                localStorage.setItem(sectionKey, JSON.stringify(aircraftStates));
             }
         }
 
@@ -1989,199 +1697,11 @@
             }
         }
 
-        // Renderizar fases para administrador
-        function renderAdminPhases() {
-            const container = document.getElementById('phasesContainer');
-            container.innerHTML = '';
-            
-            // Se não há aeronaves, mostrar mensagem
-            if (!appState || !appState.aircraftId || appState.aircraftId.trim() === '') {
-                container.innerHTML = `
-                    <div style="background: #f8f9fa; padding: 40px; text-align: center; border-radius: 10px; margin: 20px 0;">
-                        <h3 style="color: #666; margin-bottom: 10px;">Nenhuma aeronave em manutenção</h3>
-                        <p style="color: #999;">As aeronaves aparecerão aqui quando forem adicionadas pelas seções técnicas.</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            const currentAircraftId = appState.aircraftId;
-            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-            
-            phases.forEach(phase => {
-                // Calcular status da fase baseado em todas as seções
-                let hasBlocked = false;
-                let hasCompleted = false;
-                let hasInProgress = false;
-                
-                validSections.forEach(section => {
-                    const sectionKey = `c105_${section}_data`;
-                    const sectionData = localStorage.getItem(sectionKey);
-                    
-                    if (sectionData) {
-                        try {
-                            const data = JSON.parse(sectionData);
-                            Object.values(data).forEach(aircraft => {
-                                if (aircraft && aircraft.aircraftId === currentAircraftId && aircraft.phases) {
-                                    const phaseData = aircraft.phases.find(p => p.id === phase.id);
-                                    if (phaseData) {
-                                        const completedCount = phaseData.tasks.filter(t => t.completed).length;
-                                        const totalCount = phaseData.tasks.length;
-                                        
-                                        if (aircraft.blocks) {
-                                            const phaseBlocks = phaseData.tasks.some(t => aircraft.blocks[t.id]);
-                                            if (phaseBlocks) hasBlocked = true;
-                                        }
-                                        
-                                        if (completedCount === totalCount && totalCount > 0) {
-                                            hasCompleted = true;
-                                        } else if (completedCount > 0) {
-                                            hasInProgress = true;
-                                        }
-                                    }
-                                }
-                            });
-                        } catch (error) {
-                            console.error(`Erro ao processar ${section}:`, error);
-                        }
-                    }
-                });
-                
-                // Calcular totais para determinar status
-                let totalTasks = 0;
-                let totalCompleted = 0;
-                
-                validSections.forEach(section => {
-                    const sectionKey = `c105_${section}_data`;
-                    const sectionData = localStorage.getItem(sectionKey);
-                    
-                    if (sectionData) {
-                        try {
-                            const data = JSON.parse(sectionData);
-                            Object.values(data).forEach(aircraft => {
-                                if (aircraft && aircraft.aircraftId === currentAircraftId && aircraft.phases) {
-                                    const phaseData = aircraft.phases.find(p => p.id === phase.id);
-                                    if (phaseData) {
-                                        totalTasks += phaseData.tasks.length;
-                                        totalCompleted += phaseData.tasks.filter(t => t.completed).length;
-                                    }
-                                }
-                            });
-                        } catch (error) {
-                            console.error(`Erro ao processar ${section}:`, error);
-                        }
-                    }
-                });
-                
-                // Determinar status final da fase
-                let phaseStatus = 'pending';
-                if (hasBlocked) phaseStatus = 'blocked';
-                else if (totalTasks > 0) {
-                    // Só marca como concluído se TODAS as tarefas estiverem completas
-                    if (totalCompleted === totalTasks) {
-                        phaseStatus = 'completed';
-                    } else if (totalCompleted > 0) {
-                        phaseStatus = 'in-progress';
-                    }
-                }
-                
-                const phaseCard = document.createElement('div');
-                phaseCard.className = 'phase-card';
-                
-                phaseCard.innerHTML = `
-                    <div class="phase-header status-${phaseStatus}" onclick="togglePhase(${phase.id})">
-                        <div class="phase-title">
-                            <div class="phase-number">${phase.id}</div>
-                            <span>${phase.title}</span>
-                        </div>
-                        <div class="phase-status">
-                            <span class="status-badge status-${phaseStatus}">${getStatusText(phaseStatus)}</span>
-                            <span>▼</span>
-                        </div>
-                    </div>
-                    <div class="phase-content" id="phase-content-${phase.id}">
-                        <div class="tasks-list" style="padding: 20px;">
-                            ${renderAdminSectionsProgress(phase.id, currentAircraftId)}
-                        </div>
-                    </div>
-                `;
-                
-                container.appendChild(phaseCard);
-            });
-            
-            setTimeout(setupScrollAnimations, 100);
-        }
-        
-        // Renderizar progresso das seções para uma fase específica
-        function renderAdminSectionsProgress(phaseId, aircraftId) {
-            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-            let html = '<div style="display: grid; gap: 15px;">';
-            
-            validSections.forEach(section => {
-                const sectionKey = `c105_${section}_data`;
-                const sectionData = localStorage.getItem(sectionKey);
-                
-                let sectionProgress = {
-                    total: 0,
-                    completed: 0,
-                    percentage: 0
-                };
-                
-                if (sectionData) {
-                    try {
-                        const data = JSON.parse(sectionData);
-                        Object.values(data).forEach(aircraft => {
-                            // Comparar apenas pela matrícula quando ela existe
-                            if (aircraft && aircraft.aircraftId === aircraftId && aircraft.phases) {
-                                const phase = aircraft.phases.find(p => p.id === phaseId);
-                                if (phase) {
-                                    sectionProgress.total = phase.tasks.length;
-                                    sectionProgress.completed = phase.tasks.filter(t => t.completed).length;
-                                    sectionProgress.percentage = sectionProgress.total > 0 ? 
-                                        Math.round((sectionProgress.completed / sectionProgress.total) * 100) : 0;
-                                }
-                            }
-                        });
-                    } catch (error) {
-                        console.error(`Erro ao processar dados de ${section}:`, error);
-                    }
-                }
-                
-                html += `
-                    <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #e0e0e0;">
-                        <h4 style="margin: 0 0 10px 0; color: #1a5490;">${getDisplaySectionName(section)}</h4>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <span>${sectionProgress.completed}/${sectionProgress.total} tarefas</span>
-                            <span style="font-weight: bold; color: ${sectionProgress.percentage === 100 ? '#4caf50' : '#1a5490'};">
-                                ${sectionProgress.percentage}%
-                            </span>
-                        </div>
-                        <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
-                            <div style="background: ${sectionProgress.percentage === 100 ? '#4caf50' : '#2196f3'}; 
-                                       height: 100%; width: ${sectionProgress.percentage}%; 
-                                       transition: width 0.3s ease;"></div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            html += '</div>';
-            return html;
-        }
-        
         // Renderizar fases
         function renderPhases() {
             const container = document.getElementById('phasesContainer');
             container.innerHTML = '';
             
-            const user = firebase.auth().currentUser;
-            const isAdmin = user && user.email === 'admin@c105.fab';
-        
-            if (isAdmin) {
-                renderAdminPhases();
-                return;
-            }
-        
             appState.phases.forEach(phase => {
                 const phaseStatus = getPhaseStatus(phase);
                 const phaseCard = document.createElement('div');
@@ -2218,7 +1738,7 @@
                 container.appendChild(phaseCard);
             });
             
-            // ADICIONE ESTA LINHA:
+            // Animações
             setTimeout(setupScrollAnimations, 100);
         }
 
@@ -2405,6 +1925,7 @@
                 updateProgress();
             }
         }
+
         // Toggle informações da tarefa
         window.toggleTaskInfo = function(taskId) {
             const infoModal = document.getElementById(`info-${taskId}`);
@@ -2412,7 +1933,8 @@
                 infoModal.classList.toggle('active');
             }
         }
-                // Mostrar formulário de nova tarefa
+
+        // Mostrar formulário de nova tarefa
         window.showNewTaskForm = function(phaseId) {
             const form = document.getElementById(`new-task-form-${phaseId}`);
             const input = document.getElementById(`new-task-input-${phaseId}`);
@@ -2439,12 +1961,6 @@
             
             if (taskName) {
                 const phase = appState.phases.find(p => p.id === phaseId);
-                
-                // PROTEÇÃO CONTRA MUITAS TAREFAS
-                if (phase.tasks.length >= SAFETY_LIMITS.MAX_TASKS_PER_PHASE) {
-                    alert('Limite máximo de 100 tarefas por fase atingido!');
-                    return;
-                }
                 const newTaskNumber = phase.tasks.length + 1;
                 const newTaskId = `${phaseId}.${newTaskNumber}`;
                 
@@ -2486,7 +2002,8 @@
                 hideNewTaskForm(phaseId);
             }
         }
-                // Excluir tarefa
+
+        // Excluir tarefa
         window.deleteTask = function(phaseId, taskId) {
             if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
                 const phase = appState.phases.find(p => p.id === phaseId);
@@ -2620,10 +2137,6 @@
 
         // Atualizar progresso
         function updateProgress() {
-            const user = firebase.auth().currentUser;
-            const isAdmin = user && user.email === 'admin@c105.fab';
-            
-            // Se não há dados, zerar tudo
             if (!appState || !appState.phases) {
                 document.getElementById('progressFill').style.width = '0%';
                 document.getElementById('progressFill').textContent = '0%';
@@ -2633,63 +2146,20 @@
                 return;
             }
             
-            if (isAdmin && appState.aircraftId) {
-                // Para admin, calcular com base na média de todas as seções
-                const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-                let totalTasks = 0;
-                let totalCompleted = 0;
-                let totalBlocked = 0;
-                
-                validSections.forEach(section => {
-                    const sectionKey = `c105_${section}_data`;
-                    const sectionData = localStorage.getItem(sectionKey);
-                    
-                    if (sectionData) {
-                        try {
-                            const data = JSON.parse(sectionData);
-                            Object.values(data).forEach(aircraft => {
-                                if (aircraft && aircraft.aircraftId === appState.aircraftId && aircraft.phases) {
-                                    aircraft.phases.forEach(phase => {
-                                        totalTasks += phase.tasks.length;
-                                        totalCompleted += phase.tasks.filter(t => t.completed).length;
-                                        if (aircraft.blocks) {
-                                            totalBlocked += Object.keys(aircraft.blocks).length;
-                                        }
-                                    });
-                                }
-                            });
-                        } catch (error) {
-                            console.error(`Erro ao processar ${section}:`, error);
-                        }
-                    }
-                });
-                
-                const pendingTasks = totalTasks - totalCompleted - totalBlocked;
-                const percentage = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
-                
-                document.getElementById('progressFill').style.width = percentage + '%';
-                document.getElementById('progressFill').textContent = percentage + '%';
-                document.getElementById('completedCount').textContent = totalCompleted;
-                document.getElementById('pendingCount').textContent = pendingTasks;
-                document.getElementById('blockedCount').textContent = totalBlocked;
-                
-            } else {
-                // Seções normais - código original
-                const totalTasks = appState.phases.reduce((sum, phase) => sum + phase.tasks.length, 0);
-                const completedTasks = appState.phases.reduce((sum, phase) => 
-                    sum + phase.tasks.filter(task => task.completed).length, 0);
-                const blockedTasks = Object.keys(appState.blocks || {}).length;
-                const pendingTasks = totalTasks - completedTasks - blockedTasks;
-                
-                const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-                const progressFill = document.getElementById('progressFill');
-                progressFill.style.width = percentage + '%';
-                progressFill.textContent = percentage + '%';
-                
-                document.getElementById('completedCount').textContent = completedTasks;
-                document.getElementById('pendingCount').textContent = pendingTasks;
-                document.getElementById('blockedCount').textContent = blockedTasks;
-            }
+            const totalTasks = appState.phases.reduce((sum, phase) => sum + phase.tasks.length, 0);
+            const completedTasks = appState.phases.reduce((sum, phase) => 
+                sum + phase.tasks.filter(task => task.completed).length, 0);
+            const blockedTasks = Object.keys(appState.blocks || {}).length;
+            const pendingTasks = totalTasks - completedTasks - blockedTasks;
+            
+            const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            const progressFill = document.getElementById('progressFill');
+            progressFill.style.width = percentage + '%';
+            progressFill.textContent = percentage + '%';
+            
+            document.getElementById('completedCount').textContent = completedTasks;
+            document.getElementById('pendingCount').textContent = pendingTasks;
+            document.getElementById('blockedCount').textContent = blockedTasks;
         }
 
         // Atualizar dias decorridos
@@ -2736,7 +2206,7 @@
         // Limpar dados
         window.clearData = function() {
             if (confirm('Tem certeza que deseja limpar todos os dados desta aeronave?')) {
-                // CRIAR BACKUP ANTES DE LIMPAR
+                // Criar backup antes de limpar
                 createBackup();
                 
                 // Limpar apenas a aeronave atual
@@ -2752,12 +2222,10 @@
                 renderTabs();
                 renderPhases();
                 updateProgress();
-                updateDaysElapsed(); // CERTIFIQUE-SE QUE ESTA LINHA ESTÁ AQUI
+                updateDaysElapsed();
             }
         }
 
-        // ADICIONE ESTAS NOVAS FUNÇÕES AQUI:
-        
         // Função de backup antes de operações críticas
         function createBackup() {
             const backup = {
@@ -2767,33 +2235,12 @@
             localStorage.setItem('c105Backup', JSON.stringify(backup));
         }
 
-        // Função para restaurar backup (caso precise)
-        function restoreBackup() {
-            const backup = localStorage.getItem('c105Backup');
-            if (backup) {
-                const backupData = JSON.parse(backup);
-                if (confirm(`Restaurar backup de ${new Date(backupData.date).toLocaleString()}?`)) {
-                    aircraftStates = JSON.parse(backupData.data);
-                    currentAircraftId = Object.keys(aircraftStates)[0];
-                    saveAllData();
-                    location.reload();
-                }
-            } else {
-                alert('Nenhum backup encontrado.');
-            }
-        }
-
-        // Event listeners
-        document.getElementById('aircraftId').addEventListener('input', saveData);
-
         // Event listeners
         document.getElementById('aircraftId').addEventListener('input', saveData);
         document.getElementById('startDate').addEventListener('change', () => {
             saveData();
             updateDaysElapsed();
         });
-
-        // Remova este trecho duplicado - já está sendo tratado no onAuthStateChanged principal
 
         // Animação de Fade no Scroll
         function setupScrollAnimations() {
@@ -2825,9 +2272,6 @@
             });
         }
         
-        // Chamar após renderizar as fases
-        setTimeout(setupScrollAnimations, 100);
-        
         // Botão voltar ao topo
         window.addEventListener('scroll', () => {
             const backToTop = document.getElementById('backToTop');
@@ -2844,401 +2288,6 @@
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         }
-
-        // ========== SISTEMA ADMINISTRATIVO ==========
-
-        // Função de limpeza de dados órfãos (para debug)
-        window.cleanOrphanData = function() {
-            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-            const allKeys = Object.keys(localStorage);
-            
-            allKeys.forEach(key => {
-                if (key.startsWith('c105_') && key.endsWith('_data')) {
-                    const sectionName = key.replace('c105_', '').replace('_data', '');
-                    if (!validSections.includes(sectionName)) {
-                        console.log(`Removendo chave inválida: ${key}`);
-                        localStorage.removeItem(key);
-                    }
-                }
-            });
-            
-            console.log('Limpeza de dados órfãos concluída');
-        }
-
-        // Função de debug para verificar dados (útil para diagnóstico)
-        window.debugC105Data = function() {
-            console.log('=== DEBUG C-105 ===');
-            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-            
-            validSections.forEach(section => {
-                const key = `c105_${section}_data`;
-                const data = localStorage.getItem(key);
-                
-                if (data) {
-                    try {
-                        const parsed = JSON.parse(data);
-                        const aircraftIds = Object.values(parsed)
-                            .filter(a => a && a.aircraftId)
-                            .map(a => a.aircraftId);
-                        
-                        console.log(`${section.toUpperCase()}: ${aircraftIds.length > 0 ? aircraftIds.join(', ') : 'Sem aeronaves'}`);
-                    } catch (e) {
-                        console.log(`${section.toUpperCase()}: Erro ao processar dados`);
-                    }
-                } else {
-                    console.log(`${section.toUpperCase()}: Sem dados`);
-                }
-            });
-            
-            // Verificar chaves órfãs
-            const allKeys = Object.keys(localStorage).filter(key => key.startsWith('c105_') && key.endsWith('_data'));
-            const orphanKeys = allKeys.filter(key => {
-                const sectionName = key.replace('c105_', '').replace('_data', '');
-                return !validSections.includes(sectionName);
-            });
-            
-            if (orphanKeys.length > 0) {
-                console.log('\nCHAVES ÓRFÃS ENCONTRADAS:', orphanKeys);
-                console.log('Execute cleanOrphanData() para removê-las');
-            }
-            
-            console.log('==================');
-        }
-
-        // Verificar se é administrador
-        function checkIfAdmin() {
-            const user = firebase.auth().currentUser;
-            if (user && user.email === 'admin@c105.fab') {
-                document.getElementById('btnAdmin').style.display = 'inline-flex';
-            } else {
-                document.getElementById('btnAdmin').style.display = 'none';
-            }
-        }
-        
-        // Mostrar dashboard administrativo
-        window.showAdminDashboard = function() {
-            const validSections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-            const allAircraftMap = new Map();
-            
-            // Coletar todas as aeronaves únicas
-            validSections.forEach(section => {
-                const sectionKey = `c105_${section}_data`;
-                const sectionData = localStorage.getItem(sectionKey);
-                
-                if (sectionData) {
-                    try {
-                        const data = JSON.parse(sectionData);
-                        Object.values(data).forEach(aircraft => {
-                            if (aircraft && aircraft.aircraftId && aircraft.aircraftId.trim() !== '') {
-                                if (!allAircraftMap.has(aircraft.aircraftId)) {
-                                    allAircraftMap.set(aircraft.aircraftId, {
-                                        aircraftId: aircraft.aircraftId,
-                                        startDate: aircraft.startDate || '',
-                                        phases: JSON.parse(JSON.stringify(phases)) // Cópia das fases padrão
-                                    });
-                                }
-                            }
-                        });
-                    } catch (error) {
-                        console.error(`Erro ao processar ${section}:`, error);
-                    }
-                }
-            });
-            
-            // Se não há aeronaves
-            if (allAircraftMap.size === 0) {
-                document.getElementById('adminDashboard').innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #666;">
-                        <h3>Nenhuma aeronave em manutenção</h3>
-                        <p>As aeronaves aparecerão aqui quando forem adicionadas pelas seções técnicas.</p>
-                    </div>
-                `;
-                document.getElementById('adminModal').classList.add('active');
-                return;
-            }
-            
-            // Criar HTML com abas
-            let dashboardHTML = `
-                <div class="admin-tabs-container">
-                    <div class="admin-tabs">
-            `;
-            
-            // Adicionar abas para cada aeronave
-            let firstAircraft = true;
-            allAircraftMap.forEach((aircraft, aircraftId) => {
-                dashboardHTML += `
-                    <div class="admin-tab ${firstAircraft ? 'active' : ''}" onclick="switchAdminTab('${aircraftId}')">
-                        ${aircraftId}
-                    </div>
-                `;
-                firstAircraft = false;
-            });
-            
-            dashboardHTML += `
-                    </div>
-                    <div class="admin-content">
-            `;
-            
-            // Adicionar conteúdo para cada aeronave
-            firstAircraft = true;
-            allAircraftMap.forEach((aircraft, aircraftId) => {
-                dashboardHTML += `
-                    <div class="admin-aircraft-content" id="admin-content-${aircraftId}" style="${firstAircraft ? '' : 'display: none;'}">
-                        <h3>Aeronave: ${aircraftId}</h3>
-                        <div class="admin-phases-grid">
-                `;
-                
-                // Para cada fase, calcular a média de progresso entre todas as seções
-                phases.forEach(phase => {
-                    let totalCompleted = 0;
-                    let totalTasks = 0;
-                    let sectionDetails = [];
-                    
-                    // Garantir que todas as seções apareçam
-                    validSections.forEach(section => {
-                        let sectionInfo = {
-                            section: getDisplaySectionName(section),
-                            completed: 0,
-                            total: 0,
-                            percentage: 0,
-                            hasData: false
-                        };
-                        
-                        const sectionKey = `c105_${section}_data`;
-                        const sectionData = localStorage.getItem(sectionKey);
-                        
-                        if (sectionData) {
-                            try {
-                                const data = JSON.parse(sectionData);
-                                Object.values(data).forEach(sectionAircraft => {
-                                    if (sectionAircraft && sectionAircraft.aircraftId === aircraftId && sectionAircraft.phases) {
-                                        const phaseData = sectionAircraft.phases.find(p => p.id === phase.id);
-                                        if (phaseData && phaseData.tasks.length > 0) {
-                                            sectionInfo.completed = phaseData.tasks.filter(t => t.completed).length;
-                                            sectionInfo.total = phaseData.tasks.length;
-                                            sectionInfo.percentage = Math.round((sectionInfo.completed / sectionInfo.total) * 100);
-                                            sectionInfo.hasData = true;
-                                            
-                                            // Somar para cálculo da média ponderada
-                                            totalCompleted += sectionInfo.completed;
-                                            totalTasks += sectionInfo.total;
-                                        }
-                                    }
-                                });
-                            } catch (error) {
-                                console.error(`Erro ao processar ${section}:`, error);
-                            }
-                        }
-                        
-                        sectionDetails.push(sectionInfo);
-                    });
-                    
-                    // Média ponderada: total de tarefas concluídas / total de tarefas
-                    const averageProgress = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
-                    
-                    dashboardHTML += `
-                        <div class="admin-phase-card">
-                            <div class="admin-phase-header" style="background: linear-gradient(to right, ${averageProgress === 100 ? '#4caf50' : '#2196f3'} 0%, ${averageProgress === 100 ? '#4caf50' : '#2196f3'} ${averageProgress}%, #e0e0e0 ${averageProgress}%, #e0e0e0 100%);">
-                                <div class="admin-phase-number">${phase.id}</div>
-                                <div class="admin-phase-title">${phase.title}</div>
-                                <div class="admin-phase-progress">${averageProgress}%</div>
-                            </div>
-                            <div class="admin-phase-details">
-                    `;
-                    
-                    // Mostrar detalhes por seção
-                    sectionDetails.forEach(detail => {
-                        const isComplete = detail.total > 0 && detail.completed === detail.total;
-                        dashboardHTML += `
-                            <div class="admin-section-detail" style="${isComplete ? 'background: #d4edda;' : ''}">
-                                <span class="section-name">${detail.section}:</span>
-                                <span class="section-progress">${detail.completed}/${detail.total} (${detail.percentage}%)</span>
-                            </div>
-                        `;
-                    });
-                    
-                    dashboardHTML += `
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                dashboardHTML += `
-                        </div>
-                    </div>
-                `;
-                firstAircraft = false;
-            });
-            
-            dashboardHTML += `
-                    </div>
-                </div>
-            `;
-            
-            // Adicionar estilos específicos do admin
-            dashboardHTML += `
-                <style>
-                    .admin-tabs-container {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 20px;
-                    }
-                    
-                    .admin-tabs {
-                        display: flex;
-                        gap: 10px;
-                        border-bottom: 2px solid #e0e0e0;
-                        padding-bottom: 10px;
-                    }
-                    
-                    .admin-tab {
-                        padding: 10px 20px;
-                        background: #f0f0f0;
-                        border-radius: 8px 8px 0 0;
-                        cursor: pointer;
-                        font-weight: 600;
-                        transition: all 0.3s;
-                    }
-                    
-                    .admin-tab:hover {
-                        background: #e0e0e0;
-                    }
-                    
-                    .admin-tab.active {
-                        background: #1a5490;
-                        color: white;
-                    }
-                    
-                    .admin-phases-grid {
-                        display: grid;
-                        gap: 15px;
-                        margin-top: 20px;
-                    }
-                    
-                    .admin-phase-card {
-                        border: 1px solid #ddd;
-                        border-radius: 8px;
-                        overflow: hidden;
-                    }
-                    
-                    .admin-phase-header {
-                        padding: 15px;
-                        display: flex;
-                        align-items: center;
-                        gap: 15px;
-                        position: relative;
-                        min-height: 60px;
-                    }
-                    
-                    .admin-phase-number {
-                        background: rgba(26, 84, 144, 0.9);
-                        color: white;
-                        width: 35px;
-                        height: 35px;
-                        border-radius: 50%;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-weight: bold;
-                        font-size: 14px;
-                        z-index: 1;
-                    }
-                    
-                    .admin-phase-title {
-                        flex: 1;
-                        font-weight: 600;
-                        color: #333;
-                        z-index: 1;
-                    }
-                    
-                    .admin-phase-progress {
-                        font-weight: bold;
-                        font-size: 18px;
-                        color: #333;
-                        z-index: 1;
-                    }
-                    
-                    .admin-phase-details {
-                        padding: 15px;
-                        background: #f8f9fa;
-                        display: grid;
-                        grid-template-columns: repeat(7, 1fr);
-                        gap: 10px;
-                    }
-                    
-                    .admin-section-detail {
-                        display: flex;
-                        align-items: center;
-                        padding: 5px 10px;
-                        background: white;
-                        border-radius: 4px;
-                        font-size: 12px;
-                        white-space: nowrap;
-                    }
-                    
-                    .section-name {
-                        font-weight: 600;
-                        color: #1a5490;
-                        margin-right: 10px;
-                    }
-                    
-                    .section-progress {
-                        color: #666;
-                    }
-                </style>
-            `;
-            
-            document.getElementById('adminDashboard').innerHTML = dashboardHTML;
-            document.getElementById('adminModal').classList.add('active');
-        }
-        
-        // Função para trocar abas no admin
-        window.switchAdminTab = function(aircraftId) {
-            // Esconder todos os conteúdos
-            document.querySelectorAll('.admin-aircraft-content').forEach(content => {
-                content.style.display = 'none';
-            });
-            
-            // Remover active de todas as abas
-            document.querySelectorAll('.admin-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Mostrar conteúdo selecionado
-            document.getElementById(`admin-content-${aircraftId}`).style.display = 'block';
-            
-            // Marcar aba como ativa
-            event.target.classList.add('active');
-        }
-        
-        // Fechar modal admin
-        window.closeAdminModal = function() {
-            document.getElementById('adminModal').classList.remove('active');
-        }
-        
-        // Exportar dados de todas as seções
-        window.exportAllSections = function() {
-            const sections = ['hidraulica', 'motores', 'pneumatica', 'eletrica', 'estrutura', 'comando', 'celula'];
-            const allData = {};
-            
-            sections.forEach(section => {
-                const sectionKey = `c105_${section}_data`;
-                const sectionData = localStorage.getItem(sectionKey);
-                if (sectionData) {
-                    allData[section] = JSON.parse(sectionData);
-                }
-            });
-            
-            const dataStr = JSON.stringify(allData, null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `c105_all_sections_${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-        }
-        
-        // ========== FIM DO SISTEMA ADMINISTRATIVO ==========
         
     }); // Fecha o window.addEventListener
 </script>
