@@ -291,10 +291,21 @@
 
         .logout-container {
             position: absolute;
-            right: 150px;
+            right: calc(90px + 36px); /* 90px (margem do logo) + 36px (metade do logo 72px) */
+            left: auto;
             top: 50%;     
             transform: translateY(-50%);  
             z-index: 100;
+        }
+        
+        /* Ajuste dinâmico para centralizar entre elementos */
+        @media (min-width: 769px) {
+            .logout-container {
+                left: calc(50% + 200px); /* Metade da tela + metade da largura da aircraft-info */
+                right: calc(90px + 36px);
+                margin: 0 auto;
+                transform: translate(-50%, -50%);
+            }
         }
         
         .logout-btn {
@@ -2303,6 +2314,26 @@
 
         // Event listeners
         document.getElementById('aircraftId').addEventListener('input', saveData);
+        
+        // Posicionar botão SAIR dinamicamente
+        function positionLogoutButton() {
+            const aircraftInfo = document.querySelector('.aircraft-info');
+            const logoRight = document.querySelector('.logo-right');
+            const logoutContainer = document.querySelector('.logout-container');
+            
+            if (aircraftInfo && logoRight && logoutContainer) {
+                const aircraftRight = aircraftInfo.getBoundingClientRect().right;
+                const logoLeft = logoRight.getBoundingClientRect().left;
+                const centerPoint = aircraftRight + ((logoLeft - aircraftRight) / 2);
+                
+                logoutContainer.style.left = centerPoint + 'px';
+                logoutContainer.style.transform = 'translateX(-50%) translateY(-50%)';
+            }
+        }
+        
+        // Executar ao carregar e ao redimensionar
+        window.addEventListener('load', positionLogoutButton);
+        window.addEventListener('resize', positionLogoutButton);
         document.getElementById('startDate').addEventListener('change', () => {
             saveData();
             updateDaysElapsed();
