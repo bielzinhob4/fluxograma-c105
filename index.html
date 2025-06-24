@@ -291,29 +291,25 @@
 
         .logout-container {
             position: absolute;
-            right: 136px;
+            right: 150px;
             top: 50%;     
             transform: translateY(-50%);  
-            background: #dc3545;
-            border-radius: 8px;
-            padding: 2px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
             z-index: 100;
         }
-
+        
         .logout-btn {
             background: #dc3545;
             border: 2px solid rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 10px 20px;
+            padding: 6px 14px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .logout-btn:hover {
@@ -346,12 +342,11 @@
 
         .aircraft-info {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             align-items: center;
             background: rgba(255,255,255,0.1);
             padding: 10px 20px;
             border-radius: 5px;
-            min-width: 400px;
         }
 
         .aircraft-info input {
@@ -372,6 +367,13 @@
         
         #startDate {
             width: 140px;
+        }
+        
+        #daysElapsed {
+            min-width: 60px;
+            text-align: center;
+            font-weight: 600;
+            color: #ffffff;
         }
 
         .aircraft-info input::placeholder {
