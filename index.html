@@ -277,12 +277,28 @@
             max-width: 1400px;
             margin: 0 auto;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
             flex-wrap: nowrap;
             gap: 30px;
             padding: 0 90px;
         }
+        
+        #daysElapsed {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .aircraft-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 5px;
+            min-width: 400px;
+        }
+
 
         .header h1 {
             font-size: 22px;
@@ -1047,7 +1063,11 @@
                         <input type="date" id="startDate" title="Data de entrada da aeronave na linha de revisão" />
                         <span class="date-tooltip">Data de entrada na linha de revisão</span>
                     </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressFill">0%</div>
+                    </div>
                     <span id="daysElapsed" title="Dias desde o início da manutenção">0 dias</span>
+
                 </div>
             </div>
         </header>
