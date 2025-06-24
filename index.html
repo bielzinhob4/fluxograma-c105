@@ -176,6 +176,39 @@
         #mainApp {
             display: none;
         }
+        
+        /* Tela de carregamento inicial */
+        .auth-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0e27;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+        }
+        
+        .auth-loading-content {
+            text-align: center;
+        }
+        
+        .auth-loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #1a5490;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        .auth-loading-text {
+            color: #ecf0f1;
+            font-size: 14px;
+        }
 
         /* Estilos originais do fluxograma */
         * {
@@ -1002,8 +1035,16 @@
     </style>
 </head>
 <body>
+    <!-- Tela de Carregamento -->
+    <div class="auth-loading" id="authLoading">
+        <div class="auth-loading-content">
+            <div class="auth-loading-spinner"></div>
+            <div class="auth-loading-text">Verificando autenticação...</div>
+        </div>
+    </div>
+
     <!-- Sistema de Login -->
-    <div class="login-container" id="loginContainer">
+    <div class="login-container" id="loginContainer" style="display: none;">
         <div class="login-box">
             <div class="login-logo">
                 <img src="https://i.imgur.com/G07XGSC.jpeg" alt="C-105 Amazonas">
@@ -1206,7 +1247,8 @@
                 console.error('Erro ao configurar persistência:', error);
             });
 
-        // Elementos do Sistema de Login
+         // Elementos do Sistema de Login
+        const authLoading = document.getElementById('authLoading');
         const loginContainer = document.getElementById('loginContainer');
         const mainApp = document.getElementById('mainApp');
         const loginForm = document.getElementById('loginForm');
@@ -1221,6 +1263,9 @@
 
         // Verificar autenticação
         auth.onAuthStateChanged((user) => {
+            // Esconder tela de carregamento
+            if (authLoading) authLoading.style.display = 'none';
+            
             if (user) {
                 // Limpar estados anteriores
                 aircraftStates = {};
