@@ -289,12 +289,19 @@
             object-position: center;
         }
 
-        .logout-container {
+        .header-layout {
             position: absolute;
-            right: 150px;
-            top: 50%;     
-            transform: translateY(-50%);  
-            z-index: 100;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 90px;
+            right: 90px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-spacer {
+            width: 72px; /* Mesmo tamanho do logo direito para balancear */
         }
         
         .logout-btn {
@@ -307,11 +314,7 @@
             font-size: 13px;
             font-weight: 600;
             transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
-
         .logout-btn:hover {
             background: #c82333;
             transform: translateY(-1px);
@@ -1005,39 +1008,47 @@
                 flex-direction: column;
                 padding: 0 40px;
             }
-
+        
+            .header-layout {
+                position: static;
+                transform: none;
+                flex-direction: column;
+                gap: 10px;
+                padding: 20px;
+                left: 0;
+                right: 0;
+            }
+        
             .header-logos {
                 display: none;
             }
-
+        
             .aircraft-info {
                 width: 100%;
                 justify-content: center;
             }
-
+        
+            .header-spacer {
+                display: none;
+            }
+        
             .phase-header {
                 flex-wrap: wrap;
             }
-
+        
             .controls {
                 justify-content: center;
             }
-
+        
             .progress-info {
                 flex-direction: column;
             }
-
+        
             .progress-stats {
                 width: 100%;
                 justify-content: space-around;
             }
-
-            .logout-container {
-                position: static;
-                margin-top: 10px;
-                width: 100%;
-            }
-
+        
             .logout-btn {
                 width: 100%;
                 justify-content: center;
@@ -1094,11 +1105,6 @@
     <!-- Aplicação Principal (Fluxograma) -->
     <div id="mainApp">
         <header class="header">
-            <!-- Botão de logout -->
-            <div class="logout-container">
-                <button class="logout-btn" onclick="logout()">SAIR</button>
-            </div>
-            
             <div class="header-logos">
                 <div class="logo-left">
                     <img src="https://i.imgur.com/QkMKOTv.png" alt="PAMA GL">
@@ -1107,8 +1113,7 @@
                     <img src="https://i.imgur.com/CgWeD26.jpeg" alt="Linha de Revisão C-105">
                 </div>
             </div>
-            <div class="header-content">
-                <h1 id="sectionTitle">FLUXOGRAMA - <span id="sectionName">CARREGANDO...</span>: C-105 AMAZONAS</h1>
+            <div class="header-layout">
                 <div class="aircraft-info">
                     <input type="text" id="aircraftId" placeholder="2855" title="Ex: 2855" maxlength="4" />
                     <div class="date-info">
@@ -1117,6 +1122,13 @@
                     </div>
                     <span id="daysElapsed" title="Dias desde o início da manutenção">0 dias</span>
                 </div>
+                
+                <button class="logout-btn" onclick="logout()">SAIR</button>
+                
+                <div class="header-spacer"></div>
+            </div>
+            <div class="header-content">
+                <h1 id="sectionTitle">FLUXOGRAMA - <span id="sectionName">CARREGANDO...</span>: C-105 AMAZONAS</h1>
             </div>
         </header>
 
