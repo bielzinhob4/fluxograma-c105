@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FLUXOGRAMA - HIDRÁULICA: C-105 AMAZONAS FAB</title>
+    <title>Fluxograma C-105</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔧</text></svg>">
     <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔧</text></svg>">
 
@@ -23,14 +23,27 @@
         }
 
         .login-box {
-            background: rgba(255, 255, 255, 0.05);
+            background: #f5f7fa;  /* Arctic Grey - cinza com toque azulado */
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid #e3e7ed;
             border-radius: 16px;
             padding: 40px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 15px 50px rgba(10, 14, 39, 0.5);
             width: 90%;
             max-width: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Detalhe sutil de gradiente no topo */
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #1a5490 0%, #dc3545 100%);
         }
 
         .login-logo {
@@ -54,14 +67,15 @@
         }
 
         .security-info {
-            background: rgba(26, 84, 144, 0.1);
-            border: 1px solid rgba(26, 84, 144, 0.3);
+            background: #e8f0fe;
+            border: 1px solid #c1d9f2;
             border-radius: 8px;
             padding: 12px;
             margin-bottom: 25px;
             text-align: center;
             font-size: 13px;
             color: #1a5490;
+            font-weight: 500;
         }
 
         .form-group {
@@ -78,10 +92,10 @@
         .form-group input {
             width: 100%;
             padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #ffffff;
+            border: 2px solid #e3e7ed;
             border-radius: 8px;
-            color: #fff;
+            color: #2c3e50;
             font-size: 16px;
             transition: all 0.3s;
         }
