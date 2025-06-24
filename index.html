@@ -296,6 +296,8 @@
             top: 50%;     
             transform: translateY(-50%);  
             z-index: 100;
+            opacity: 0; /* Esconder inicialmente */
+            transition: opacity 0.3s ease;
         }
         
         .logout-btn {
@@ -2345,6 +2347,7 @@
                 logoutContainer.style.right = 'auto';
                 logoutContainer.style.left = centerPoint + 'px';
                 logoutContainer.style.transform = 'translateX(-50%) translateY(-50%)';
+                logoutContainer.style.opacity = '1'; /* Mostrar após posicionar */
             }
         }
         
