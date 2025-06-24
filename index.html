@@ -291,21 +291,11 @@
 
         .logout-container {
             position: absolute;
-            right: calc(90px + 36px); /* 90px (margem do logo) + 36px (metade do logo 72px) */
             left: auto;
+            right: 110px; /* Ajuste fino para centralizar */
             top: 50%;     
             transform: translateY(-50%);  
             z-index: 100;
-        }
-        
-        /* Ajuste dinâmico para centralizar entre elementos */
-        @media (min-width: 769px) {
-            .logout-container {
-                left: calc(50% + 200px); /* Metade da tela + metade da largura da aircraft-info */
-                right: calc(90px + 36px);
-                margin: 0 auto;
-                transform: translate(-50%, -50%);
-            }
         }
         
         .logout-btn {
