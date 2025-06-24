@@ -997,13 +997,28 @@
         }
         
         /* Smooth scroll */
-        html {
-            scroll-behavior: smooth;
-        }
-
-/* CSS do logout-container já definido anteriormente, removendo duplicação */
-
-        @media (max-width: 768px) {
+                html {
+                    scroll-behavior: smooth;
+                }
+        
+                /* DEBUG - Forçar botão a aparecer */
+                .logout-container {
+                    position: absolute !important;
+                    right: 150px !important;
+                    top: 40px !important;
+                    z-index: 9999 !important;
+                    display: block !important;
+                    background: red !important;
+                    padding: 5px !important;
+                }
+        
+                .logout-btn {
+                    display: block !important;
+                    opacity: 1 !important;
+                    visibility: visible !important;
+                }
+        
+                @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
                 padding: 0 40px;
