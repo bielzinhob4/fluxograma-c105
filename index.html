@@ -1197,10 +1197,10 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         
-        // Configurar persistência para SESSION
-        auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+        // Configurar persistência para LOCAL (mantém login após recarregar)
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
             .then(() => {
-                console.log('Persistência configurada para SESSION');
+                console.log('Persistência configurada para LOCAL');
             })
             .catch((error) => {
                 console.error('Erro ao configurar persistência:', error);
@@ -1214,16 +1214,10 @@
         const loading = document.getElementById('loading');
         const loginBtn = document.getElementById('loginBtn');
 
-        // Verificar se deve forçar logout ao carregar
-        window.addEventListener('load', () => {
-            // Se a página foi recarregada ou veio de um favorito/atalho
-            if (performance.navigation.type === 1 || !document.referrer) {
-                // Fazer logout silencioso
-                auth.signOut().then(() => {
-                    console.log('Logout automático ao recarregar');
-                });
-            }
-        });
+        // Remover logout automático - comentado para manter login
+        // window.addEventListener('load', () => {
+        //     // Funcionalidade removida para manter usuário logado
+        // });
 
         // Verificar autenticação
         auth.onAuthStateChanged((user) => {
