@@ -2357,31 +2357,6 @@ function renderTabs() {
         // Event listeners
         document.getElementById('aircraftId').addEventListener('input', saveData);
         
-        // Centralizar título entre logo PAMA GL e caixa (IGUAL ao botão SAIR)
-        function centerTitle() {
-            const logoLeft = document.querySelector('.logo-left');
-            const aircraftInfo = document.querySelector('.aircraft-info');
-            const title = document.querySelector('#sectionTitle');
-            
-            if (logoLeft && aircraftInfo && title && window.innerWidth > 768) {
-                const logoRect = logoLeft.getBoundingClientRect();
-                const aircraftRect = aircraftInfo.getBoundingClientRect();
-                
-                // MESMA LÓGICA do botão SAIR
-                const gapStart = logoRect.right;
-                const gapEnd = aircraftRect.left;
-                const centerPoint = gapStart + ((gapEnd - gapStart) / 2);
-                
-                // Aplicar posição IGUAL ao botão SAIR
-                title.style.position = 'absolute';
-                title.style.left = centerPoint + 'px';
-                title.style.right = 'auto';
-                title.style.transform = 'translateX(-50%) translateY(-50%)';
-                title.style.top = '50%';
-                title.style.zIndex = '50';
-            }
-        }
-        
         // Posicionar botão SAIR dinamicamente
         function positionLogoutButton() {
             const aircraftInfo = document.querySelector('.aircraft-info');
@@ -2408,16 +2383,10 @@ function renderTabs() {
         // Chamar a função quando tudo estiver carregado
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(() => {
-                    centerTitle();
-                    positionLogoutButton();
-                }, 500);
+                 setTimeout(positionLogoutButton, 500);
             });
         } else {
-            setTimeout(() => {
-                centerTitle();
-                positionLogoutButton();
-            }, 500);
+            setTimeout(positionLogoutButton, 500);
         }
         
         // Reposicionar ao redimensionar
