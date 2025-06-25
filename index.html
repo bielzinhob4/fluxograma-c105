@@ -2357,6 +2357,28 @@ function renderTabs() {
         // Event listeners
         document.getElementById('aircraftId').addEventListener('input', saveData);
         
+        // Centralizar título entre logo PAMA e caixa
+        function centerTitle() {
+            const logoLeft = document.querySelector('.logo-left');
+            const title = document.querySelector('#sectionTitle');
+            const aircraftInfo = document.querySelector('.aircraft-info');
+            
+            if (logoLeft && title && aircraftInfo && window.innerWidth > 768) {
+                const logoRect = logoLeft.getBoundingClientRect();
+                const aircraftRect = aircraftInfo.getBoundingClientRect();
+                
+                // Espaço disponível entre logo e caixa
+                const availableSpace = aircraftRect.left - logoRect.right;
+                const centerPoint = logoRect.right + (availableSpace / 2);
+                
+                // Posicionar título no centro
+                title.style.position = 'absolute';
+                title.style.left = centerPoint + 'px';
+                title.style.transform = 'translateX(-50%) translateY(-50%)';
+                title.style.top = '50%';
+            }
+        }
+        
         // Posicionar botão SAIR dinamicamente
         function positionLogoutButton() {
             const aircraftInfo = document.querySelector('.aircraft-info');
@@ -2383,19 +2405,31 @@ function renderTabs() {
         // Chamar a função quando tudo estiver carregado
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(positionLogoutButton, 500);
+                setTimeout(() => {
+                    centerTitle();
+                    positionLogoutButton();
+                }, 500);
             });
         } else {
-            setTimeout(positionLogoutButton, 500);
+            setTimeout(() => {
+                centerTitle();
+                positionLogoutButton();
+            }, 500);
         }
         
         // Reposicionar ao redimensionar
-        window.addEventListener('resize', positionLogoutButton);
+        window.addEventListener('resize', () => {
+            centerTitle();
+            positionLogoutButton();
+        });
         
         // Reposicionar quando o usuário fizer login
         auth.onAuthStateChanged((user) => {
             if (user) {
-                setTimeout(positionLogoutButton, 1000);
+                setTimeout(() => {
+                    centerTitle();
+                    positionLogoutButton();
+                }, 1000);
             }
         });
         document.getElementById('startDate').addEventListener('change', () => {
