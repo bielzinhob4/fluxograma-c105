@@ -1913,7 +1913,15 @@ function renderTabs() {
                                value="${task.osNumber || ''}"
                                onchange="updateOSNumber('${task.id}', this.value)"
                                title="Número da OS (10 dígitos)"
-                                style="width: 100px; padding: 5px 8px; font-size: 12px; text-align: center; border: 1px solid #ddd; border-radius: 4px; margin-left: 8px; background: white;"
+                               style="width: 100px; padding: 5px 8px; font-size: 12px; text-align: center; border: 1px solid #ddd; border-radius: 4px; margin-left: 8px; background: white;">
+                        <input type="text" 
+                               class="task-number-input" 
+                               placeholder="000" 
+                               maxlength="3" 
+                               value="${task.taskNumber || ''}"
+                               onchange="updateTaskNumber('${task.id}', this.value)"
+                               title="Número da tarefa (3 dígitos)"
+                               style="width: 50px; padding: 5px 8px; font-size: 12px; text-align: center; border: 1px solid #ddd; border-radius: 4px; margin-left: 8px; background: white;">
                         <input type="text" 
                                class="task-number-input" 
                                placeholder="000" 
