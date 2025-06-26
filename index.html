@@ -2202,15 +2202,71 @@ function renderTabs() {
                     break;
             }
             
-            const newValue = prompt(prompt_text, currentValue);
+        // Criar modal customizado ao invés de prompt
+        const modalHtml = `
+            <div class="custom-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+                <div style="background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px;">
+                    <h3>${prompt_text}</h3>
+                    <textarea id="customInput" style="width: 100%; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; resize: vertical;" placeholder="Digite cada item em uma linha separada...">${currentValue}</textarea>
+                    <div style="text-align: right; margin-top: 15px;">
+                        <button onclick="cancelCustomModal()" style="margin-right: 10px; padding: 8px 16px; background: #ccc; border: none; border-radius: 4px;">Cancelar</button>
+                        <button onclick="saveCustomModal('${taskId}', '${field}')" style="padding: 8px 16px; background: #1a5490; color: white; border: none; border-radius: 4px;">Salvar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Funções para o modal customizado
+        window.cancelCustomModal = function() {
+            document.querySelector('.custom-modal').remove();
+        }
+        
+        window.saveCustomModal = function(taskId, field) {
+            const newValue = document.getElementById('customInput').value;
             
-            if (newValue !== null) {
+            // Encontrar a tarefa
+            let task = null;
+            for (let phase of appState.phases) {
+                task = phase.tasks.find(t => t.id === taskId);
+                if (task) break;
+            }
+            
+            if (task && newValue !== null) {
                 switch(field) {
                     case 'tools':
-                    case 'materials':
+                    case 'materials': 
                     case 'safety':
                         task.info[field] = newValue.split('\n').filter(line => line.trim() !== '');
                         break;
+                    case 'time':
+                    case 'manual':
+                        task.info[field] = newValue;
+                        break;
+                }
+                
+                saveData();
+                renderPhases();
+                
+                // Reabrir a modal de informações
+                setTimeout(() => {
+                    toggleTaskInfo(taskId);
+                }, 100);
+            }
+            
+            document.querySelector('.custom-modal').remove();
+        }
+        
+        return; // Sair da função aqui para não executar o código antigo
+        
+        if (newValue !== null) {
+            switch(field) {
+                case 'tools':
+                case 'materials':
+                case 'safety':
+                    task.info[field] = newValue.split('\n').filter(line => line.trim() !== '');
+                    break;
                     case 'time':
                     case 'manual':
                         task.info[field] = newValue;
