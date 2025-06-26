@@ -711,6 +711,64 @@
             transform: translateY(-2px);
         }
 
+        /* Estado minimizado da fase */
+        .phase-card.minimized {
+            height: 35px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .phase-card.minimized:hover {
+            transform: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .phase-card.minimized .phase-header {
+            padding: 8px 20px;
+            font-size: 13px;
+        }
+        
+        .phase-card.minimized .phase-number {
+            width: 25px;
+            height: 25px;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+        
+        .phase-card.minimized .phase-title {
+            font-size: 13px;
+        }
+        
+        .phase-card.minimized .phase-content {
+            display: none;
+        }
+        
+        /* Botão de minimizar */
+        .btn-minimize {
+            background: transparent;
+            border: 1px solid rgba(0,0,0,0.2);
+            color: #666;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            margin-left: 10px;
+            transition: all 0.2s;
+        }
+        
+        .btn-minimize:hover {
+            background: rgba(0,0,0,0.05);
+            border-color: rgba(0,0,0,0.3);
+        }
+        
+        .phase-card.minimized .btn-minimize {
+            font-size: 12px;
+        }
+
         .phase-header {
             padding: 20px;
             cursor: pointer;
@@ -1834,6 +1892,9 @@ function renderTabs() {
                 const phaseCard = document.createElement('div');
                 phaseCard.className = 'phase-card';
                 
+                const isMinimized = appState.minimizedPhases && appState.minimizedPhases[phase.id];
+                phaseCard.className = `phase-card ${isMinimized ? 'minimized' : ''}`;
+                
                 phaseCard.innerHTML = `
                     <div class="phase-header status-${phaseStatus}" onclick="togglePhase(${phase.id})">
                         <div class="phase-title">
@@ -1842,7 +1903,9 @@ function renderTabs() {
                         </div>
                         <div class="phase-status">
                             <span class="status-badge status-${phaseStatus}">${getStatusText(phaseStatus)}</span>
-                            <span>▼</span>
+                            <button class="btn-minimize" onclick="event.stopPropagation(); toggleMinimize(${phase.id})" title="${isMinimized ? 'Expandir' : 'Minimizar'}">
+                                ${isMinimized ? '▶' : '▼'}
+                            </button>
                         </div>
                     </div>
                     <div class="phase-content" id="phase-content-${phase.id}">
@@ -2020,6 +2083,44 @@ function renderTabs() {
         window.togglePhase = function(phaseId) {
             const content = document.getElementById(`phase-content-${phaseId}`);
             content.classList.toggle('active');
+        }
+
+        // Toggle minimizar fase
+        window.toggleMinimize = function(phaseId) {
+            if (!appState.minimizedPhases) {
+                appState.minimizedPhases = {};
+            }
+            
+            appState.minimizedPhases[phaseId] = !appState.minimizedPhases[phaseId];
+            
+            saveData();
+            
+            // Manter fases abertas (exceto a minimizada)
+            const openPhases = [];
+            document.querySelectorAll('.phase-content.active').forEach(content => {
+                const id = content.id.replace('phase-content-', '');
+                if (id !== phaseId.toString()) {
+                    openPhases.push(id);
+                }
+            });
+            
+            renderPhases();
+            
+            // Reabrir fases que estavam abertas
+            openPhases.forEach(id => {
+                const element = document.getElementById(`phase-content-${id}`);
+                if (element) {
+                    element.classList.add('active');
+                }
+            });
+            
+            // Animar scroll suave se necessário
+            const phaseCard = document.querySelector(`.phase-card:nth-child(${phaseId})`);
+            if (phaseCard && appState.minimizedPhases[phaseId]) {
+                setTimeout(() => {
+                    phaseCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+            }
         }
 
         // Toggle tarefa
