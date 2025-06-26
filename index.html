@@ -2216,11 +2216,53 @@ function renderTabs() {
 
         // Obter status da fase
         function getPhaseStatus(phase) {
-            // Se for admin, sempre retornar 'pending' para manter visual neutro
             if (appState && appState.isAdminView) {
+                // Para admin, verificar status baseado em TODAS as seções
+                const sections = ['hidraulica', 'pneumatica', 'celula', 'comando', 'eletrica', 'motores', 'estrutura'];
+                let hasAnyTask = false;
+                let hasAnyCompleted = false;
+                let hasAnyBlocked = false;
+                let allSectionsCompleted = true;
+                
+                sections.forEach(section => {
+                    const sectionKey = `c105_${section}_data`;
+                    const sectionData = localStorage.getItem(sectionKey);
+                    
+                    if (sectionData) {
+                        const data = JSON.parse(sectionData);
+                        Object.values(data).forEach(aircraft => {
+                            if (aircraft.aircraftId === appState.aircraftId) {
+                                const sectionPhase = aircraft.phases.find(p => p.id === phase.id);
+                                if (sectionPhase && sectionPhase.tasks.length > 0) {
+                                    hasAnyTask = true;
+                                    
+                                    // Verificar se tem algum impedimento
+                                    if (aircraft.blocks) {
+                                        const hasBlockedInPhase = sectionPhase.tasks.some(task => aircraft.blocks[task.id]);
+                                        if (hasBlockedInPhase) hasAnyBlocked = true;
+                                    }
+                                    
+                                    // Verificar se tem alguma tarefa completa
+                                    const someCompleted = sectionPhase.tasks.some(task => task.completed);
+                                    if (someCompleted) hasAnyCompleted = true;
+                                    
+                                    // Verificar se todas as tarefas da seção estão completas
+                                    const allCompleted = sectionPhase.tasks.every(task => task.completed);
+                                    if (!allCompleted) allSectionsCompleted = false;
+                                }
+                            }
+                        });
+                    }
+                });
+                
+                // Retornar status baseado nas regras
+                if (hasAnyBlocked) return 'blocked';
+                if (hasAnyTask && allSectionsCompleted) return 'completed';
+                if (hasAnyCompleted) return 'in-progress';
                 return 'pending';
             }
             
+            // Para usuário normal, lógica original
             const hasBlocked = phase.tasks.some(task => appState.blocks[task.id]);
             if (hasBlocked) return 'blocked';
             
@@ -2663,16 +2705,54 @@ function renderTabs() {
                 return;
             }
             
-            const totalTasks = appState.phases.reduce((sum, phase) => sum + phase.tasks.length, 0);
-            const completedTasks = appState.phases.reduce((sum, phase) => 
-                sum + phase.tasks.filter(task => task.completed).length, 0);
-            const blockedTasks = Object.keys(appState.blocks || {}).length;
-            const pendingTasks = totalTasks - completedTasks - blockedTasks;
+            let totalTasks = 0;
+            let completedTasks = 0;
+            let blockedTasks = 0;
             
+            if (appState.isAdminView) {
+                // Para admin, somar tarefas de todas as seções
+                const sections = ['hidraulica', 'pneumatica', 'celula', 'comando', 'eletrica', 'motores', 'estrutura'];
+                
+                sections.forEach(section => {
+                    const sectionKey = `c105_${section}_data`;
+                    const sectionData = localStorage.getItem(sectionKey);
+                    
+                    if (sectionData) {
+                        const data = JSON.parse(sectionData);
+                        Object.values(data).forEach(aircraft => {
+                            if (aircraft.aircraftId === appState.aircraftId) {
+                                aircraft.phases.forEach(phase => {
+                                    totalTasks += phase.tasks.length;
+                                    completedTasks += phase.tasks.filter(t => t.completed).length;
+                                    if (aircraft.blocks) {
+                                        blockedTasks += Object.keys(aircraft.blocks).length;
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            } else {
+                // Para usuário normal, usar dados locais
+                totalTasks = appState.phases.reduce((sum, phase) => sum + phase.tasks.length, 0);
+                completedTasks = appState.phases.reduce((sum, phase) => 
+                    sum + phase.tasks.filter(task => task.completed).length, 0);
+                blockedTasks = Object.keys(appState.blocks || {}).length;
+            }
+            
+            const pendingTasks = totalTasks - completedTasks - blockedTasks;
             const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            
             const progressFill = document.getElementById('progressFill');
             progressFill.style.width = percentage + '%';
             progressFill.textContent = percentage + '%';
+            
+            // Mudar cor da barra: azul por padrão, verde apenas quando 100%
+            if (percentage === 100) {
+                progressFill.style.background = 'linear-gradient(90deg, #4caf50 0%, #66bb6a 100%)';
+            } else {
+                progressFill.style.background = 'linear-gradient(90deg, #2196f3 0%, #42a5f5 100%)';
+            }
             
             document.getElementById('completedCount').textContent = completedTasks;
             document.getElementById('pendingCount').textContent = pendingTasks;
@@ -2906,7 +2986,132 @@ function renderTabs() {
                 
                 // Mostrar painel do administrador
                 window.showAdminPanel = function() {
-                    alert('Painel Administrativo - Em desenvolvimento\nAqui você poderá ver relatórios consolidados de todas as seções.');
+                    const modal = document.createElement('div');
+                    modal.className = 'modal active';
+                    modal.style.zIndex = '10001';
+                    
+                    const sections = ['hidraulica', 'pneumatica', 'celula', 'comando', 'eletrica', 'motores', 'estrutura'];
+                    const aircraftData = {};
+                    
+                    // Coletar dados de todas as aeronaves
+                    sections.forEach(section => {
+                        const sectionKey = `c105_${section}_data`;
+                        const sectionData = localStorage.getItem(sectionKey);
+                        
+                        if (sectionData) {
+                            const data = JSON.parse(sectionData);
+                            Object.values(data).forEach(aircraft => {
+                                if (aircraft.aircraftId) {
+                                    if (!aircraftData[aircraft.aircraftId]) {
+                                        aircraftData[aircraft.aircraftId] = {
+                                            sections: {},
+                                            totalTasks: 0,
+                                            completedTasks: 0,
+                                            blockedTasks: 0
+                                        };
+                                    }
+                                    
+                                    let sectionCompleted = 0;
+                                    let sectionTotal = 0;
+                                    let sectionBlocked = 0;
+                                    
+                                    aircraft.phases.forEach(phase => {
+                                        phase.tasks.forEach(task => {
+                                            sectionTotal++;
+                                            if (task.completed) sectionCompleted++;
+                                            if (aircraft.blocks && aircraft.blocks[task.id]) sectionBlocked++;
+                                        });
+                                    });
+                                    
+                                    aircraftData[aircraft.aircraftId].sections[section] = {
+                                        total: sectionTotal,
+                                        completed: sectionCompleted,
+                                        blocked: sectionBlocked,
+                                        percentage: sectionTotal > 0 ? Math.round((sectionCompleted / sectionTotal) * 100) : 0
+                                    };
+                                    
+                                    aircraftData[aircraft.aircraftId].totalTasks += sectionTotal;
+                                    aircraftData[aircraft.aircraftId].completedTasks += sectionCompleted;
+                                    aircraftData[aircraft.aircraftId].blockedTasks += sectionBlocked;
+                                }
+                            });
+                        }
+                    });
+                    
+                    let reportHTML = `
+                        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+                            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                <h2>📊 Painel Administrativo - Relatório Geral</h2>
+                                <button onclick="this.closest('.modal').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+                            </div>
+                            <div class="modal-body">
+                    `;
+                    
+                    if (Object.keys(aircraftData).length === 0) {
+                        reportHTML += '<p style="text-align: center; color: #666;">Nenhuma aeronave cadastrada nas seções.</p>';
+                    } else {
+                        Object.keys(aircraftData).sort().forEach(aircraftId => {
+                            const data = aircraftData[aircraftId];
+                            const overallPercentage = data.totalTasks > 0 ? Math.round((data.completedTasks / data.totalTasks) * 100) : 0;
+                            
+                            reportHTML += `
+                                <div style="margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                                    <h3 style="color: #1a5490; margin-bottom: 15px;">✈️ Aeronave ${aircraftId}</h3>
+                                    <div style="margin-bottom: 15px;">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                            <span><strong>Progresso Geral:</strong></span>
+                                            <span>${data.completedTasks}/${data.totalTasks} tarefas (${overallPercentage}%)</span>
+                                        </div>
+                                        <div style="background: #e0e0e0; height: 30px; border-radius: 15px; overflow: hidden;">
+                                            <div style="background: ${overallPercentage === 100 ? 'linear-gradient(90deg, #4caf50 0%, #66bb6a 100%)' : 'linear-gradient(90deg, #2196f3 0%, #42a5f5 100%)'}; 
+                                                        height: 100%; width: ${overallPercentage}%; min-width: ${overallPercentage > 0 ? '50px' : '0'};
+                                                        display: flex; align-items: center; justify-content: center;
+                                                        color: white; font-weight: bold; font-size: 14px;">
+                                                ${overallPercentage}%
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="display: grid; gap: 10px;">
+                            `;
+                            
+                            sections.forEach(section => {
+                                if (data.sections[section]) {
+                                    const sectionData = data.sections[section];
+                                    reportHTML += `
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <span style="width: 140px; font-weight: 600;">${getDisplaySectionName(section)}:</span>
+                                            <div style="flex: 1; background: #e0e0e0; height: 25px; border-radius: 12px; overflow: hidden;">
+                                                <div style="background: ${sectionData.percentage === 100 ? 'linear-gradient(90deg, #4caf50 0%, #66bb6a 100%)' : 'linear-gradient(90deg, #2196f3 0%, #42a5f5 100%)'}; 
+                                                            height: 100%; width: ${sectionData.percentage}%; min-width: ${sectionData.percentage > 0 ? '50px' : '0'};
+                                                            display: flex; align-items: center; justify-content: center;
+                                                            color: white; font-weight: bold; font-size: 12px;">
+                                                    ${sectionData.percentage}%
+                                                </div>
+                                            </div>
+                                            <span style="font-size: 14px; color: #666;">${sectionData.completed}/${sectionData.total}</span>
+                                            ${sectionData.blocked > 0 ? `<span style="color: #f44336; font-size: 12px;">⚠️ ${sectionData.blocked} impedimentos</span>` : ''}
+                                        </div>
+                                    `;
+                                }
+                            });
+                            
+                            reportHTML += `
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    reportHTML += `
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Fechar</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    modal.innerHTML = reportHTML;
+                    document.body.appendChild(modal);
                 }
                 
             }); // Fecha o window.addEventListener
