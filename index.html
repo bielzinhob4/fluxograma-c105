@@ -1433,6 +1433,23 @@
                     const sectionName = user.email.split('@')[0].split('.')[0];
                     sectionNameElement.textContent = getDisplaySectionName(sectionName);
                 }
+
+                // Verificar se é admin e ajustar interface
+                const isAdmin = user.email.toLowerCase().includes('admin');
+                if (isAdmin) {
+                    // Mudar botão "Limpar Tudo" para "Painel ADM"
+                    const btnClear = document.getElementById('btnClear');
+                    if (btnClear) {
+                        btnClear.className = 'btn btn-warning';
+                        btnClear.innerHTML = '📊 Painel ADM';
+                        btnClear.onclick = function() { showAdminPanel(); };
+                    }
+                    
+                    // Esconder botão de nova aeronave para admin
+                    const style = document.createElement('style');
+                    style.textContent = '.btn-new-tab { display: none !important; }';
+                    document.head.appendChild(style);
+                }
                 
                 // Carregar dados específicos da seção
                 loadData();
@@ -1757,6 +1774,14 @@
             const user = firebase.auth().currentUser;
             if (!user) return;
             
+            const isAdmin = user.email.toLowerCase().includes('admin');
+            
+            if (isAdmin) {
+                // Admin vê todas as aeronaves de todas as seções
+                loadAdminView();
+                return;
+            }
+            
             const sectionKey = `c105_${user.email.split('@')[0].split('.')[0]}_data`;
             const savedTabs = localStorage.getItem(sectionKey);
             
@@ -1777,6 +1802,52 @@
             } else {
                 // Não há dados locais, criar primeira aba
                 createNewTab();
+            }
+            
+            renderTabs();
+            loadCurrentAircraft();
+        }
+
+        // Carregar visão do administrador
+function loadAdminView() {
+    aircraftStates = {};
+    
+            // Seções a verificar
+            const sections = ['hidraulica', 'pneumatica', 'celula', 'comando', 'eletrica', 'motores', 'estrutura'];
+            const allAircraft = new Set();
+            
+            // Coletar todas as aeronaves únicas
+            sections.forEach(section => {
+                const sectionKey = `c105_${section}_data`;
+                const sectionData = localStorage.getItem(sectionKey);
+                
+                if (sectionData) {
+                    const data = JSON.parse(sectionData);
+                    Object.values(data).forEach(aircraft => {
+                        if (aircraft.aircraftId) {
+                            allAircraft.add(aircraft.aircraftId);
+                        }
+                    });
+                }
+            });
+            
+            // Criar estado para cada aeronave única
+            allAircraft.forEach(aircraftId => {
+                const id = 'admin-' + aircraftId;
+                aircraftStates[id] = {
+                    aircraftId: aircraftId,
+                    phases: JSON.parse(JSON.stringify(phases)),
+                    startDate: '',
+                    blocks: {},
+                    section: 'ADMINISTRADOR',
+                    isAdminView: true
+                };
+            });
+            
+            // Se houver aeronaves, selecionar a primeira
+            const aircraftIds = Object.keys(aircraftStates);
+            if (aircraftIds.length > 0) {
+                currentAircraftId = aircraftIds[0];
             }
             
             renderTabs();
@@ -1876,6 +1947,12 @@ function renderTabs() {
             appState = aircraftStates[currentAircraftId];
             document.getElementById('aircraftId').value = appState.aircraftId || '';
             document.getElementById('startDate').value = appState.startDate || '';
+
+         // Se for admin, desabilitar inputs
+        if (appState.isAdminView) {
+            document.getElementById('aircraftId').disabled = true;
+            document.getElementById('startDate').disabled = true;
+        }
             
             renderPhases();
             updateProgress();
@@ -1915,20 +1992,15 @@ function renderTabs() {
                 const isMinimized = appState.minimizedPhases && appState.minimizedPhases[phase.id];
                 phaseCard.className = `phase-card ${isMinimized ? 'minimized' : ''}`;
                 
-                phaseCard.innerHTML = `
-                    <div class="phase-header status-${phaseStatus}" onclick="togglePhase(${phase.id})">
-                        <div class="phase-title">
-                            <div class="phase-number">${phase.id}</div>
-                            <span>${phase.title}</span>
-                        </div>
-                        <div class="phase-status">
-                            <span class="status-badge status-${phaseStatus}">${getStatusText(phaseStatus)}</span>
-                            <button class="btn-minimize" onclick="event.stopPropagation(); toggleMinimize(${phase.id})" title="${isMinimized ? 'Expandir' : 'Minimizar'}">
-                                ${isMinimized ? '▶' : '▼'}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="phase-content" id="phase-content-${phase.id}">
+                // Conteúdo específico para admin ou usuário normal
+                let phaseContentHTML = '';
+                
+                if (appState && appState.isAdminView) {
+                    // Para admin: mostrar apenas visualização das seções
+                    phaseContentHTML = renderAdminPhaseView(phase.id);
+                } else {
+                    // Para usuário normal: mostrar lista de tarefas
+                    phaseContentHTML = `
                         <div class="tasks-list">
                             ${phase.tasks
                                 .sort((a, b) => {
@@ -1974,6 +2046,24 @@ function renderTabs() {
                             <button class="btn btn-success btn-small" onclick="addNewTask(${phase.id})">Adicionar</button>
                             <button class="btn btn-small" onclick="hideNewTaskForm(${phase.id})">Cancelar</button>
                         </div>
+                    `;
+                }
+                
+                phaseCard.innerHTML = `
+                    <div class="phase-header status-${phaseStatus}" onclick="togglePhase(${phase.id})">
+                        <div class="phase-title">
+                            <div class="phase-number">${phase.id}</div>
+                            <span>${phase.title}</span>
+                        </div>
+                        <div class="phase-status">
+                            <span class="status-badge status-${phaseStatus}">${getStatusText(phaseStatus)}</span>
+                            <button class="btn-minimize" onclick="event.stopPropagation(); toggleMinimize(${phase.id})" title="${isMinimized ? 'Expandir' : 'Minimizar'}">
+                                ${isMinimized ? '▶' : '▼'}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="phase-content" id="phase-content-${phase.id}">
+                        ${phaseContentHTML}
                     </div>
                 `;
                 
@@ -1986,6 +2076,11 @@ function renderTabs() {
 
         // Renderizar tarefa
         function renderTask(phaseId, task) {
+            // Admin não deve usar esta função, pois o conteúdo é renderizado diretamente em renderPhases()
+            if (appState && appState.isAdminView) {
+                return '';
+            }
+            
             const taskStatus = getTaskStatus(phaseId, task);
             const isBlocked = appState.blocks[task.id];
             
@@ -2065,10 +2160,67 @@ function renderTabs() {
                     </div>
                 </div>
             `;
+
+            }
+
+        // Renderizar visualização do admin para fase
+        function renderAdminPhaseView(phaseId) {
+            const sections = ['hidraulica', 'pneumatica', 'celula', 'comando', 'eletrica', 'motores', 'estrutura'];
+            let html = '<div class="admin-phase-view" style="padding: 20px;">';
+            
+            sections.forEach(section => {
+                const sectionKey = `c105_${section}_data`;
+                const sectionData = localStorage.getItem(sectionKey);
+                
+                if (sectionData) {
+                    const data = JSON.parse(sectionData);
+                    
+                    // Procurar esta aeronave nesta seção
+                    Object.values(data).forEach(aircraft => {
+                        if (aircraft.aircraftId === appState.aircraftId) {
+                            const phase = aircraft.phases.find(p => p.id === phaseId);
+                            if (phase) {
+                                const totalTasks = phase.tasks.length;
+                                const completedTasks = phase.tasks.filter(t => t.completed).length;
+                                const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                                
+                                html += `
+                                    <div style="margin-bottom: 15px;">
+                                        <h4 style="color: #1a5490; margin-bottom: 5px;">${getDisplaySectionName(section)}</h4>
+                                        <div style="display: flex; align-items: center; gap: 15px;">
+                                            <div style="flex: 1;">
+                                                <div style="background: #e0e0e0; height: 25px; border-radius: 12px; overflow: hidden;">
+                                                    <div style="background: linear-gradient(90deg, #4caf50 0%, #66bb6a 100%); 
+                                                                height: 100%; width: ${percentage}%; min-width: 50px;
+                                                                display: flex; align-items: center; justify-content: center;
+                                                                color: white; font-weight: bold; font-size: 12px;">
+                                                        ${percentage}%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <span style="font-weight: 600; color: #666;">
+                                                ${completedTasks}/${totalTasks} tarefas
+                                            </span>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        }
+                    });
+                }
+            });
+            
+            html += '</div>';
+            return html;
         }
 
         // Obter status da fase
         function getPhaseStatus(phase) {
+            // Se for admin, sempre retornar 'pending' para manter visual neutro
+            if (appState && appState.isAdminView) {
+                return 'pending';
+            }
+            
             const hasBlocked = phase.tasks.some(task => appState.blocks[task.id]);
             if (hasBlocked) return 'blocked';
             
@@ -2746,13 +2898,18 @@ function renderTabs() {
         });
         
         const backToTopBtn = document.getElementById('backToTop');
-        if (backToTopBtn) {
-            backToTopBtn.addEventListener('click', () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
-        }
-        
-    }); // Fecha o window.addEventListener
-</script>
+                if (backToTopBtn) {
+                    backToTopBtn.addEventListener('click', () => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                }
+                
+                // Mostrar painel do administrador
+                window.showAdminPanel = function() {
+                    alert('Painel Administrativo - Em desenvolvimento\nAqui você poderá ver relatórios consolidados de todas as seções.');
+                }
+                
+            }); // Fecha o window.addEventListener
+        </script>
 </body>
 </html>
