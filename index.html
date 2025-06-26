@@ -1887,6 +1887,14 @@ function renderTabs() {
                                  <button class="btn btn-warning btn-small" onclick="removeBlock('${task.id}')">Remover Impedimento</button>` :
                                 `<button class="btn btn-danger btn-small" onclick="blockTask('${task.id}')">Impedimento</button>`
                         }
+                        <input type="text" 
+                               class="task-number-input" 
+                               placeholder="000" 
+                               maxlength="3" 
+                               value="${task.taskNumber || ''}"
+                               onchange="updateTaskNumber('${task.id}', this.value)"
+                               title="Número da tarefa (3 dígitos)"
+                               style="width: 50px; padding: 5px 8px; font-size: 12px; text-align: center; border: 1px solid #ddd; border-radius: 4px; margin-left: 8px;">
                     </div>
                 </div>
                 <div class="task-info-modal" id="info-${task.id}">
@@ -2246,13 +2254,26 @@ function renderTabs() {
                         break;
                 }
                 
-                saveData();
-                renderPhases();
-                
-                // Reabrir a modal de informações
-                setTimeout(() => {
-                    toggleTaskInfo(taskId);
-                }, 100);
+        saveData();
+        
+        // Manter fases abertas
+        const openPhases = [];
+        document.querySelectorAll('.phase-content.active').forEach(content => {
+            const id = content.id.replace('phase-content-', '');
+            openPhases.push(id);
+        });
+        
+        renderPhases();
+        
+        // Reabrir fases
+        openPhases.forEach(id => {
+            document.getElementById(`phase-content-${id}`).classList.add('active');
+        });
+        
+        // Reabrir a modal de informações
+        setTimeout(() => {
+            toggleTaskInfo(taskId);
+        }, 100);
             }
             
             document.querySelector('.custom-modal').remove();
@@ -2411,6 +2432,21 @@ function renderTabs() {
             localStorage.setItem('c105Backup', JSON.stringify(backup));
         }
 
+        // Atualizar número da tarefa
+        window.updateTaskNumber = function(taskId, value) {
+            // Encontrar a tarefa
+            let task = null;
+            for (let phase of appState.phases) {
+                task = phase.tasks.find(t => t.id === taskId);
+                if (task) break;
+            }
+            
+            if (task) {
+                task.taskNumber = value;
+                saveData();
+            }
+        }
+        
         // Event listeners
         document.getElementById('aircraftId').addEventListener('input', saveData);
         
