@@ -210,11 +210,26 @@
             font-size: 14px;
         }
 
-        /* Estilos originais do fluxograma */
+        /* Reset CSS completo para consistência */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+        
+        /* Forçar zoom padrão */
+        html {
+            zoom: 1 !important;
+            -moz-transform: scale(1) !important;
+            -webkit-transform: scale(1) !important;
+        }
+        
+        body {
+            zoom: 1 !important;
+            transform: scale(1) !important;
+            -webkit-text-size-adjust: 100% !important;
+            -moz-text-size-adjust: 100% !important;
+            -ms-text-size-adjust: 100% !important;
         }
 
         body {
@@ -232,6 +247,7 @@
             padding: 30px 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             position: relative;
+            min-width: 1200px; /* Largura mínima fixa */
         }
 
         .header-logos {
@@ -291,12 +307,11 @@
 
         .logout-container {
             position: absolute;
-            left: auto;
-            right: 110px; /* Ajuste fino para centralizar */
+            left: 65%;  /* Posição fixa relativa */
             top: 50%;     
-            transform: translateY(-50%);  
+            transform: translate(-50%, -50%);  
             z-index: 100;
-            opacity: 0; /* Esconder inicialmente */
+            opacity: 0;
             transition: opacity 0.3s ease;
         }
         
@@ -926,6 +941,13 @@
             border-radius: 5px;
             font-size: 14px;
             background: white;
+            color: #333; /* Cor escura para o texto */
+        }
+        
+        /* Garantir que o placeholder também seja visível */
+        .modal-body .form-group input::placeholder,
+        .modal-body .form-group textarea::placeholder {
+            color: #999;
         }
 
         .modal-body .form-group textarea {
@@ -2532,45 +2554,15 @@ function renderTabs() {
         // Event listeners
         document.getElementById('aircraftId').addEventListener('input', saveData);
         
-        // Posicionar botão SAIR dinamicamente
-        function positionLogoutButton() {
-            const aircraftInfo = document.querySelector('.aircraft-info');
-            const logoRight = document.querySelector('.logo-right');
-            const logoutContainer = document.querySelector('.logout-container');
-            
-            if (aircraftInfo && logoRight && logoutContainer && window.innerWidth > 768) {
-                const aircraftRect = aircraftInfo.getBoundingClientRect();
-                const logoRect = logoRight.getBoundingClientRect();
-                
-                // Calcular o ponto médio entre o fim da caixa e início do logo
-                const gapStart = aircraftRect.right;
-                const gapEnd = logoRect.left;
-                const centerPoint = gapStart + ((gapEnd - gapStart) / 2);
-                
-                // Remover right e aplicar left
-                logoutContainer.style.right = 'auto';
-                logoutContainer.style.left = centerPoint + 'px';
-                logoutContainer.style.transform = 'translateX(-50%) translateY(-50%)';
-                logoutContainer.style.opacity = '1'; /* Mostrar após posicionar */
-            }
-        }
-        
-        // Chamar a função quando tudo estiver carregado
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                 setTimeout(positionLogoutButton, 500);
-            });
-        } else {
-            setTimeout(positionLogoutButton, 500);
-        }
-        
-        // Reposicionar ao redimensionar
-        window.addEventListener('resize', positionLogoutButton);
-        
-        // Reposicionar quando o usuário fizer login
+        // Mostrar botão SAIR após login
         auth.onAuthStateChanged((user) => {
             if (user) {
-                setTimeout(positionLogoutButton, 1000);
+                setTimeout(() => {
+                    const logoutContainer = document.querySelector('.logout-container');
+                    if (logoutContainer) {
+                        logoutContainer.style.opacity = '1';
+                    }
+                }, 100);
             }
         });
         document.getElementById('startDate').addEventListener('change', () => {
