@@ -2190,8 +2190,8 @@ function renderTabs() {
                                         <div style="display: flex; align-items: center; gap: 15px;">
                                             <div style="flex: 1;">
                                                 <div style="background: #e0e0e0; height: 25px; border-radius: 12px; overflow: hidden;">
-                                                    <div style="background: linear-gradient(90deg, #4caf50 0%, #66bb6a 100%); 
-                                                                height: 100%; width: ${percentage}%; min-width: 50px;
+                                                    <div style="background: ${percentage === 100 ? 'linear-gradient(90deg, #4caf50 0%, #66bb6a 100%)' : 'linear-gradient(90deg, #2196f3 0%, #42a5f5 100%)'}; 
+                                                                height: 100%; width: ${percentage}%; min-width: ${percentage > 0 ? '50px' : '0'};
                                                                 display: flex; align-items: center; justify-content: center;
                                                                 color: white; font-weight: bold; font-size: 12px;">
                                                         ${percentage}%
@@ -2747,12 +2747,8 @@ function renderTabs() {
             progressFill.style.width = percentage + '%';
             progressFill.textContent = percentage + '%';
             
-            // Mudar cor da barra: azul por padrão, verde apenas quando 100%
-            if (percentage === 100) {
-                progressFill.style.background = 'linear-gradient(90deg, #4caf50 0%, #66bb6a 100%)';
-            } else {
-                progressFill.style.background = 'linear-gradient(90deg, #2196f3 0%, #42a5f5 100%)';
-            }
+            // Barra de progresso geral sempre verde (não muda de cor)
+            // Já está definida no CSS como verde, então remover essa parte
             
             document.getElementById('completedCount').textContent = completedTasks;
             document.getElementById('pendingCount').textContent = pendingTasks;
