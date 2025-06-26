@@ -1843,14 +1843,28 @@ function renderTabs() {
                         <div class="tasks-list">
                             ${phase.tasks
                                 .sort((a, b) => {
-                                    // Priorizar tarefas com OS/Tarefa preenchidos
-                                    const hasDataA = (a.osNumber && a.osNumber.trim()) || (a.taskNumber && a.taskNumber.trim());
-                                    const hasDataB = (b.osNumber && b.osNumber.trim()) || (b.taskNumber && b.taskNumber.trim());
+                                    // Definir prioridades
+                                    const hasOsA = a.osNumber && a.osNumber.trim();
+                                    const hasTaskA = a.taskNumber && a.taskNumber.trim();
+                                    const hasOsB = b.osNumber && b.osNumber.trim();
+                                    const hasTaskB = b.taskNumber && b.taskNumber.trim();
                                     
-                                    if (hasDataA && !hasDataB) return -1; // A vai primeiro
-                                    if (!hasDataA && hasDataB) return 1;  // B vai primeiro
+                                    // Calcular nível de prioridade (menor = mais prioritário)
+                                    let priorityA = 4; // em branco
+                                    let priorityB = 4; // em branco
                                     
-                                    // Ambos têm dados ou ambos não têm - ordenar normalmente
+                                    if (hasOsA && hasTaskA) priorityA = 1; // OS e tarefa cadastrada
+                                    else if (hasOsA && !hasTaskA) priorityA = 2; // só OS cadastrada
+                                    else if (!hasOsA && hasTaskA) priorityA = 3; // só tarefa cadastrada
+                                    
+                                    if (hasOsB && hasTaskB) priorityB = 1; // OS e tarefa cadastrada
+                                    else if (hasOsB && !hasTaskB) priorityB = 2; // só OS cadastrada
+                                    else if (!hasOsB && hasTaskB) priorityB = 3; // só tarefa cadastrada
+                                    
+                                    // Se prioridades diferentes, ordenar por prioridade
+                                    if (priorityA !== priorityB) return priorityA - priorityB;
+                                    
+                                    // Se mesma prioridade, ordenar por OS e depois por tarefa
                                     const osA = parseInt(a.osNumber) || 0;
                                     const osB = parseInt(b.osNumber) || 0;
                                     if (osA !== osB) return osA - osB;
@@ -2459,33 +2473,33 @@ function renderTabs() {
             localStorage.setItem('c105Backup', JSON.stringify(backup));
         }
 
-// Atualizar número da OS
-window.updateOSNumber = function(taskId, value) {
-    let task = null;
-    for (let phase of appState.phases) {
-        task = phase.tasks.find(t => t.id === taskId);
-        if (task) break;
-    }
-    
-    if (task) {
-        task.osNumber = value;
-        saveData();
-        
-        // Manter fases abertas
-        const openPhases = [];
-        document.querySelectorAll('.phase-content.active').forEach(content => {
-            const id = content.id.replace('phase-content-', '');
-            openPhases.push(id);
-        });
-        
-        renderPhases();
-        
-        // Reabrir fases
-        openPhases.forEach(id => {
-            document.getElementById(`phase-content-${id}`).classList.add('active');
-        });
-    }
-}
+        // Atualizar número da OS
+        window.updateOSNumber = function(taskId, value) {
+            let task = null;
+            for (let phase of appState.phases) {
+                task = phase.tasks.find(t => t.id === taskId);
+                if (task) break;
+            }
+            
+            if (task) {
+                task.osNumber = value;
+                saveData();
+                
+                // Manter fases abertas
+                const openPhases = [];
+                document.querySelectorAll('.phase-content.active').forEach(content => {
+                    const id = content.id.replace('phase-content-', '');
+                    openPhases.push(id);
+                });
+                
+                renderPhases();
+                
+                // Reabrir fases
+                openPhases.forEach(id => {
+                    document.getElementById(`phase-content-${id}`).classList.add('active');
+                });
+            }
+        }
 
         // Atualizar número da tarefa
         window.updateTaskNumber = function(taskId, value) {
