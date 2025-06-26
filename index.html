@@ -724,8 +724,10 @@
         }
         
         .phase-card.minimized .phase-header {
-            padding: 7px 20px;
+            padding: 5px 20px;
             font-size: 13px;
+            height: 35px;
+            align-items: center;
         }
         
         .phase-card.minimized .phase-number {
@@ -766,6 +768,24 @@
         }
         
         .phase-card.minimized .btn-minimize {
+            font-size: 12px;
+        }
+
+        /* Ajuste fino para centralização vertical quando minimizado */
+        .phase-card.minimized .phase-title {
+            display: flex;
+            align-items: center;
+            height: 25px;
+        }
+        
+        .phase-card.minimized .phase-status {
+            display: flex;
+            align-items: center;
+            height: 25px;
+        }
+        
+        .phase-card.minimized .status-badge {
+            padding: 3px 12px;
             font-size: 12px;
         }
 
