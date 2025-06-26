@@ -1840,7 +1840,19 @@ function renderTabs() {
                     </div>
                     <div class="phase-content" id="phase-content-${phase.id}">
                         <div class="tasks-list">
-                            ${phase.tasks.map(task => renderTask(phase.id, task)).join('')}
+                            ${phase.tasks
+                                .sort((a, b) => {
+                                    // Primeiro por OS (crescente)
+                                    const osA = parseInt(a.osNumber) || 0;
+                                    const osB = parseInt(b.osNumber) || 0;
+                                    if (osA !== osB) return osA - osB;
+                                    
+                                    // Depois por tarefa (crescente)
+                                    const taskA = parseInt(a.taskNumber) || 0;
+                                    const taskB = parseInt(b.taskNumber) || 0;
+                                    return taskA - taskB;
+                                })
+                                .map(task => renderTask(phase.id, task)).join('')}
                         </div>
                         <button class="btn btn-add-task" onclick="showNewTaskForm(${phase.id})">
                             <span style="font-size: 18px;">+</span> Adicionar Tarefa
@@ -1888,13 +1900,21 @@ function renderTabs() {
                                 `<button class="btn btn-danger btn-small" onclick="blockTask('${task.id}')">Impedimento</button>`
                         }
                         <input type="text" 
+                               class="os-number-input" 
+                               placeholder="OS" 
+                               maxlength="10" 
+                               value="${task.osNumber || ''}"
+                               onchange="updateOSNumber('${task.id}', this.value)"
+                               title="Número da OS (10 dígitos)"
+                               style="width: 80px; padding: 5px 8px; font-size: 12px; text-align: center; border: 1px solid #ddd; border-radius: 4px; margin-left: 8px; background: white;">
+                        <input type="text" 
                                class="task-number-input" 
                                placeholder="000" 
                                maxlength="3" 
                                value="${task.taskNumber || ''}"
                                onchange="updateTaskNumber('${task.id}', this.value)"
                                title="Número da tarefa (3 dígitos)"
-                               style="width: 50px; padding: 5px 8px; font-size: 12px; text-align: center; border: 1px solid #ddd; border-radius: 4px; margin-left: 8px;">
+                               style="width: 50px; padding: 5px 8px; font-size: 12px; text-align: center; border: 1px solid #ddd; border-radius: 4px; margin-left: 8px; background: white;">
                     </div>
                 </div>
                 <div class="task-info-modal" id="info-${task.id}">
@@ -2432,9 +2452,23 @@ function renderTabs() {
             localStorage.setItem('c105Backup', JSON.stringify(backup));
         }
 
+        // Atualizar número da OS
+        window.updateOSNumber = function(taskId, value) {
+            let task = null;
+            for (let phase of appState.phases) {
+                task = phase.tasks.find(t => t.id === taskId);
+                if (task) break;
+            }
+            
+            if (task) {
+                task.osNumber = value;
+                saveData();
+                renderPhases(); // Reordenar após mudança
+            }
+        }
+        
         // Atualizar número da tarefa
         window.updateTaskNumber = function(taskId, value) {
-            // Encontrar a tarefa
             let task = null;
             for (let phase of appState.phases) {
                 task = phase.tasks.find(t => t.id === taskId);
@@ -2444,6 +2478,7 @@ function renderTabs() {
             if (task) {
                 task.taskNumber = value;
                 saveData();
+                renderPhases(); // Reordenar após mudança
             }
         }
         
