@@ -1922,14 +1922,6 @@ function renderTabs() {
                                onchange="updateTaskNumber('${task.id}', this.value)"
                                title="Número da tarefa (3 dígitos)"
                                style="width: 50px; padding: 5px 8px; font-size: 12px; text-align: center; border: 1px solid #ddd; border-radius: 4px; margin-left: 8px; background: white;">
-                        <input type="text" 
-                               class="task-number-input" 
-                               placeholder="000" 
-                               maxlength="3" 
-                               value="${task.taskNumber || ''}"
-                               onchange="updateTaskNumber('${task.id}', this.value)"
-                               title="Número da tarefa (3 dígitos)"
-                               style="width: 50px; padding: 5px 8px; font-size: 12px; text-align: center; border: 1px solid #ddd; border-radius: 4px; margin-left: 8px; background: white;">
                     </div>
                 </div>
                 <div class="task-info-modal" id="info-${task.id}">
@@ -2520,21 +2512,6 @@ window.updateOSNumber = function(taskId, value) {
                 openPhases.forEach(id => {
                     document.getElementById(`phase-content-${id}`).classList.add('active');
                 });
-            }
-        }
-        
-        // Atualizar número da tarefa
-        window.updateTaskNumber = function(taskId, value) {
-            let task = null;
-            for (let phase of appState.phases) {
-                task = phase.tasks.find(t => t.id === taskId);
-                if (task) break;
-            }
-            
-            if (task) {
-                task.taskNumber = value;
-                saveData();
-                renderPhases(); // Reordenar após mudança
             }
         }
         
