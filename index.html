@@ -2721,12 +2721,19 @@ function renderTabs() {
                         const data = JSON.parse(sectionData);
                         Object.values(data).forEach(aircraft => {
                             if (aircraft.aircraftId === appState.aircraftId) {
+                                // Contar todas as tarefas
                                 aircraft.phases.forEach(phase => {
-                                    totalTasks += phase.tasks.length;
-                                    completedTasks += phase.tasks.filter(t => t.completed).length;
-                                    if (aircraft.blocks) {
-                                        blockedTasks += Object.keys(aircraft.blocks).length;
-                                    }
+                                    phase.tasks.forEach(task => {
+                                        totalTasks++;
+                                        
+                                        // Verificar se a tarefa está bloqueada
+                                        if (aircraft.blocks && aircraft.blocks[task.id]) {
+                                            blockedTasks++;
+                                        } else if (task.completed) {
+                                            // Só conta como completa se não estiver bloqueada
+                                            completedTasks++;
+                                        }
+                                    });
                                 });
                             }
                         });
@@ -2734,21 +2741,28 @@ function renderTabs() {
                 });
             } else {
                 // Para usuário normal, usar dados locais
-                totalTasks = appState.phases.reduce((sum, phase) => sum + phase.tasks.length, 0);
-                completedTasks = appState.phases.reduce((sum, phase) => 
-                    sum + phase.tasks.filter(task => task.completed).length, 0);
-                blockedTasks = Object.keys(appState.blocks || {}).length;
+                appState.phases.forEach(phase => {
+                    phase.tasks.forEach(task => {
+                        totalTasks++;
+                        
+                        // Verificar se a tarefa está bloqueada
+                        if (appState.blocks && appState.blocks[task.id]) {
+                            blockedTasks++;
+                        } else if (task.completed) {
+                            // Só conta como completa se não estiver bloqueada
+                            completedTasks++;
+                        }
+                    });
+                });
             }
             
+            // Pendentes = Total - Concluídas - Impedimentos
             const pendingTasks = totalTasks - completedTasks - blockedTasks;
             const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
             
             const progressFill = document.getElementById('progressFill');
             progressFill.style.width = percentage + '%';
             progressFill.textContent = percentage + '%';
-            
-            // Barra de progresso geral sempre verde (não muda de cor)
-            // Já está definida no CSS como verde, então remover essa parte
             
             document.getElementById('completedCount').textContent = completedTasks;
             document.getElementById('pendingCount').textContent = pendingTasks;
