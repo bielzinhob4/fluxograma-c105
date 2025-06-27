@@ -3028,8 +3028,11 @@ function renderTabs() {
                                     aircraft.phases.forEach(phase => {
                                         phase.tasks.forEach(task => {
                                             sectionTotal++;
-                                            if (task.completed) sectionCompleted++;
-                                            if (aircraft.blocks && aircraft.blocks[task.id]) sectionBlocked++;
+                                            if (aircraft.blocks && aircraft.blocks[task.id]) {
+                                                sectionBlocked++;
+                                            } else if (task.completed) {
+                                                sectionCompleted++;
+                                            }
                                         });
                                     });
                                     
