@@ -682,7 +682,7 @@
             background: linear-gradient(90deg, #4caf50 0%, #66bb6a 100%);
             height: 100%;
             width: 0%;
-            min-width: 0;
+            min-width: 50px;
             transition: width 0.5s ease;
             display: flex;
             align-items: center;
@@ -691,23 +691,6 @@
             font-weight: bold;
             font-size: 14px;
             position: relative;
-        }
-        
-        /* Mostrar porcentagem sempre */
-        .progress-fill::after {
-            content: attr(data-percentage);
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            color: #333;
-            font-weight: bold;
-            z-index: 1;
-        }
-        
-        .progress-fill[data-percentage="0%"]::after {
-            left: 15px;
-            transform: translateY(-50%);
         }
 
         .phases-container {
@@ -2763,7 +2746,6 @@ function renderTabs() {
             const progressFill = document.getElementById('progressFill');
             progressFill.style.width = percentage + '%';
             progressFill.textContent = percentage + '%';
-            progressFill.setAttribute('data-percentage', percentage + '%');
             
             // Barra de progresso geral sempre verde (não muda de cor)
             // Já está definida no CSS como verde, então remover essa parte
@@ -3077,13 +3059,10 @@ function renderTabs() {
                                             <span>${data.completedTasks}/${data.totalTasks} tarefas (${overallPercentage}%)</span>
                                         </div>
                                         <div style="background: ${overallPercentage === 100 ? 'linear-gradient(90deg, #4caf50 0%, #66bb6a 100%)' : 'linear-gradient(90deg, #2196f3 0%, #42a5f5 100%)'}; 
-                                                    height: 100%; width: ${overallPercentage}%; min-width: 0;
-                                                    position: relative;">
-                                            <span style="position: absolute; left: ${overallPercentage < 10 ? '10px' : '50%'}; top: 50%; 
-                                                        transform: ${overallPercentage < 10 ? 'translateY(-50%)' : 'translate(-50%, -50%)'};
-                                                        color: ${overallPercentage < 10 ? '#333' : 'white'}; font-weight: bold; font-size: 14px;">
-                                                ${overallPercentage}%
-                                            </span>
+                                                    height: 100%; width: ${overallPercentage}%; min-width: ${overallPercentage > 0 ? '50px' : '0'};
+                                                    display: flex; align-items: center; justify-content: center;
+                                                    color: white; font-weight: bold; font-size: 14px;">
+                                            ${overallPercentage}%
                                         </div>
                                         </div>
                                     </div>
@@ -3098,13 +3077,10 @@ function renderTabs() {
                                             <span style="width: 140px; font-weight: 600;">${getDisplaySectionName(section)}:</span>
                                             <div style="flex: 1; background: #e0e0e0; height: 25px; border-radius: 12px; overflow: hidden;">
                                                 <div style="background: ${sectionData.percentage === 100 ? 'linear-gradient(90deg, #4caf50 0%, #66bb6a 100%)' : 'linear-gradient(90deg, #2196f3 0%, #42a5f5 100%)'}; 
-                                                            height: 100%; width: ${sectionData.percentage}%; min-width: 0;
-                                                            position: relative;">
-                                                    <span style="position: absolute; left: ${sectionData.percentage < 10 ? '10px' : '50%'}; top: 50%; 
-                                                                transform: ${sectionData.percentage < 10 ? 'translateY(-50%)' : 'translate(-50%, -50%)'};
-                                                                color: ${sectionData.percentage < 10 ? '#333' : 'white'}; font-weight: bold; font-size: 12px;">
-                                                        ${sectionData.percentage}%
-                                                    </span>
+                                                            height: 100%; width: ${sectionData.percentage}%; min-width: ${sectionData.percentage > 0 ? '50px' : '0'};
+                                                            display: flex; align-items: center; justify-content: center;
+                                                            color: white; font-weight: bold; font-size: 12px;">
+                                                    ${sectionData.percentage}%
                                                 </div>
                                             </div>
                                             <span style="font-size: 14px; color: #666;">${sectionData.completed}/${sectionData.total}</span>
