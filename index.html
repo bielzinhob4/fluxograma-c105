@@ -3058,12 +3058,13 @@ function renderTabs() {
                                             <span><strong>Progresso Geral:</strong></span>
                                             <span>${data.completedTasks}/${data.totalTasks} tarefas (${overallPercentage}%)</span>
                                         </div>
-                                        <div style="background: ${overallPercentage === 100 ? 'linear-gradient(90deg, #4caf50 0%, #66bb6a 100%)' : 'linear-gradient(90deg, #2196f3 0%, #42a5f5 100%)'}; 
-                                                    height: 100%; width: ${overallPercentage}%; min-width: ${overallPercentage > 0 ? '50px' : '0'};
-                                                    display: flex; align-items: center; justify-content: center;
-                                                    color: white; font-weight: bold; font-size: 14px;">
-                                            ${overallPercentage}%
-                                        </div>
+                                        <div style="background: #e0e0e0; height: 30px; border-radius: 15px; overflow: hidden;">
+                                            <div style="background: ${overallPercentage === 100 ? 'linear-gradient(90deg, #4caf50 0%, #66bb6a 100%)' : 'linear-gradient(90deg, #2196f3 0%, #42a5f5 100%)'}; 
+                                                        height: 100%; width: ${overallPercentage}%; min-width: ${overallPercentage > 0 ? '50px' : '0'};
+                                                        display: flex; align-items: center; justify-content: center;
+                                                        color: white; font-weight: bold; font-size: 14px;">
+                                                ${overallPercentage}%
+                                            </div>
                                         </div>
                                     </div>
                                     <div style="display: grid; gap: 10px;">
