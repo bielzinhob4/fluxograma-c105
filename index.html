@@ -1897,10 +1897,12 @@ function renderTabs() {
             const tab = document.createElement('div');
             tab.className = `tab ${aircraftId === currentAircraftId ? 'active' : ''}`;
             
-            tab.innerHTML = `
-                <span onclick="switchTab('${aircraftId}')">${state.aircraftId || 'Nova Aeronave'}</span>
-                ${Object.keys(aircraftStates).length > 1 ? `<span class="tab-close" onclick="closeTab('${aircraftId}')">×</span>` : ''}
-            `;
+        // Para admin, não mostrar X para fechar
+        const isAdmin = firebase.auth().currentUser && firebase.auth().currentUser.email.toLowerCase().includes('admin');
+        tab.innerHTML = `
+            <span onclick="switchTab('${aircraftId}')">${state.aircraftId || 'Nova Aeronave'}</span>
+            ${!isAdmin && Object.keys(aircraftStates).length > 1 ? `<span class="tab-close" onclick="closeTab('${aircraftId}')">×</span>` : ''}
+        `;
             tabsContainer.appendChild(tab);
         });
         
@@ -2189,12 +2191,23 @@ function renderTabs() {
                                 const completedTasks = phase.tasks.filter(t => t.completed).length;
                                 const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
                                 
+                                // Verificar se há impedimentos nesta seção/fase
+                                let hasBlockedTasks = false;
+                                phase.tasks.forEach(task => {
+                                    if (aircraft.blocks && aircraft.blocks[task.id]) {
+                                        hasBlockedTasks = true;
+                                    }
+                                });
+                                
                                 html += `
                                     <div style="margin-bottom: 15px; cursor: pointer; padding: 10px; border-radius: 8px; transition: background 0.2s;" 
                                          onclick="toggleSectionTasks('${section}', ${phaseId})"
                                          onmouseover="this.style.background='#f0f0f0'" 
                                          onmouseout="this.style.background='transparent'">
-                                        <h4 style="color: #1a5490; margin-bottom: 5px;">${getDisplaySectionName(section)}</h4>
+                                        <h4 style="color: #1a5490; margin-bottom: 5px;">
+                                            ${getDisplaySectionName(section)}
+                                            ${hasBlockedTasks ? '<span style="background: #f44336; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 10px;">⚠️ Impedimento</span>' : ''}
+                                        </h4>
                                         <div style="display: flex; align-items: center; gap: 15px;">
                                             <div style="flex: 1;">
                                                 <div style="background: #e0e0e0; height: 25px; border-radius: 12px; overflow: hidden;">
@@ -2244,16 +2257,17 @@ function renderTabs() {
                                 ${task.taskNumber ? `<span style="margin-left: 5px; color: #666; font-size: 12px;">Tarefa: ${task.taskNumber}</span>` : ''}
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="background: ${statusColor}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">
-                                    ${statusText}
-                                </span>
                                 ${isBlocked ? `
                                     <button onclick="viewAdminBlockDetail('${section}', '${task.id}')" 
                                             style="background: #f44336; color: white; border: none; padding: 4px 12px; 
                                                    border-radius: 4px; cursor: pointer; font-size: 12px;">
                                         Ver Impedimento
                                     </button>
-                                ` : ''}
+                                ` : `
+                                    <span style="background: ${statusColor}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">
+                                        ${statusText}
+                                    </span>
+                                `}
                             </div>
                         </div>
                     </div>
