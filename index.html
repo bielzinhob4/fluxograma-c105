@@ -2204,10 +2204,10 @@ function renderTabs() {
                                          onclick="toggleSectionTasks('${section}', ${phaseId})"
                                          onmouseover="this.style.background='#f0f0f0'" 
                                          onmouseout="this.style.background='transparent'">
-                                        <h4 style="color: #1a5490; margin-bottom: 5px;">
-                                            ${getDisplaySectionName(section)}
-                                            ${hasBlockedTasks ? '<span style="background: #f44336; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 10px;">⚠️ Impedimento</span>' : ''}
-                                        </h4>
+                                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                            <h4 style="color: #1a5490; margin: 0;">${getDisplaySectionName(section)}</h4>
+                                            ${hasBlockedTasks ? '<span style="background: #f44336; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: normal;">⚠️ Impedimento</span>' : ''}
+                                        </div>
                                         <div style="display: flex; align-items: center; gap: 15px;">
                                             <div style="flex: 1;">
                                                 <div style="background: #e0e0e0; height: 25px; border-radius: 12px; overflow: hidden;">
