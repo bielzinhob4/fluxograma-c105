@@ -1544,19 +1544,34 @@
 
                 // Verificar se é admin e ajustar interface
                 const isAdmin = user.email.toLowerCase().includes('admin');
+                const btnClear = document.getElementById('btnClear');
+                
                 if (isAdmin) {
                     // Mudar botão "Limpar Tudo" para "Painel ADM"
-                    const btnClear = document.getElementById('btnClear');
                     if (btnClear) {
                         btnClear.className = 'btn btn-warning';
                         btnClear.innerHTML = '📊 Painel ADM';
                         btnClear.onclick = function() { showAdminPanel(); };
                     }
-
+                
                     // Esconder botão de nova aeronave para admin
                     const style = document.createElement('style');
+                    style.setAttribute('id', 'admin-style');
                     style.textContent = '.btn-new-tab { display: none !important; }';
                     document.head.appendChild(style);
+                } else {
+                    // Restaurar botão "Limpar Tudo" para usuários normais
+                    if (btnClear) {
+                        btnClear.className = 'btn btn-danger';
+                        btnClear.innerHTML = '🗑️ Limpar Tudo';
+                        btnClear.onclick = function() { clearData(); };
+                    }
+                
+                    // Remover estilo de admin se existir
+                    const adminStyle = document.getElementById('admin-style');
+                    if (adminStyle) {
+                        adminStyle.remove();
+                    }
                 }
 
                 // Carregar dados específicos da seção
