@@ -1374,6 +1374,53 @@
             </div>
         </div>
 
+        <!-- Modal para selecionar coordenador -->
+        <div class="modal" id="coordinatorModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Exportar Relatório de Progresso</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Selecione o Coordenador:</label>
+                        <select id="coordinatorSelect" style="width: 100%; padding: 10px; margin-bottom: 15px;">
+                            <option value="">Selecione...</option>
+                        </select>
+                        <button class="btn btn-primary btn-small" onclick="openCoordinatorManager()">⚙️ Gerenciar Coordenadores</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success" onclick="generateReport()">Gerar Relatório</button>
+                    <button class="btn" onclick="closeCoordinatorModal()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal para gerenciar coordenadores -->
+        <div class="modal" id="coordinatorManagerModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Gerenciar Coordenadores</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Coordenadores Cadastrados:</label>
+                        <div id="coordinatorsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;">
+                            <!-- Lista será preenchida dinamicamente -->
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Adicionar Novo Coordenador:</label>
+                        <input type="text" id="newCoordinatorName" placeholder="Nome completo" style="width: 70%;">
+                        <button class="btn btn-success btn-small" onclick="addCoordinator()">Adicionar</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="closeCoordinatorManager()">Fechar</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Modal para impedimentos -->
         <div class="modal" id="blockModal">
             <div class="modal-content">
@@ -3071,13 +3118,22 @@ function renderTabs() {
 
         // Exportar dados
         window.exportData = function() {
-            const dataStr = JSON.stringify(appState, null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `c105_maintenance_${appState.aircraftId}_${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
+            const user = firebase.auth().currentUser;
+            const isAdmin = user && user.email.toLowerCase().includes('admin');
+            
+            if (isAdmin) {
+                // Admin: Abrir modal para selecionar coordenador
+                openCoordinatorModal();
+            } else {
+                // Usuário normal: Exportar JSON como antes
+                const dataStr = JSON.stringify(appState, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `c105_maintenance_${appState.aircraftId}_${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+            }
         }
 
         // Limpar dados
@@ -3295,6 +3351,414 @@ function renderTabs() {
                 task.executedBy = executorName;
                 saveData();
             }
+        }
+
+        // Gerenciamento de Coordenadores
+        function getCoordinatorsList() {
+            const coordinatorsKey = 'c105_coordinators';
+            const saved = localStorage.getItem(coordinatorsKey);
+            return saved ? JSON.parse(saved) : [];
+        }
+        
+        function saveCoordinatorsList(coordinators) {
+            localStorage.setItem('c105_coordinators', JSON.stringify(coordinators));
+        }
+        
+        window.openCoordinatorModal = function() {
+            const modal = document.getElementById('coordinatorModal');
+            const select = document.getElementById('coordinatorSelect');
+            const coordinators = getCoordinatorsList();
+            
+            select.innerHTML = '<option value="">Selecione...</option>' + 
+                coordinators.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            modal.classList.add('active');
+        }
+        
+        window.closeCoordinatorModal = function() {
+            document.getElementById('coordinatorModal').classList.remove('active');
+        }
+        
+        window.openCoordinatorManager = function() {
+            document.getElementById('coordinatorManagerModal').classList.add('active');
+            renderCoordinatorsList();
+        }
+        
+        window.closeCoordinatorManager = function() {
+            document.getElementById('coordinatorManagerModal').classList.remove('active');
+            document.getElementById('newCoordinatorName').value = '';
+        }
+        
+        function renderCoordinatorsList() {
+            const coordinators = getCoordinatorsList();
+            const listContainer = document.getElementById('coordinatorsList');
+            
+            if (coordinators.length === 0) {
+                listContainer.innerHTML = '<p style="color: #666;">Nenhum coordenador cadastrado</p>';
+                return;
+            }
+            
+            listContainer.innerHTML = coordinators.map((coordinator, index) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f5f5f5; margin-bottom: 5px; border-radius: 4px;">
+                    <span>${coordinator}</span>
+                    <button class="btn btn-danger btn-small" onclick="removeCoordinator(${index})">Remover</button>
+                </div>
+            `).join('');
+        }
+        
+        window.addCoordinator = function() {
+            const input = document.getElementById('newCoordinatorName');
+            const name = input.value.trim();
+            
+            if (!name) {
+                alert('Por favor, insira o nome do coordenador');
+                return;
+            }
+            
+            const coordinators = getCoordinatorsList();
+            
+            if (coordinators.includes(name)) {
+                alert('Este coordenador já está cadastrado');
+                return;
+            }
+            
+            coordinators.push(name);
+            coordinators.sort();
+            saveCoordinatorsList(coordinators);
+            
+            input.value = '';
+            renderCoordinatorsList();
+            
+            // Atualizar o select no modal principal
+            const select = document.getElementById('coordinatorSelect');
+            select.innerHTML = '<option value="">Selecione...</option>' + 
+                coordinators.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+        
+        window.removeCoordinator = function(index) {
+            if (!confirm('Tem certeza que deseja remover este coordenador?')) return;
+            
+            const coordinators = getCoordinatorsList();
+            coordinators.splice(index, 1);
+            saveCoordinatorsList(coordinators);
+            renderCoordinatorsList();
+        }
+        
+        // Gerar relatório HTML
+        window.generateReport = function() {
+            const coordinatorName = document.getElementById('coordinatorSelect').value;
+            
+            if (!coordinatorName) {
+                alert('Por favor, selecione um coordenador');
+                return;
+            }
+            
+            closeCoordinatorModal();
+            
+            // Coletar dados consolidados
+            const reportData = collectReportData();
+            
+            // Gerar HTML do relatório
+            const reportHTML = generateReportHTML(reportData, coordinatorName);
+            
+            // Abrir em nova janela
+            const reportWindow = window.open('', '_blank');
+            reportWindow.document.write(reportHTML);
+            reportWindow.document.close();
+        }
+        
+        function collectReportData() {
+            const sections = ['hidraulica', 'pneumatica', 'celula', 'comando', 'eletrica', 'motores', 'estrutura'];
+            const data = {
+                aircraftId: appState.aircraftId,
+                startDate: appState.startDate,
+                daysElapsed: 0,
+                sections: {},
+                totalProgress: 0,
+                totalTasks: 0,
+                completedTasks: 0,
+                blockedTasks: 0,
+                impediments: []
+            };
+            
+            // Calcular dias
+            if (appState.startDate) {
+                const start = new Date(appState.startDate);
+                const today = new Date();
+                data.daysElapsed = Math.ceil((today - start) / (1000 * 60 * 60 * 24));
+            }
+            
+            // Coletar dados de cada seção
+            sections.forEach(section => {
+                const sectionKey = `c105_${section}_data`;
+                const sectionData = localStorage.getItem(sectionKey);
+                
+                if (sectionData) {
+                    const parsedData = JSON.parse(sectionData);
+                    Object.values(parsedData).forEach(aircraft => {
+                        if (aircraft.aircraftId === appState.aircraftId) {
+                            let sectionTotal = 0;
+                            let sectionCompleted = 0;
+                            let sectionBlocked = 0;
+                            
+                            aircraft.phases.forEach(phase => {
+                                phase.tasks.forEach(task => {
+                                    sectionTotal++;
+                                    data.totalTasks++;
+                                    
+                                    if (aircraft.blocks && aircraft.blocks[task.id]) {
+                                        sectionBlocked++;
+                                        data.blockedTasks++;
+                                        data.impediments.push({
+                                            section: getDisplaySectionName(section),
+                                            phase: phase.title,
+                                            task: task.name,
+                                            impediment: aircraft.blocks[task.id]
+                                        });
+                                    } else if (task.completed) {
+                                        sectionCompleted++;
+                                        data.completedTasks++;
+                                    }
+                                });
+                            });
+                            
+                            data.sections[section] = {
+                                name: getDisplaySectionName(section),
+                                total: sectionTotal,
+                                completed: sectionCompleted,
+                                blocked: sectionBlocked,
+                                percentage: sectionTotal > 0 ? Math.round((sectionCompleted / sectionTotal) * 100) : 0
+                            };
+                        }
+                    });
+                }
+            });
+            
+            data.totalProgress = data.totalTasks > 0 ? Math.round((data.completedTasks / data.totalTasks) * 100) : 0;
+            
+            return data;
+        }
+        
+        function generateReportHTML(data, coordinatorName) {
+            const today = new Date().toLocaleDateString('pt-BR');
+            const time = new Date().toLocaleTimeString('pt-BR');
+            
+            return `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Relatório de Manutenção - FAB ${data.aircraftId}</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 0;
+                    padding: 20px;
+                    color: #333;
+                }
+                .header {
+                    text-align: center;
+                    margin-bottom: 30px;
+                    border-bottom: 2px solid #1a5490;
+                    padding-bottom: 20px;
+                }
+                .header h1 {
+                    color: #1a5490;
+                    margin: 10px 0;
+                }
+                .header h2 {
+                    color: #666;
+                    font-weight: normal;
+                    margin: 5px 0;
+                }
+                .info-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 20px;
+                    margin-bottom: 30px;
+                    background: #f5f5f5;
+                    padding: 20px;
+                    border-radius: 8px;
+                }
+                .info-item {
+                    display: flex;
+                    justify-content: space-between;
+                }
+                .info-label {
+                    font-weight: bold;
+                    color: #666;
+                }
+                .section-progress {
+                    margin-bottom: 25px;
+                }
+                .section-title {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 5px;
+                    font-weight: bold;
+                }
+                .progress-bar {
+                    width: 100%;
+                    height: 30px;
+                    background: #e0e0e0;
+                    border-radius: 15px;
+                    overflow: hidden;
+                    margin-bottom: 15px;
+                }
+                .progress-fill {
+                    height: 100%;
+                    background: linear-gradient(90deg, #4caf50 0%, #66bb6a 100%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: bold;
+                }
+                .progress-fill.incomplete {
+                    background: linear-gradient(90deg, #2196f3 0%, #42a5f5 100%);
+                }
+                .impediments {
+                    margin-top: 30px;
+                    padding: 20px;
+                    background: #fff3cd;
+                    border-radius: 8px;
+                    border-left: 4px solid #ffc107;
+                }
+                .impediment-item {
+                    margin-bottom: 10px;
+                    padding-bottom: 10px;
+                    border-bottom: 1px solid #f0f0f0;
+                }
+                .footer {
+                    margin-top: 50px;
+                    text-align: center;
+                    color: #666;
+                    font-size: 12px;
+                }
+                .signature {
+                    margin-top: 50px;
+                    text-align: center;
+                }
+                .signature-line {
+                    display: inline-block;
+                    width: 300px;
+                    border-bottom: 1px solid #333;
+                    margin-bottom: 5px;
+                }
+                @media print {
+                    body { margin: 0; }
+                    .no-print { display: none; }
+                }
+                .print-button {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 10px 20px;
+                    background: #1a5490;
+                    color: white;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 16px;
+                }
+                .print-button:hover {
+                    background: #2a6ab0;
+                }
+            </style>
+        </head>
+        <body>
+            <button class="print-button no-print" onclick="window.print()">🖨️ Imprimir Relatório</button>
+            
+            <div class="header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <img src="https://i.imgur.com/QkMKOTv.png" alt="PAMA GL" style="height: 80px;">
+                    <div style="text-align: center;">
+                        <h2>FORÇA AÉREA BRASILEIRA</h2>
+                        <h2>PARQUE DE MATERIAL AERONÁUTICO DO GALEÃO</h2>
+                    </div>
+                    <img src="https://i.imgur.com/CgWeD26.jpeg" alt="Linha de Revisão C-105" style="height: 80px;">
+                </div>
+                <h1>RELATÓRIO DE PROGRESSO - REVISÃO GERAL C-105 AMAZONAS</h1>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Aeronave:</span>
+                    <span>FAB ${data.aircraftId}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Data de Entrada:</span>
+                    <span>${data.startDate ? new Date(data.startDate).toLocaleDateString('pt-BR') : 'Não informada'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Dias em Manutenção:</span>
+                    <span>${data.daysElapsed} dias</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Data do Relatório:</span>
+                    <span>${today}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Progresso Geral:</span>
+                    <span style="font-weight: bold; color: ${data.totalProgress === 100 ? '#4caf50' : '#2196f3'}">
+                        ${data.totalProgress}% (${data.completedTasks}/${data.totalTasks} tarefas)
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Impedimentos Ativos:</span>
+                    <span style="color: ${data.blockedTasks > 0 ? '#f44336' : '#4caf50'}">
+                        ${data.blockedTasks}
+                    </span>
+                </div>
+            </div>
+            
+            <h3 style="color: #1a5490; margin-bottom: 20px;">PROGRESSO POR SEÇÃO</h3>
+            
+            ${Object.values(data.sections).map(section => `
+                <div class="section-progress">
+                    <div class="section-title">
+                        <span>${section.name}</span>
+                        <span>${section.completed}/${section.total} tarefas (${section.percentage}%)</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill ${section.percentage < 100 ? 'incomplete' : ''}" 
+                             style="width: ${Math.max(section.percentage, 5)}%">
+                            ${section.percentage}%
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+            
+            ${data.impediments.length > 0 ? `
+                <div class="impediments">
+                    <h3 style="color: #856404; margin-top: 0;">⚠️ IMPEDIMENTOS ATIVOS</h3>
+                    ${data.impediments.map(imp => `
+                        <div class="impediment-item">
+                            <strong>${imp.section} - ${imp.phase}</strong><br>
+                            Tarefa: ${imp.task}<br>
+                            Tipo: ${imp.impediment.type === 'material' ? 'Falta de Material' :
+                                   imp.impediment.type === 'ferramenta' ? 'Falta de Ferramenta' :
+                                   imp.impediment.type === 'pessoal' ? 'Falta de Pessoal' :
+                                   imp.impediment.type === 'tecnico' ? 'Problema Técnico' : 'Outro'}<br>
+                            Descrição: ${imp.impediment.description}
+                        </div>
+                    `).join('')}
+                </div>
+            ` : ''}
+            
+            <div class="signature">
+                <div class="signature-line"></div>
+                <div>${coordinatorName}</div>
+                <div>Coordenador da Linha de Revisão</div>
+            </div>
+            
+            <div class="footer">
+                <p>Documento gerado em ${today} às ${time}</p>
+                <p>Sistema de Controle de Manutenção - C-105 Amazonas</p>
+            </div>
+        </body>
+        </html>
+            `;
         }
         
         // Event listeners
