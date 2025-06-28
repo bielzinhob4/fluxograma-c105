@@ -2011,10 +2011,10 @@ function renderTabs() {
             document.getElementById('aircraftId').value = appState.aircraftId || '';
             document.getElementById('startDate').value = appState.startDate || '';
 
-         // Se for admin, desabilitar inputs
+        // Se for admin, desabilitar apenas matrícula
         if (appState.isAdminView) {
             document.getElementById('aircraftId').disabled = true;
-            document.getElementById('startDate').disabled = true;
+            document.getElementById('startDate').disabled = false; // Admin pode editar data
         }
             
             renderPhases();
@@ -2034,9 +2034,32 @@ function renderTabs() {
         // Salvar dados
         function saveData() {
             if (appState && currentAircraftId) {
-                appState.aircraftId = document.getElementById('aircraftId').value;
+                // Se não for admin, salva matrícula normalmente
+                if (!appState.isAdminView) {
+                    appState.aircraftId = document.getElementById('aircraftId').value;
+                }
                 appState.startDate = document.getElementById('startDate').value;
                 aircraftStates[currentAircraftId] = appState;
+                
+                // Se for admin, salvar a data em todas as seções desta aeronave
+                if (appState.isAdminView) {
+                    const sections = ['hidraulica', 'pneumatica', 'celula', 'comando', 'eletrica', 'motores', 'estrutura'];
+                    sections.forEach(section => {
+                        const sectionKey = `c105_${section}_data`;
+                        const sectionData = localStorage.getItem(sectionKey);
+                        
+                        if (sectionData) {
+                            const data = JSON.parse(sectionData);
+                            Object.keys(data).forEach(key => {
+                                if (data[key].aircraftId === appState.aircraftId) {
+                                    data[key].startDate = appState.startDate;
+                                }
+                            });
+                            localStorage.setItem(sectionKey, JSON.stringify(data));
+                        }
+                    });
+                }
+                
                 saveAllData();
                 renderTabs(); // Atualizar nome na aba
             }
