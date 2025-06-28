@@ -3648,10 +3648,18 @@ function renderTabs() {
                 @media print {
                     body { margin: 0; }
                     .no-print { display: none; }
+                    .progress-bar { 
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .progress-fill {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
                 }
                 .print-button {
                     position: fixed;
-                    top: 20px;
+                    bottom: 20px;
                     right: 20px;
                     padding: 10px 20px;
                     background: #1a5490;
@@ -3660,6 +3668,7 @@ function renderTabs() {
                     border-radius: 5px;
                     cursor: pointer;
                     font-size: 16px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
                 }
                 .print-button:hover {
                     background: #2a6ab0;
@@ -3673,12 +3682,12 @@ function renderTabs() {
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <img src="https://i.imgur.com/QkMKOTv.png" alt="PAMA GL" style="height: 80px;">
                     <div style="text-align: center;">
-                        <h2>FORÇA AÉREA BRASILEIRA</h2>
-                        <h2>PARQUE DE MATERIAL AERONÁUTICO DO GALEÃO</h2>
+                        <h2 style="font-size: 18px;">FORÇA AÉREA BRASILEIRA</h2>
+                        <h2 style="font-size: 16px;">PARQUE DE MATERIAL AERONÁUTICO DO GALEÃO</h2>
                     </div>
                     <img src="https://i.imgur.com/CgWeD26.jpeg" alt="Linha de Revisão C-105" style="height: 80px;">
                 </div>
-                <h1>RELATÓRIO DE PROGRESSO - REVISÃO GERAL C-105 AMAZONAS</h1>
+                <h1 style="font-size: 20px;">RELATÓRIO DE PROGRESSO - REVISÃO GERAL C-105 AMAZONAS</h1>
             </div>
             
             <div class="info-grid">
@@ -3722,7 +3731,7 @@ function renderTabs() {
                     </div>
                     <div class="progress-bar">
                         <div class="progress-fill ${section.percentage < 100 ? 'incomplete' : ''}" 
-                             style="width: ${Math.max(section.percentage, 5)}%">
+                             style="width: ${Math.max(section.percentage, 5)}%; min-width: 40px;">
                             ${section.percentage}%
                         </div>
                     </div>
