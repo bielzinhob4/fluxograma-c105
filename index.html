@@ -347,12 +347,6 @@
             white-space: nowrap;
             margin-right: 130px; /* Empurra a frase para a esquerda */
         }
-        
-        .header h1.admin-title {
-            margin-right: 0;
-            justify-content: center;
-            flex: 1;
-        }
 
         .aircraft-info {
             display: flex;
@@ -1272,7 +1266,7 @@
             </div>
             <div class="header-content">
                 <h1 id="sectionTitle">FLUXOGRAMA - <span id="sectionName">CARREGANDO...</span>: C-105 AMAZONAS</h1>
-                <div class="aircraft-info" id="aircraftInfoContainer">
+                <div class="aircraft-info">
                     <input type="text" id="aircraftId" placeholder="2855" title="Ex: 2855" maxlength="4" />
                     <div class="date-info">
                         <input type="date" id="startDate" title="Data de entrada da aeronave na linha de revisão" />
@@ -1496,15 +1490,9 @@
                 
                 // Atualizar nome da seção
                 const sectionNameElement = document.getElementById('sectionName');
-                const sectionTitle = document.getElementById('sectionTitle');
                 if (sectionNameElement) {
                     const sectionName = user.email.split('@')[0].split('.')[0];
                     sectionNameElement.textContent = getDisplaySectionName(sectionName);
-                    
-                    // Se for admin, centralizar título
-                    if (isAdmin && sectionTitle) {
-                        sectionTitle.classList.add('admin-title');
-                    }
                 }
 
                 // Verificar se é admin e ajustar interface
@@ -1518,12 +1506,9 @@
                         btnClear.onclick = function() { showAdminPanel(); };
                     }
                     
-                    // Esconder elementos desnecessários para admin
+                    // Esconder botão de nova aeronave para admin
                     const style = document.createElement('style');
-                    style.textContent = `
-                        .btn-new-tab { display: none !important; }
-                        #aircraftInfoContainer { display: none !important; }
-                    `;
+                    style.textContent = '.btn-new-tab { display: none !important; }';
                     document.head.appendChild(style);
                 }
                 
