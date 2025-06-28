@@ -935,6 +935,36 @@
             align-items: center;
             gap: 15px;
         }
+        
+        .executor-select {
+            width: 150px;
+            padding: 5px 8px;
+            font-size: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .executor-select:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+        
+        .manage-executors-btn {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        
+        .manage-executors-btn:hover {
+            background: #1976d2;
+        }
 
         .task-checkbox {
             width: 20px;
@@ -1318,6 +1348,31 @@
             </div>
         <button id="backToTop" style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1a5490; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; opacity: 0; transition: all 0.3s; z-index: 100;">↑</button>
         </main>
+
+        <!-- Modal para gerenciar executantes -->
+        <div class="modal" id="executorsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Gerenciar Militares da Seção</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Militares Cadastrados:</label>
+                        <div id="executorsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;">
+                            <!-- Lista será preenchida dinamicamente -->
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Adicionar Novo Militar:</label>
+                        <input type="text" id="newExecutorName" placeholder="Nome completo" style="width: 70%;">
+                        <button class="btn btn-success btn-small" onclick="addExecutor()">Adicionar</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="closeExecutorsModal()">Fechar</button>
+                </div>
+            </div>
+        </div>
 
         <!-- Modal para impedimentos -->
         <div class="modal" id="blockModal">
@@ -2092,6 +2147,9 @@ function renderTabs() {
             const taskStatus = getTaskStatus(phaseId, task);
             const isBlocked = appState.blocks[task.id];
             
+            // Obter lista de executantes
+            const executors = getExecutorsList();
+            
             return `
                 <div class="task-item ${task.custom ? 'custom' : ''}">
                     <div class="task-info">
@@ -2105,8 +2163,17 @@ function renderTabs() {
 
                     </div>
                     <div class="task-actions">
-                        ${task.completed ? 
-                            `<button class="btn btn-success btn-small" style="cursor: default;">Concluído</button>` :
+                            ${task.completed ? 
+                                `<button class="btn btn-success btn-small" style="cursor: default;">Concluído</button>
+                                 <select class="executor-select" ${!task.completed ? 'disabled' : ''} 
+                                         onchange="updateExecutor('${task.id}', this.value)"
+                                         title="Executado por">
+                                    <option value="">Executado por...</option>
+                                    ${executors.map(executor => 
+                                        `<option value="${executor}" ${task.executedBy === executor ? 'selected' : ''}>${executor}</option>`
+                                    ).join('')}
+                                 </select>
+                                 <button class="manage-executors-btn" onclick="openExecutorsModal()" title="Gerenciar militares">⚙️</button>` :
                             isBlocked ? 
                                 `<button class="btn btn-danger btn-small" onclick="viewBlock('${task.id}')">Ver Impedimento</button>
                                  <button class="btn btn-warning btn-small" onclick="removeBlock('${task.id}')">Remover Impedimento</button>` :
@@ -2254,6 +2321,7 @@ function renderTabs() {
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div style="flex: 1;">
                                 <span style="${task.completed ? 'text-decoration: line-through;' : ''}">${task.name}</span>
+                                ${task.executedBy ? `<span style="margin-left: 10px; color: #2196f3; font-size: 12px;">👤 ${task.executedBy}</span>` : ''}
                                 ${task.osNumber ? `<span style="margin-left: 10px; color: #666; font-size: 12px;">OS: ${task.osNumber}</span>` : ''}
                                 ${task.taskNumber ? `<span style="margin-left: 5px; color: #666; font-size: 12px;">Tarefa: ${task.taskNumber}</span>` : ''}
                             </div>
@@ -2490,6 +2558,11 @@ function renderTabs() {
             // Remover impedimento se existir ao marcar como concluído
             if (task.completed && appState.blocks[taskId]) {
                 delete appState.blocks[taskId];
+            }
+            
+            // Limpar executor se desmarcar a tarefa
+            if (!task.completed) {
+                task.executedBy = '';
             }
             
             saveData();
@@ -3039,6 +3112,135 @@ function renderTabs() {
                 openPhases.forEach(id => {
                     document.getElementById(`phase-content-${id}`).classList.add('active');
                 });
+            }
+        }
+
+        // Obter lista de executantes da seção
+        function getExecutorsList() {
+            const user = firebase.auth().currentUser;
+            if (!user) return [];
+            
+            const section = user.email.split('@')[0].split('.')[0];
+            const executorsKey = `c105_${section}_executors`;
+            const savedExecutors = localStorage.getItem(executorsKey);
+            
+            return savedExecutors ? JSON.parse(savedExecutors) : [];
+        }
+        
+        // Salvar lista de executantes
+        function saveExecutorsList(executors) {
+            const user = firebase.auth().currentUser;
+            if (!user) return;
+            
+            const section = user.email.split('@')[0].split('.')[0];
+            const executorsKey = `c105_${section}_executors`;
+            localStorage.setItem(executorsKey, JSON.stringify(executors));
+        }
+        
+        // Abrir modal de executantes
+        window.openExecutorsModal = function() {
+            const modal = document.getElementById('executorsModal');
+            modal.classList.add('active');
+            renderExecutorsList();
+        }
+        
+        // Fechar modal de executantes
+        window.closeExecutorsModal = function() {
+            const modal = document.getElementById('executorsModal');
+            modal.classList.remove('active');
+            document.getElementById('newExecutorName').value = '';
+        }
+        
+        // Renderizar lista de executantes
+        function renderExecutorsList() {
+            const executors = getExecutorsList();
+            const listContainer = document.getElementById('executorsList');
+            
+            if (executors.length === 0) {
+                listContainer.innerHTML = '<p style="color: #666;">Nenhum militar cadastrado</p>';
+                return;
+            }
+            
+            listContainer.innerHTML = executors.map((executor, index) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f5f5f5; margin-bottom: 5px; border-radius: 4px;">
+                    <span>${executor}</span>
+                    <button class="btn btn-danger btn-small" onclick="removeExecutor(${index})">Remover</button>
+                </div>
+            `).join('');
+        }
+        
+        // Adicionar executor
+        window.addExecutor = function() {
+            const nameInput = document.getElementById('newExecutorName');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                alert('Por favor, insira o nome do militar');
+                return;
+            }
+            
+            const executors = getExecutorsList();
+            
+            if (executors.includes(name)) {
+                alert('Este militar já está cadastrado');
+                return;
+            }
+            
+            executors.push(name);
+            executors.sort(); // Ordenar alfabeticamente
+            saveExecutorsList(executors);
+            
+            nameInput.value = '';
+            renderExecutorsList();
+            
+            // Recarregar as tarefas para atualizar os dropdowns
+            const openPhases = [];
+            document.querySelectorAll('.phase-content.active').forEach(content => {
+                const id = content.id.replace('phase-content-', '');
+                openPhases.push(id);
+            });
+            
+            renderPhases();
+            
+            openPhases.forEach(id => {
+                document.getElementById(`phase-content-${id}`).classList.add('active');
+            });
+        }
+        
+        // Remover executor
+        window.removeExecutor = function(index) {
+            if (!confirm('Tem certeza que deseja remover este militar?')) return;
+            
+            const executors = getExecutorsList();
+            executors.splice(index, 1);
+            saveExecutorsList(executors);
+            renderExecutorsList();
+            
+            // Recarregar as tarefas
+            const openPhases = [];
+            document.querySelectorAll('.phase-content.active').forEach(content => {
+                const id = content.id.replace('phase-content-', '');
+                openPhases.push(id);
+            });
+            
+            renderPhases();
+            
+            openPhases.forEach(id => {
+                document.getElementById(`phase-content-${id}`).classList.add('active');
+            });
+        }
+        
+        // Atualizar executor da tarefa
+        window.updateExecutor = function(taskId, executorName) {
+            let task = null;
+            for (let phase of appState.phases) {
+                task = phase.tasks.find(t => t.id === taskId);
+                if (task) break;
+            }
+            
+            if (task) {
+                task.executedBy = executorName;
+                saveData();
             }
         }
         
