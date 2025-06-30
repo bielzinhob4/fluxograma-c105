@@ -345,7 +345,11 @@
             align-items: center;
             gap: 10px;
             white-space: nowrap;
-            margin-right: 130px; /* Empurra a frase para a esquerda */
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .aircraft-info {
@@ -3788,6 +3792,28 @@ function renderTabs() {
         // Event listeners
         document.getElementById('aircraftId').addEventListener('input', saveData);
 
+        // Posicionar título dinamicamente
+        function positionTitle() {
+            const logoLeft = document.querySelector('.logo-left');
+            const aircraftInfo = document.querySelector('.aircraft-info');
+            const title = document.querySelector('#sectionTitle');
+            
+            if (logoLeft && aircraftInfo && title && window.innerWidth > 768) {
+                const logoRect = logoLeft.getBoundingClientRect();
+                const aircraftRect = aircraftInfo.getBoundingClientRect();
+                
+                // Calcular o ponto médio entre extremidade direita do logo e extremidade esquerda do aircraft-info
+                const gapStart = logoRect.right;
+                const gapEnd = aircraftRect.left;
+                const centerPoint = gapStart + ((gapEnd - gapStart) / 2);
+                
+                // Posicionar o centro do título no ponto médio
+                title.style.left = centerPoint + 'px';
+                title.style.transform = 'translateX(-50%) translateY(-50%)';
+                title.style.opacity = '1';
+            }
+        }
+
         // Posicionar botão SAIR dinamicamente
         function positionLogoutButton() {
             const aircraftInfo = document.querySelector('.aircraft-info');
@@ -3811,13 +3837,19 @@ function renderTabs() {
             }
         }
 
-        // Chamar a função quando tudo estiver carregado
+        // Chamar as funções quando tudo estiver carregado
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
-                 setTimeout(positionLogoutButton, 500);
+                setTimeout(() => {
+                    positionTitle();
+                    positionLogoutButton();
+                }, 500);
             });
         } else {
-            setTimeout(positionLogoutButton, 500);
+            setTimeout(() => {
+                positionTitle();
+                positionLogoutButton();
+            }, 500);
         }
 
         // Reposicionar ao redimensionar
@@ -3826,7 +3858,10 @@ function renderTabs() {
         // Reposicionar quando o usuário fizer login
         auth.onAuthStateChanged((user) => {
             if (user) {
-                setTimeout(positionLogoutButton, 1000);
+                setTimeout(() => {
+                    positionTitle();
+                    positionLogoutButton();
+                }, 1000);
             }
         });
         document.getElementById('startDate').addEventListener('change', () => {
