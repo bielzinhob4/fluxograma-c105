@@ -3807,10 +3807,13 @@ function renderTabs() {
                 const gapEnd = aircraftRect.left;
                 const centerPoint = gapStart + ((gapEnd - gapStart) / 2);
                 
-                // TESTE: posição ajustada
-                title.style.left = '30px';
-                title.style.transform = 'translateX(-50%) translateY(-50%)';
+            // TESTE: debug extremo
+                title.style.left = '0px';
+                title.style.top = '60px';
+                title.style.transform = 'none';
                 title.style.opacity = '1';
+                title.style.background = 'red'; // Para ver onde está
+                console.log('Título posicionado!', title);
             }
         }
 
