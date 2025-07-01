@@ -3807,12 +3807,18 @@ function renderTabs() {
                 const gapEnd = aircraftRect.left;
                 const centerPoint = gapStart + ((gapEnd - gapStart) / 2);
                 
-                // Posição final: meio entre logo e caixa
-                title.style.left = '400px'; // Estimativa do meio
+                // Calcular o ponto médio entre extremidade direita do logo e extremidade esquerda do aircraft-info
+                const gapStart = logoRect.right;
+                const gapEnd = aircraftRect.left;
+                const centerPoint = gapStart + ((gapEnd - gapStart) / 2);
+                
+                // Posicionar o centro do título no ponto médio
+                title.style.left = centerPoint + 'px';
                 title.style.top = '50%';
                 title.style.transform = 'translateX(-50%) translateY(-50%)';
                 title.style.opacity = '1';
                 title.style.background = 'transparent';
+                console.log('Logo right:', logoRect.right, 'Aircraft left:', aircraftRect.left, 'Center:', centerPoint);
             }
         }
 
