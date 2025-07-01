@@ -590,6 +590,7 @@
             border-radius: 10px;
             margin-top: 10px;
             display: none;
+            position: relative;
         }
 
         .task-info-modal.active {
@@ -2283,6 +2284,9 @@ function renderTabs() {
                     </div>
                 </div>
                 <div class="task-info-modal" id="info-${task.id}">
+                    <div style="background: #1a5490; color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 10px 10px 0 0;">
+                        <h3 style="margin: 0; color: white; font-size: 16px;">📋 ${task.name}</h3>
+                    </div>
                     <div class="info-section">
                         <h4>🔧 Ferramentas Necessárias:</h4>
                         <ul id="tools-${task.id}">
@@ -2780,12 +2784,13 @@ function renderTabs() {
         window.addNewTask = function(phaseId) {
             const input = document.getElementById(`new-task-input-${phaseId}`);
             const taskName = input.value.trim();
-
+        
             if (taskName) {
                 const phase = appState.phases.find(p => p.id === phaseId);
-                const newTaskNumber = phase.tasks.length + 1;
-                const newTaskId = `${phaseId}.${newTaskNumber}`;
-
+                
+                // Gerar ID único baseado em timestamp para evitar conflitos
+                const newTaskId = `${phaseId}.custom.${Date.now()}`;
+        
                 const newTask = {
                     id: newTaskId,
                     name: taskName,
@@ -2800,7 +2805,7 @@ function renderTabs() {
                     }
                 };
 
-                phase.tasks.push(newTask);
+        phase.tasks.push(newTask);
 
                 saveData();
 
