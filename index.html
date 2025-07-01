@@ -522,11 +522,41 @@
             margin-left: 8px;
             cursor: pointer;
             transition: all 0.3s;
+            position: relative;
         }
-
+        
         .btn-info:hover {
             background: #1976d2;
             transform: scale(1.1);
+        }
+        
+        /* Botão quando tem informações preenchidas */
+        .btn-info.has-info {
+            background: #4caf50;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+        }
+        
+        .btn-info.has-info:hover {
+            background: #45a049;
+        }
+        
+        /* Badge com contagem de campos preenchidos */
+        .info-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ff9800;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
         .btn-add-task {
@@ -2248,6 +2278,61 @@ function renderTabs() {
             setTimeout(setupScrollAnimations, 100);
         }
 
+        // Renderizar botão de informações com indicador
+        function renderInfoButton(task) {
+            const taskId = task.id.replace(/[^a-zA-Z0-9._-]/g, '_');
+            
+            // Verificar quantos campos estão preenchidos
+            let filledCount = 0;
+            let hasInfo = false;
+            
+            if (task.info) {
+                // Verificar ferramentas
+                if (task.info.tools && task.info.tools.length > 0) {
+                    filledCount++;
+                    hasInfo = true;
+                }
+                
+                // Verificar materiais
+                if (task.info.materials && task.info.materials.length > 0) {
+                    filledCount++;
+                    hasInfo = true;
+                }
+                
+                // Verificar segurança
+                if (task.info.safety && task.info.safety.length > 0) {
+                    filledCount++;
+                    hasInfo = true;
+                }
+                
+                // Verificar tempo
+                if (task.info.time && task.info.time.trim()) {
+                    filledCount++;
+                    hasInfo = true;
+                }
+                
+                // Verificar manual
+                if (task.info.manual && task.info.manual.trim()) {
+                    filledCount++;
+                    hasInfo = true;
+                }
+            }
+            
+            const hasInfoClass = hasInfo ? 'has-info' : '';
+            const badgeHtml = filledCount > 0 ? `<span class="info-badge">${filledCount}</span>` : '';
+            const titleText = hasInfo ? 
+                `Ver informações (${filledCount}/5 campos preenchidos)` : 
+                'Ver informações (vazio)';
+            
+            return `
+                <button class="btn btn-info ${hasInfoClass}" 
+                        onclick="toggleTaskInfo('${taskId}')" 
+                        title="${titleText}">
+                    ℹ${badgeHtml}
+                </button>
+            `;
+        }
+
         // Renderizar tarefa
         function renderTask(phaseId, task) {
             // Admin não deve usar esta função, pois o conteúdo é renderizado diretamente em renderPhases()
@@ -2270,7 +2355,7 @@ function renderTabs() {
                                ${isBlocked ? 'disabled' : ''}
                                onchange="toggleTask(${phaseId}, '${task.id}')">
                         <span style="${task.completed ? 'text-decoration: line-through;' : ''}">${task.name}</span>
-                        <button class="btn btn-info" onclick="toggleTaskInfo('${task.id.replace(/[^a-zA-Z0-9._-]/g, '_')}')" title="Ver informações da tarefa">ℹ</button>
+                        ${renderInfoButton(task)}
 
                     </div>
                     <div class="task-actions">
