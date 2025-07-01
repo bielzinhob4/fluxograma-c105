@@ -3807,11 +3807,6 @@ function renderTabs() {
                 const gapEnd = aircraftRect.left;
                 const centerPoint = gapStart + ((gapEnd - gapStart) / 2);
                 
-                // Calcular o ponto médio entre extremidade direita do logo e extremidade esquerda do aircraft-info
-                const gapStart = logoRect.right;
-                const gapEnd = aircraftRect.left;
-                const centerPoint = gapStart + ((gapEnd - gapStart) / 2);
-                
                 // Posicionar o centro do título no ponto médio
                 title.style.left = centerPoint + 'px';
                 title.style.top = '50%';
