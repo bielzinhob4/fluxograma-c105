@@ -2280,7 +2280,7 @@ function renderTabs() {
 
         // Renderizar botão de informações com indicador
         function renderInfoButton(task) {
-            const taskId = task.id.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const taskId = task.id; // Usar ID original
             
             // Verificar quantos campos estão preenchidos
             let filledCount = 0;
@@ -2326,7 +2326,7 @@ function renderTabs() {
             
             return `
                 <button class="btn btn-info ${hasInfoClass}" 
-                        onclick="toggleTaskInfo('${taskId}')" 
+                        onclick="toggleTaskInfo('${task.id}')" 
                         title="${titleText}">
                     ℹ${badgeHtml}
                 </button>
@@ -2393,7 +2393,7 @@ function renderTabs() {
                                style="width: 50px; padding: 5px 8px; font-size: 12px; text-align: center; border: 1px solid #ddd; border-radius: 4px; margin-left: 8px; background: white;">
                     </div>
                 </div>
-                <div class="task-info-modal" id="info-${task.id.replace(/[^a-zA-Z0-9._-]/g, '_')}">
+                <div class="task-info-modal" id="info-${task.id}">
                     <div style="background: #1a5490; color: white; padding: 10px; margin: -20px -20px 20px -20px; border-radius: 10px 10px 0 0;">
                         <strong>📋 ${task.name}</strong>
                     </div>
