@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html>More actions
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -345,11 +345,7 @@
             align-items: center;
             gap: 10px;
             white-space: nowrap;
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            margin-right: 130px; /* Empurra a frase para a esquerda */
         }
 
         .aircraft-info {
@@ -586,7 +582,7 @@
             border-radius: 4px;
             margin-right: 10px;
         }
-        
+
         .task-info-modal {
             background: #f0f7ff;
             border: 2px solid #2196f3;
@@ -1033,7 +1029,7 @@
             font-weight: 600;
             color: #555;
         }
-        
+
         .modal-body .form-group input,
         .modal-body .form-group textarea,
         .modal-body .form-group select {
@@ -1399,7 +1395,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Modal para gerenciar coordenadores -->
         <div class="modal" id="coordinatorManagerModal">
             <div class="modal-content">
@@ -1549,7 +1545,7 @@
                 // Verificar se é admin e ajustar interface
                 const isAdmin = user.email.toLowerCase().includes('admin');
                 const btnClear = document.getElementById('btnClear');
-                
+
                 if (isAdmin) {
                     // Mudar botão "Limpar Tudo" para "Painel ADM"
                     if (btnClear) {
@@ -1557,7 +1553,7 @@
                         btnClear.innerHTML = '📊 Painel ADM';
                         btnClear.onclick = function() { showAdminPanel(); };
                     }
-                
+
                     // Esconder botão de nova aeronave para admin
                     const style = document.createElement('style');
                     style.setAttribute('id', 'admin-style');
@@ -1570,7 +1566,7 @@
                         btnClear.innerHTML = '🗑️ Limpar Tudo';
                         btnClear.onclick = function() { clearData(); };
                     }
-                
+
                     // Remover estilo de admin se existir
                     const adminStyle = document.getElementById('admin-style');
                     if (adminStyle) {
@@ -3139,7 +3135,7 @@ function renderTabs() {
         window.exportData = function() {
             const user = firebase.auth().currentUser;
             const isAdmin = user && user.email.toLowerCase().includes('admin');
-            
+
             if (isAdmin) {
                 // Admin: Abrir modal para selecionar coordenador
                 openCoordinatorModal();
@@ -3378,45 +3374,45 @@ function renderTabs() {
             const saved = localStorage.getItem(coordinatorsKey);
             return saved ? JSON.parse(saved) : [];
         }
-        
+
         function saveCoordinatorsList(coordinators) {
             localStorage.setItem('c105_coordinators', JSON.stringify(coordinators));
         }
-        
+
         window.openCoordinatorModal = function() {
             const modal = document.getElementById('coordinatorModal');
             const select = document.getElementById('coordinatorSelect');
             const coordinators = getCoordinatorsList();
-            
+
             select.innerHTML = '<option value="">Selecione...</option>' + 
                 coordinators.map(c => `<option value="${c}">${c}</option>`).join('');
-            
+
             modal.classList.add('active');
         }
-        
+
         window.closeCoordinatorModal = function() {
             document.getElementById('coordinatorModal').classList.remove('active');
         }
-        
+
         window.openCoordinatorManager = function() {
             document.getElementById('coordinatorManagerModal').classList.add('active');
             renderCoordinatorsList();
         }
-        
+
         window.closeCoordinatorManager = function() {
             document.getElementById('coordinatorManagerModal').classList.remove('active');
             document.getElementById('newCoordinatorName').value = '';
         }
-        
+
         function renderCoordinatorsList() {
             const coordinators = getCoordinatorsList();
             const listContainer = document.getElementById('coordinatorsList');
-            
+
             if (coordinators.length === 0) {
                 listContainer.innerHTML = '<p style="color: #666;">Nenhum coordenador cadastrado</p>';
                 return;
             }
-            
+
             listContainer.innerHTML = coordinators.map((coordinator, index) => `
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f5f5f5; margin-bottom: 5px; border-radius: 4px;">
                     <span>${coordinator}</span>
@@ -3424,68 +3420,68 @@ function renderTabs() {
                 </div>
             `).join('');
         }
-        
+
         window.addCoordinator = function() {
             const input = document.getElementById('newCoordinatorName');
             const name = input.value.trim();
-            
+
             if (!name) {
                 alert('Por favor, insira o nome do coordenador');
                 return;
             }
-            
+
             const coordinators = getCoordinatorsList();
-            
+
             if (coordinators.includes(name)) {
                 alert('Este coordenador já está cadastrado');
                 return;
             }
-            
+
             coordinators.push(name);
             coordinators.sort();
             saveCoordinatorsList(coordinators);
-            
+
             input.value = '';
             renderCoordinatorsList();
-            
+
             // Atualizar o select no modal principal
             const select = document.getElementById('coordinatorSelect');
             select.innerHTML = '<option value="">Selecione...</option>' + 
                 coordinators.map(c => `<option value="${c}">${c}</option>`).join('');
         }
-        
+
         window.removeCoordinator = function(index) {
             if (!confirm('Tem certeza que deseja remover este coordenador?')) return;
-            
+
             const coordinators = getCoordinatorsList();
             coordinators.splice(index, 1);
             saveCoordinatorsList(coordinators);
             renderCoordinatorsList();
         }
-        
+
         // Gerar relatório HTML
         window.generateReport = function() {
             const coordinatorName = document.getElementById('coordinatorSelect').value;
-            
+
             if (!coordinatorName) {
                 alert('Por favor, selecione um coordenador');
                 return;
             }
-            
+
             closeCoordinatorModal();
-            
+
             // Coletar dados consolidados
             const reportData = collectReportData();
-            
+
             // Gerar HTML do relatório
             const reportHTML = generateReportHTML(reportData, coordinatorName);
-            
+
             // Abrir em nova janela
             const reportWindow = window.open('', '_blank');
             reportWindow.document.write(reportHTML);
             reportWindow.document.close();
         }
-        
+
         function collectReportData() {
             const sections = ['hidraulica', 'pneumatica', 'celula', 'comando', 'eletrica', 'motores', 'estrutura'];
             const data = {
@@ -3499,19 +3495,19 @@ function renderTabs() {
                 blockedTasks: 0,
                 impediments: []
             };
-            
+
             // Calcular dias
             if (appState.startDate) {
                 const start = new Date(appState.startDate);
                 const today = new Date();
                 data.daysElapsed = Math.ceil((today - start) / (1000 * 60 * 60 * 24));
             }
-            
+
             // Coletar dados de cada seção
             sections.forEach(section => {
                 const sectionKey = `c105_${section}_data`;
                 const sectionData = localStorage.getItem(sectionKey);
-                
+
                 if (sectionData) {
                     const parsedData = JSON.parse(sectionData);
                     Object.values(parsedData).forEach(aircraft => {
@@ -3519,12 +3515,12 @@ function renderTabs() {
                             let sectionTotal = 0;
                             let sectionCompleted = 0;
                             let sectionBlocked = 0;
-                            
+
                             aircraft.phases.forEach(phase => {
                                 phase.tasks.forEach(task => {
                                     sectionTotal++;
                                     data.totalTasks++;
-                                    
+
                                     if (aircraft.blocks && aircraft.blocks[task.id]) {
                                         sectionBlocked++;
                                         data.blockedTasks++;
@@ -3540,7 +3536,7 @@ function renderTabs() {
                                     }
                                 });
                             });
-                            
+
                             data.sections[section] = {
                                 name: getDisplaySectionName(section),
                                 total: sectionTotal,
@@ -3552,16 +3548,16 @@ function renderTabs() {
                     });
                 }
             });
-            
+
             data.totalProgress = data.totalTasks > 0 ? Math.round((data.completedTasks / data.totalTasks) * 100) : 0;
-            
+
             return data;
         }
-        
+
         function generateReportHTML(data, coordinatorName) {
             const today = new Date().toLocaleDateString('pt-BR');
             const time = new Date().toLocaleTimeString('pt-BR');
-            
+
             return `
         <!DOCTYPE html>
         <html lang="pt-BR">
@@ -3792,31 +3788,6 @@ function renderTabs() {
         // Event listeners
         document.getElementById('aircraftId').addEventListener('input', saveData);
 
-        // Posicionar título dinamicamente
-        function positionTitle() {
-            const logoLeft = document.querySelector('.logo-left');
-            const aircraftInfo = document.querySelector('.aircraft-info');
-            const title = document.querySelector('#sectionTitle');
-            
-            if (logoLeft && aircraftInfo && title && window.innerWidth > 768) {
-                const logoRect = logoLeft.getBoundingClientRect();
-                const aircraftRect = aircraftInfo.getBoundingClientRect();
-                
-                // Calcular o ponto médio entre extremidade direita do logo e extremidade esquerda do aircraft-info
-                const gapStart = logoRect.right;
-                const gapEnd = aircraftRect.left;
-                const centerPoint = gapStart + ((gapEnd - gapStart) / 2);
-                
-                // Posicionar o centro do título no ponto médio
-                title.style.left = centerPoint + 'px';
-                title.style.top = '50%';
-                title.style.transform = 'translateX(-50%) translateY(-50%)';
-                title.style.opacity = '1';
-                title.style.background = 'transparent';
-                console.log('Logo right:', logoRect.right, 'Aircraft left:', aircraftRect.left, 'Center:', centerPoint);
-            }
-        }
-
         // Posicionar botão SAIR dinamicamente
         function positionLogoutButton() {
             const aircraftInfo = document.querySelector('.aircraft-info');
@@ -3840,19 +3811,13 @@ function renderTabs() {
             }
         }
 
-        // Chamar as funções quando tudo estiver carregado
+        // Chamar a função quando tudo estiver carregado
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(() => {
-                    positionTitle();
-                    positionLogoutButton();
-                }, 500);
+                 setTimeout(positionLogoutButton, 500);
             });
         } else {
-            setTimeout(() => {
-                positionTitle();
-                positionLogoutButton();
-            }, 500);
+            setTimeout(positionLogoutButton, 500);
         }
 
         // Reposicionar ao redimensionar
@@ -3861,10 +3826,7 @@ function renderTabs() {
         // Reposicionar quando o usuário fizer login
         auth.onAuthStateChanged((user) => {
             if (user) {
-                setTimeout(() => {
-                    positionTitle();
-                    positionLogoutButton();
-                }, 1000);
+                setTimeout(positionLogoutButton, 1000);
             }
         });
         document.getElementById('startDate').addEventListener('change', () => {
