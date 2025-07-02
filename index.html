@@ -2755,13 +2755,20 @@ function renderTabs() {
         window.toggleTaskInfo = function(taskId, event) {
             event.stopPropagation();
             
+            const infoModal = document.getElementById(`info-${taskId}`);
+            
+            // Se a modal já estiver aberta, feche-a
+            if (infoModal.style.display === 'block') {
+                infoModal.style.display = 'none';
+                return;
+            }
+            
             // Fechar todas as modais abertas
             document.querySelectorAll('.task-info-modal').forEach(modal => {
                 modal.style.display = 'none';
             });
         
             // Abrir a modal da tarefa clicada
-            const infoModal = document.getElementById(`info-${taskId}`);
             if (infoModal) {
                 infoModal.style.display = 'block';
                 
@@ -2769,8 +2776,10 @@ function renderTabs() {
                 const taskItem = event.target.closest('.task-item');
                 if (taskItem) {
                     const rect = taskItem.getBoundingClientRect();
-                    infoModal.style.top = rect.bottom + 'px';
-                    infoModal.style.left = rect.left + 'px';
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+                    infoModal.style.top = (rect.bottom + scrollTop) + 'px';
+                    infoModal.style.left = (rect.left + scrollLeft) + 'px';
                 }
             }
         }
