@@ -2754,9 +2754,13 @@ function renderTabs() {
 
         // Toggle informações da tarefa
         window.toggleTaskInfo = function(taskId) {
+            console.log('Toggling task info for task ID:', taskId);
             const infoModal = document.getElementById(`info-${taskId.replace(/\./g, '-')}`);
+            console.log('Info modal element:', infoModal);
             if (infoModal) {
                 infoModal.classList.toggle('active');
+            } else {
+                console.warn('Info modal not found for task ID:', taskId);
             }
         }
 
