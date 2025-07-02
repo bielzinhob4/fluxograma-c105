@@ -2787,9 +2787,12 @@ function renderTabs() {
         
             if (taskName) {
                 const phase = appState.phases.find(p => p.id === phaseId);
-                
-                // Gerar ID único baseado em timestamp para evitar conflitos
-                const newTaskId = `${phaseId}.custom.${Date.now()}`;
+        
+                // Gerar ID sequencial para a nova tarefa
+                const lastTaskId = phase.tasks[phase.tasks.length - 1].id;
+                const lastTaskNumber = parseInt(lastTaskId.split('.')[1]);
+                const newTaskNumber = lastTaskNumber + 1;
+                const newTaskId = `${phaseId}.${newTaskNumber}`;
         
                 const newTask = {
                     id: newTaskId,
@@ -2804,9 +2807,9 @@ function renderTabs() {
                         manual: ''
                     }
                 };
-
-        phase.tasks.push(newTask);
-
+        
+                phase.tasks.push(newTask);
+        
                 saveData();
 
                 // Manter fases abertas
