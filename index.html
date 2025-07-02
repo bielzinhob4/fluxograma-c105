@@ -2788,11 +2788,9 @@ function renderTabs() {
             if (taskName) {
                 const phase = appState.phases.find(p => p.id === phaseId);
         
-                // Gerar ID sequencial para a nova tarefa
-                const lastTaskId = phase.tasks[phase.tasks.length - 1].id;
-                const lastTaskNumber = parseInt(lastTaskId.split('.')[1]);
-                const newTaskNumber = lastTaskNumber + 1;
-                const newTaskId = `${phaseId}.${newTaskNumber}`;
+                // Gerar ID único baseado no timestamp
+                const timestamp = Date.now();
+                const newTaskId = `${phaseId}.${timestamp}`;
         
                 const newTask = {
                     id: newTaskId,
@@ -2811,23 +2809,23 @@ function renderTabs() {
                 phase.tasks.push(newTask);
         
                 saveData();
-
+        
                 // Manter fases abertas
                 const openPhases = [];
                 document.querySelectorAll('.phase-content.active').forEach(content => {
                     const id = content.id.replace('phase-content-', '');
                     openPhases.push(id);
                 });
-
+        
                 renderPhases();
-
+        
                 // Reabrir fases
                 openPhases.forEach(id => {
                     document.getElementById(`phase-content-${id}`).classList.add('active');
                 });
-
+        
                 updateProgress();
-
+        
                 // Limpar e esconder formulário
                 hideNewTaskForm(phaseId);
             }
