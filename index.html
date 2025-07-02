@@ -2229,13 +2229,13 @@ function renderTabs() {
             if (appState && appState.isAdminView) {
                 return '';
             }
-        
+
             const taskStatus = getTaskStatus(phaseId, task);
             const isBlocked = appState.blocks[task.id];
-        
+
             // Obter lista de executantes
             const executors = getExecutorsList();
-        
+
             return `
                 <div class="task-item ${task.custom ? 'custom' : ''}">
                     <div class="task-info">
@@ -2245,8 +2245,8 @@ function renderTabs() {
                                ${isBlocked ? 'disabled' : ''}
                                onchange="toggleTask(${phaseId}, '${task.id}')">
                         <span style="${task.completed ? 'text-decoration: line-through;' : ''}">${task.name}</span>
-                        <button class="btn btn-info" onclick="toggleTaskInfo('${task.id}', event)" title="Ver informações">ℹ</button>
-        
+                        <button class="btn btn-info" onclick="toggleTaskInfo('${task.id}')" title="Ver informações">ℹ</button>
+
                     </div>
                     <div class="task-actions">
                             ${task.completed ? 
@@ -2283,7 +2283,7 @@ function renderTabs() {
                                style="width: 50px; padding: 5px 8px; font-size: 12px; text-align: center; border: 1px solid #ddd; border-radius: 4px; margin-left: 8px; background: white;">
                     </div>
                 </div>
-                <div class="task-info-modal" id="info-${task.id}" style="display: none;">
+                <div class="task-info-modal" id="info-${task.id}">
                     <div style="background: #1a5490; color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 10px 10px 0 0;">
                         <h3 style="margin: 0; color: white; font-size: 16px;">📋 ${task.name}</h3>
                     </div>
@@ -2324,7 +2324,8 @@ function renderTabs() {
                     </div>
                 </div>
             `;
-        }
+
+            }
 
         // Renderizar visualização do admin para fase
         function renderAdminPhaseView(phaseId) {
@@ -2752,35 +2753,10 @@ function renderTabs() {
         }
 
         // Toggle informações da tarefa
-        window.toggleTaskInfo = function(taskId, event) {
-            event.stopPropagation();
-            
+        window.toggleTaskInfo = function(taskId) {
             const infoModal = document.getElementById(`info-${taskId}`);
-            
-            // Se a modal já estiver aberta, feche-a
-            if (infoModal.style.display === 'block') {
-                infoModal.style.display = 'none';
-                return;
-            }
-            
-            // Fechar todas as modais abertas
-            document.querySelectorAll('.task-info-modal').forEach(modal => {
-                modal.style.display = 'none';
-            });
-        
-            // Abrir a modal da tarefa clicada
             if (infoModal) {
-                infoModal.style.display = 'block';
-                
-                // Posicionar a modal logo abaixo da tarefa
-                const taskItem = event.target.closest('.task-item');
-                if (taskItem) {
-                    const rect = taskItem.getBoundingClientRect();
-                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-                    infoModal.style.top = (rect.bottom + scrollTop) + 'px';
-                    infoModal.style.left = (rect.left + scrollLeft) + 'px';
-                }
+                infoModal.classList.toggle('active');
             }
         }
 
