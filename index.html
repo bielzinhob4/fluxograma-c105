@@ -2283,7 +2283,7 @@ function renderTabs() {
                                style="width: 50px; padding: 5px 8px; font-size: 12px; text-align: center; border: 1px solid #ddd; border-radius: 4px; margin-left: 8px; background: white;">
                     </div>
                 </div>
-                <div class="task-info-modal" id="info-${task.id}">
+                <div class="task-info-modal" id="info-${task.id.replace(/\./g, '-')}">
                     <div style="background: #1a5490; color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 10px 10px 0 0;">
                         <h3 style="margin: 0; color: white; font-size: 16px;">📋 ${task.name}</h3>
                     </div>
@@ -2754,7 +2754,7 @@ function renderTabs() {
 
         // Toggle informações da tarefa
         window.toggleTaskInfo = function(taskId) {
-            const infoModal = document.getElementById(`info-${taskId}`);
+            const infoModal = document.getElementById(`info-${taskId.replace(/\./g, '-')}`);
             if (infoModal) {
                 infoModal.classList.toggle('active');
             }
@@ -2789,7 +2789,7 @@ function renderTabs() {
                 const phase = appState.phases.find(p => p.id === phaseId);
                 
                 // Gerar ID único baseado em timestamp para evitar conflitos
-                const newTaskId = `${phaseId}.custom.${Date.now()}`;
+                const newTaskId = `${phaseId}-custom-${Date.now()}`;
         
                 const newTask = {
                     id: newTaskId,
