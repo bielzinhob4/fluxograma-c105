@@ -1738,14 +1738,11 @@
                 id: 9,
                 title: "CHECKS DE HANGAR",
                 tasks: [
-                    // Adicione este código aqui
                     ...phase.tasks.filter(task => ![
                         "Operational Check of Landing Gear Emergency Extension System",
                         "Check and Adjustment of Guide Track and Main Gear Uplock Operating Cables",
                         "Functional Check of Nosewheel Steering Operating Cables Tension"
                     ].includes(task.name)),
-                    // ...
-                ]
                     { 
                         id: "9.1", 
                         name: "Teste de sistemas hidráulicos", 
