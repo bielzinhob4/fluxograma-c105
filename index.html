@@ -2260,7 +2260,7 @@ function renderTabs() {
                         <span style="${task.completed ? 'text-decoration: line-through;' : ''}">${task.name}</span>
                         ${hasTaskInfo(task) ? 
                             `<button class="btn btn-info" onclick="toggleTaskInfo('${task.id}')" title="Ver informações">ℹ</button>` :
-                            `<button class="btn btn-secondary" onclick="toggleTaskInfo('${task.id}')" title="Adicionar informações" style="background: #6c757d;">ℹ</button>`
+                            `<button class="btn btn-info" onclick="toggleTaskInfo('${task.id}')" title="Adicionar informações" style="background: #6c757d;">ℹ</button>`
                         }
 
                     </div>
