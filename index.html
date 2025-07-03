@@ -303,6 +303,8 @@
             z-index: 100;
             opacity: 0;
             transition: opacity 0.3s ease;
+            display: flex;
+            gap: 10px;
         }
 
         .logout-btn {
@@ -318,6 +320,255 @@
             display: flex;
             align-items: center;
             gap: 6px;
+        }
+        
+        /* Sistema de Solicitações */
+        .requests-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+        }
+        
+        .requests-btn:hover {
+            background: linear-gradient(135deg, #218838 0%, #1da88a 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+        
+        .requests-notification {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .requests-modal .modal-content {
+            max-width: 800px;
+            max-height: 90vh;
+        }
+        
+        .request-form {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .priority-urgent { 
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            animation: urgentPulse 1.5s infinite;
+        }
+        
+        .priority-alta { 
+            background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+            color: white;
+        }
+        
+        .priority-normal { 
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #333;
+        }
+        
+        .priority-baixa { 
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            color: white;
+        }
+        
+        @keyframes urgentPulse {
+            0%, 100% { box-shadow: 0 0 5px rgba(220, 53, 69, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.8); }
+        }
+        
+        .request-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #dee2e6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .request-item:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .request-item.urgent {
+            border-left-color: #dc3545;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+        }
+        
+        .request-item.alta {
+            border-left-color: #fd7e14;
+            background: linear-gradient(135deg, #fff8f0 0%, #ffffff 100%);
+        }
+        
+        .request-item.normal {
+            border-left-color: #ffc107;
+            background: linear-gradient(135deg, #fffbf0 0%, #ffffff 100%);
+        }
+        
+        .request-item.baixa {
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, #f8fff8 0%, #ffffff 100%);
+        }
+        
+        .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .request-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1a5490;
+            margin-bottom: 5px;
+        }
+        
+        .request-meta {
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .request-content {
+            color: #333;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        
+        .request-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .status-pendente {
+            background: #ffc107;
+            color: #333;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-andamento {
+            background: #2196f3;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-concluida {
+            background: #28a745;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .requests-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .requests-tab {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+        
+        .requests-tab.active {
+            color: #1a5490;
+            border-bottom-color: #1a5490;
+            background: rgba(26, 84, 144, 0.05);
+        }
+        
+        .requests-tab:hover {
+            color: #1a5490;
+            background: rgba(26, 84, 144, 0.05);
+        }
+        
+        .requests-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+        }
+        
+        .summary-card:hover {
+            border-color: #1a5490;
+            transform: translateY(-2px);
+        }
+        
+        .summary-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a5490;
+            margin-bottom: 5px;
+        }
+        
+        .summary-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: 600;
         }
 
         .logout-btn:hover {
@@ -1254,6 +1505,10 @@
         <header class="header">
             <!-- Botão de logout -->
             <div class="logout-container">
+                <button class="requests-btn" onclick="openRequestsModal()" id="requestsBtn">
+                    📤 Solicitações
+                    <span class="requests-notification" id="requestsNotification" style="display: none;">0</span>
+                </button>
                 <button class="logout-btn" onclick="logout()">SAIR</button>
             </div>
 
@@ -1456,6 +1711,133 @@
             </div>
         </div>
     </div>
+
+<!-- Modal de Solicitações -->
+<div class="modal requests-modal" id="requestsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📤 Sistema de Solicitações Entre Seções</h2>
+            <button onclick="closeRequestsModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
+        </div>
+        <div class="modal-body">
+            <!-- Resumo -->
+            <div class="requests-summary">
+                <div class="summary-card">
+                    <div class="summary-number" id="totalSent">0</div>
+                    <div class="summary-label">Enviadas</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-number" id="totalReceived">0</div>
+                    <div class="summary-label">Recebidas</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-number" id="totalPending">0</div>
+                    <div class="summary-label">Pendentes</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-number" id="totalUrgent">0</div>
+                    <div class="summary-label">Urgentes</div>
+                </div>
+            </div>
+
+            <!-- Abas -->
+            <div class="requests-tabs">
+                <button class="requests-tab active" onclick="switchRequestTab('nova')">📝 Nova Solicitação</button>
+                <button class="requests-tab" onclick="switchRequestTab('enviadas')">📤 Enviadas</button>
+                <button class="requests-tab" onclick="switchRequestTab('recebidas')">📥 Recebidas</button>
+                <button class="requests-tab" onclick="switchRequestTab('historico')">📋 Histórico</button>
+            </div>
+
+            <!-- Conteúdo das abas -->
+            <div id="tab-nova" class="tab-content">
+                <div class="request-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>🎯 Seção Destino:</label>
+                            <select id="destinationSection" required>
+                                <option value="">Selecione a seção...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>✈️ Aeronave:</label>
+                            <select id="requestAircraft" required>
+                                <option value="">Selecione a aeronave...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>📋 Tipo de Solicitação:</label>
+                            <select id="requestType" required>
+                                <option value="">Selecione o tipo...</option>
+                                <option value="aguardando">🔄 Aguardando conclusão de tarefa</option>
+                                <option value="coordenacao">🤝 Coordenação de horário</option>
+                                <option value="acesso">🔓 Solicitação de acesso à aeronave</option>
+                                <option value="sistema">⚡ Verificação de sistema compartilhado</option>
+                                <option value="suporte">🔧 Suporte técnico</option>
+                                <option value="material">📦 Compartilhamento de material/ferramenta</option>
+                                <option value="inspecao">🔍 Inspeção conjunta</option>
+                                <option value="teste">🧪 Teste de sistema integrado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>⚡ Prioridade:</label>
+                            <select id="requestPriority" required>
+                                <option value="normal">🟡 Normal</option>
+                                <option value="alta">🟠 Alta</option>
+                                <option value="urgent">🔴 Urgente</option>
+                                <option value="baixa">🟢 Baixa</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>🔧 Sistema/Componente:</label>
+                        <select id="requestSystem">
+                            <option value="">Selecione o sistema...</option>
+                            <option value="hidraulico">💧 Sistema Hidráulico</option>
+                            <option value="pneumatico">💨 Sistema Pneumático</option>
+                            <option value="eletrico">⚡ Sistema Elétrico</option>
+                            <option value="motores">🚁 Motores</option>
+                            <option value="estrutural">🏗️ Estrutural</option>
+                            <option value="combustivel">⛽ Sistema de Combustível</option>
+                            <option value="avionicos">📡 Aviônicos</option>
+                            <option value="controles">🎮 Controles de Voo</option>
+                            <option value="trem">🛬 Trem de Pouso</option>
+                            <option value="geral">🔧 Geral</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>📝 Detalhes (máx. 200 caracteres):</label>
+                        <textarea id="requestDetails" maxlength="200" placeholder="Descreva brevemente os detalhes da solicitação..." rows="3"></textarea>
+                        <small style="color: #666;">Caracteres restantes: <span id="charCount">200</span></small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success" onclick="sendRequest()">📤 Enviar Solicitação</button>
+                    <button class="btn" onclick="clearRequestForm()">🔄 Limpar</button>
+                </div>
+            </div>
+
+            <div id="tab-enviadas" class="tab-content" style="display: none;">
+                <div id="sentRequests">
+                    <!-- Solicitações enviadas serão carregadas aqui -->
+                </div>
+            </div>
+
+            <div id="tab-recebidas" class="tab-content" style="display: none;">
+                <div id="receivedRequests">
+                    <!-- Solicitações recebidas serão carregadas aqui -->
+                </div>
+            </div>
+
+            <div id="tab-historico" class="tab-content" style="display: none;">
+                <div id="historyRequests">
+                    <!-- Histórico será carregado aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Firebase Scripts - APENAS AUTH -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -4055,6 +4437,439 @@ function renderTabs() {
                     modal.innerHTML = reportHTML;
                     document.body.appendChild(modal);
                 }
+
+                // ===== SISTEMA DE SOLICITAÇÕES ENTRE SEÇÕES =====
+                
+                // Variáveis globais do sistema de solicitações
+                let currentRequestTab = 'nova';
+                
+                // Abrir modal de solicitações
+                window.openRequestsModal = function() {
+                    const modal = document.getElementById('requestsModal');
+                    modal.classList.add('active');
+                    populateDestinationSections();
+                    populateAircraftList();
+                    loadRequestsSummary();
+                    loadRequestsContent();
+                }
+                
+                // Fechar modal de solicitações
+                window.closeRequestsModal = function() {
+                    const modal = document.getElementById('requestsModal');
+                    modal.classList.remove('active');
+                    clearRequestForm();
+                }
+                
+                // Popular seções de destino (excluindo a própria seção)
+                function populateDestinationSections() {
+                    const user = firebase.auth().currentUser;
+                    if (!user) return;
+                    
+                    const currentSection = user.email.split('@')[0].split('.')[0];
+                    const sections = [
+                        { value: 'hidraulica', name: '💧 Hidráulica' },
+                        { value: 'pneumatica', name: '💨 Pneumática' },
+                        { value: 'eletrica', name: '⚡ Elétrica' },
+                        { value: 'motores', name: '🚁 Motores' },
+                        { value: 'celula', name: '🏗️ Célula' },
+                        { value: 'comando', name: '🎮 Comando de Voo' },
+                        { value: 'estrutura', name: '🔧 Estrutura' }
+                    ];
+                    
+                    const select = document.getElementById('destinationSection');
+                    select.innerHTML = '<option value="">Selecione a seção...</option>';
+                    
+                    sections.forEach(section => {
+                        if (section.value !== currentSection) {
+                            select.innerHTML += `<option value="${section.value}">${section.name}</option>`;
+                        }
+                    });
+                }
+                
+                // Popular lista de aeronaves
+                function populateAircraftList() {
+                    const select = document.getElementById('requestAircraft');
+                    select.innerHTML = '<option value="">Selecione a aeronave...</option>';
+                    
+                    // Adicionar aeronave atual se existir
+                    if (appState && appState.aircraftId) {
+                        select.innerHTML += `<option value="${appState.aircraftId}">FAB ${appState.aircraftId}</option>`;
+                    }
+                    
+                    // Adicionar outras aeronaves do localStorage
+                    const allAircraft = new Set();
+                    const sections = ['hidraulica', 'pneumatica', 'celula', 'comando', 'eletrica', 'motores', 'estrutura'];
+                    
+                    sections.forEach(section => {
+                        const sectionKey = `c105_${section}_data`;
+                        const sectionData = localStorage.getItem(sectionKey);
+                        if (sectionData) {
+                            const data = JSON.parse(sectionData);
+                            Object.values(data).forEach(aircraft => {
+                                if (aircraft.aircraftId) {
+                                    allAircraft.add(aircraft.aircraftId);
+                                }
+                            });
+                        }
+                    });
+                    
+                    Array.from(allAircraft).sort().forEach(aircraftId => {
+                        if (!appState || aircraftId !== appState.aircraftId) {
+                            select.innerHTML += `<option value="${aircraftId}">FAB ${aircraftId}</option>`;
+                        }
+                    });
+                }
+                
+                // Trocar aba do sistema de solicitações
+                window.switchRequestTab = function(tabName) {
+                    // Atualizar abas visuais
+                    document.querySelectorAll('.requests-tab').forEach(tab => {
+                        tab.classList.remove('active');
+                    });
+                    document.querySelector(`[onclick="switchRequestTab('${tabName}')"]`).classList.add('active');
+                    
+                    // Mostrar conteúdo da aba
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.style.display = 'none';
+                    });
+                    document.getElementById(`tab-${tabName}`).style.display = 'block';
+                    
+                    currentRequestTab = tabName;
+                    loadRequestsContent();
+                }
+                
+                // Carregar conteúdo das abas
+                function loadRequestsContent() {
+                    switch(currentRequestTab) {
+                        case 'enviadas':
+                            loadSentRequests();
+                            break;
+                        case 'recebidas':
+                            loadReceivedRequests();
+                            break;
+                        case 'historico':
+                            loadHistoryRequests();
+                            break;
+                    }
+                }
+                
+                // Contador de caracteres
+                document.addEventListener('DOMContentLoaded', function() {
+                    const textarea = document.getElementById('requestDetails');
+                    const charCount = document.getElementById('charCount');
+                    
+                    if (textarea && charCount) {
+                        textarea.addEventListener('input', function() {
+                            const remaining = 200 - this.value.length;
+                            charCount.textContent = remaining;
+                            charCount.style.color = remaining < 20 ? '#dc3545' : '#666';
+                        });
+                    }
+                });
+                
+                // Enviar solicitação
+                window.sendRequest = function() {
+                    const user = firebase.auth().currentUser;
+                    if (!user) return;
+                    
+                    const destinationSection = document.getElementById('destinationSection').value;
+                    const aircraft = document.getElementById('requestAircraft').value;
+                    const type = document.getElementById('requestType').value;
+                    const priority = document.getElementById('requestPriority').value;
+                    const system = document.getElementById('requestSystem').value;
+                    const details = document.getElementById('requestDetails').value.trim();
+                    
+                    if (!destinationSection || !aircraft || !type || !priority) {
+                        alert('Por favor, preencha todos os campos obrigatórios.');
+                        return;
+                    }
+                    
+                    const currentSection = user.email.split('@')[0].split('.')[0];
+                    const request = {
+                        id: 'req-' + Date.now(),
+                        fromSection: currentSection,
+                        toSection: destinationSection,
+                        aircraft: aircraft,
+                        type: type,
+                        priority: priority,
+                        system: system || 'Não especificado',
+                        details: details || 'Sem detalhes adicionais',
+                        status: 'pendente',
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    };
+                    
+                    // Salvar solicitação
+                    const requests = getRequestsData();
+                    requests.push(request);
+                    saveRequestsData(requests);
+                    
+                    // Feedback visual
+                    showRequestFeedback('✅ Solicitação enviada com sucesso!', 'success');
+                    
+                    // Limpar formulário e atualizar
+                    clearRequestForm();
+                    loadRequestsSummary();
+                    updateNotificationBadge();
+                }
+                
+                // Obter dados de solicitações
+                function getRequestsData() {
+                    const saved = localStorage.getItem('c105_requests');
+                    return saved ? JSON.parse(saved) : [];
+                }
+                
+                // Salvar dados de solicitações
+                function saveRequestsData(requests) {
+                    localStorage.setItem('c105_requests', JSON.stringify(requests));
+                }
+                
+                // Carregar resumo das solicitações
+                function loadRequestsSummary() {
+                    const user = firebase.auth().currentUser;
+                    if (!user) return;
+                    
+                    const currentSection = user.email.split('@')[0].split('.')[0];
+                    const requests = getRequestsData();
+                    
+                    const sent = requests.filter(r => r.fromSection === currentSection).length;
+                    const received = requests.filter(r => r.toSection === currentSection).length;
+                    const pending = requests.filter(r => 
+                        (r.fromSection === currentSection || r.toSection === currentSection) && 
+                        r.status === 'pendente'
+                    ).length;
+                    const urgent = requests.filter(r => 
+                        (r.fromSection === currentSection || r.toSection === currentSection) && 
+                        r.priority === 'urgent' && r.status !== 'concluida'
+                    ).length;
+                    
+                    document.getElementById('totalSent').textContent = sent;
+                    document.getElementById('totalReceived').textContent = received;
+                    document.getElementById('totalPending').textContent = pending;
+                    document.getElementById('totalUrgent').textContent = urgent;
+                }
+                
+                // Carregar solicitações enviadas
+                function loadSentRequests() {
+                    const user = firebase.auth().currentUser;
+                    if (!user) return;
+                    
+                    const currentSection = user.email.split('@')[0].split('.')[0];
+                    const requests = getRequestsData().filter(r => r.fromSection === currentSection);
+                    
+                    const container = document.getElementById('sentRequests');
+                    
+                    if (requests.length === 0) {
+                        container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Nenhuma solicitação enviada ainda.</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = requests.map(request => renderRequestItem(request, 'sent')).join('');
+                }
+                
+                // Carregar solicitações recebidas
+                function loadReceivedRequests() {
+                    const user = firebase.auth().currentUser;
+                    if (!user) return;
+                    
+                    const currentSection = user.email.split('@')[0].split('.')[0];
+                    const requests = getRequestsData().filter(r => r.toSection === currentSection);
+                    
+                    const container = document.getElementById('receivedRequests');
+                    
+                    if (requests.length === 0) {
+                        container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Nenhuma solicitação recebida ainda.</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = requests.map(request => renderRequestItem(request, 'received')).join('');
+                }
+                
+                // Carregar histórico
+                function loadHistoryRequests() {
+                    const user = firebase.auth().currentUser;
+                    if (!user) return;
+                    
+                    const currentSection = user.email.split('@')[0].split('.')[0];
+                    const requests = getRequestsData().filter(r => 
+                        r.fromSection === currentSection || r.toSection === currentSection
+                    );
+                    
+                    const container = document.getElementById('historyRequests');
+                    
+                    if (requests.length === 0) {
+                        container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Nenhuma solicitação no histórico.</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = requests.map(request => renderRequestItem(request, 'history')).join('');
+                }
+                
+                // Renderizar item de solicitação
+                function renderRequestItem(request, type) {
+                    const typeNames = {
+                        'aguardando': '🔄 Aguardando conclusão',
+                        'coordenacao': '🤝 Coordenação de horário',
+                        'acesso': '🔓 Acesso à aeronave',
+                        'sistema': '⚡ Verificação de sistema',
+                        'suporte': '🔧 Suporte técnico',
+                        'material': '📦 Compartilhamento',
+                        'inspecao': '🔍 Inspeção conjunta',
+                        'teste': '🧪 Teste integrado'
+                    };
+                    
+                    const priorityNames = {
+                        'urgent': '🔴 Urgente',
+                        'alta': '🟠 Alta',
+                        'normal': '🟡 Normal',
+                        'baixa': '🟢 Baixa'
+                    };
+                    
+                    const sectionNames = {
+                        'hidraulica': 'Hidráulica',
+                        'pneumatica': 'Pneumática',
+                        'eletrica': 'Elétrica',
+                        'motores': 'Motores',
+                        'celula': 'Célula',
+                        'comando': 'Comando de Voo',
+                        'estrutura': 'Estrutura'
+                    };
+                    
+                    const date = new Date(request.createdAt).toLocaleString('pt-BR');
+                    const isFromCurrentUser = type === 'sent' || type === 'history';
+                    
+                    return `
+                        <div class="request-item ${request.priority}">
+                            <div class="request-header">
+                                <div>
+                                    <div class="request-title">${typeNames[request.type] || request.type}</div>
+                                    <div class="request-meta">
+                                        <span>✈️ FAB ${request.aircraft}</span>
+                                        <span>${isFromCurrentUser ? '📤 Para: ' + sectionNames[request.toSection] : '📥 De: ' + sectionNames[request.fromSection]}</span>
+                                        <span>🕒 ${date}</span>
+                                        <span>🔧 ${request.system}</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span class="priority-${request.priority}">${priorityNames[request.priority]}</span>
+                                    <span class="status-${request.status}">${getStatusText(request.status)}</span>
+                                </div>
+                            </div>
+                            <div class="request-content">${request.details}</div>
+                            ${type === 'received' && request.status === 'pendente' ? `
+                                <div class="request-actions">
+                                    <button class="btn btn-success btn-small" onclick="updateRequestStatus('${request.id}', 'andamento')">🚀 Iniciar</button>
+                                    <button class="btn btn-primary btn-small" onclick="updateRequestStatus('${request.id}', 'concluida')">✅ Concluir</button>
+                                </div>
+                            ` : type === 'received' && request.status === 'andamento' ? `
+                                <div class="request-actions">
+                                    <button class="btn btn-primary btn-small" onclick="updateRequestStatus('${request.id}', 'concluida')">✅ Concluir</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                // Atualizar status da solicitação
+                window.updateRequestStatus = function(requestId, newStatus) {
+                    const requests = getRequestsData();
+                    const requestIndex = requests.findIndex(r => r.id === requestId);
+                    
+                    if (requestIndex !== -1) {
+                        requests[requestIndex].status = newStatus;
+                        requests[requestIndex].updatedAt = new Date().toISOString();
+                        saveRequestsData(requests);
+                        
+                        const statusNames = {
+                            'andamento': 'em andamento',
+                            'concluida': 'concluída'
+                        };
+                        
+                        showRequestFeedback(`✅ Solicitação marcada como ${statusNames[newStatus]}!`, 'success');
+                        loadRequestsContent();
+                        loadRequestsSummary();
+                        updateNotificationBadge();
+                    }
+                }
+                
+                // Limpar formulário
+                window.clearRequestForm = function() {
+                    document.getElementById('destinationSection').value = '';
+                    document.getElementById('requestAircraft').value = '';
+                    document.getElementById('requestType').value = '';
+                    document.getElementById('requestPriority').value = 'normal';
+                    document.getElementById('requestSystem').value = '';
+                    document.getElementById('requestDetails').value = '';
+                    document.getElementById('charCount').textContent = '200';
+                    document.getElementById('charCount').style.color = '#666';
+                }
+                
+                // Mostrar feedback
+                function showRequestFeedback(message, type) {
+                    const feedback = document.createElement('div');
+                    feedback.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+                        color: white;
+                        padding: 15px 20px;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        z-index: 10003;
+                        animation: slideIn 0.3s ease;
+                    `;
+                    feedback.textContent = message;
+                    
+                    document.body.appendChild(feedback);
+                    
+                    setTimeout(() => {
+                        feedback.style.animation = 'slideOut 0.3s ease';
+                        setTimeout(() => feedback.remove(), 300);
+                    }, 3000);
+                }
+                
+                // Atualizar badge de notificação
+                function updateNotificationBadge() {
+                    const user = firebase.auth().currentUser;
+                    if (!user) return;
+                    
+                    const currentSection = user.email.split('@')[0].split('.')[0];
+                    const requests = getRequestsData();
+                    
+                    const pendingReceived = requests.filter(r => 
+                        r.toSection === currentSection && r.status === 'pendente'
+                    ).length;
+                    
+                    const badge = document.getElementById('requestsNotification');
+                    if (pendingReceived > 0) {
+                        badge.textContent = pendingReceived;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+                
+                // Adicionar estilos para animações
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes slideOut {
+                        from { transform: translateX(0); opacity: 1; }
+                        to { transform: translateX(100%); opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                // Inicializar sistema ao fazer login
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        setTimeout(updateNotificationBadge, 1000);
+                    }
+                });
 
             }); // Fecha o window.addEventListener
         </script>
