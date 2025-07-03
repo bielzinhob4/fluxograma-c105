@@ -321,29 +321,18 @@
         }
         
         /* Sistema de Solicitações */
-        .requests-container {
-            position: absolute;
-            left: 5.68vw;
-            top: 50%;     
-            transform: translate(-50%, -50%);  
-            z-index: 100;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
         .requests-btn {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 6px 14px;
-            border-radius: 6px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+            border: none !important;
+            color: white !important;
+            padding: 10px 20px !important;
+            border-radius: 5px !important;
             cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
+            font-weight: 600 !important;
             transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             position: relative;
         }
         
@@ -1512,12 +1501,6 @@
     <div id="mainApp">
         <header class="header">
             <!-- Botão de logout -->
-            <div class="requests-container">
-                <button class="requests-btn" onclick="openRequestsModal()" id="requestsBtn">
-                    📤 SOLICITAÇÕES
-                    <span class="requests-notification" id="requestsNotification" style="display: none;">0</span>
-                </button>
-            </div>
             <div class="logout-container">
                 <button class="logout-btn" onclick="logout()">SAIR</button>
             </div>
@@ -1558,6 +1541,10 @@
             <div class="controls" id="controlsContainer">
                 <button class="btn btn-primary" onclick="expandAll()">📋 Expandir Tudo</button>
                 <button class="btn btn-primary" onclick="collapseAll()">📁 Recolher Tudo</button>
+                <button class="btn requests-btn" onclick="openRequestsModal()" id="requestsBtn">
+                    📤 SOLICITAÇÕES
+                    <span class="requests-notification" id="requestsNotification" style="display: none;">0</span>
+                </button>
                 <button class="btn btn-success" onclick="exportData()" id="btnExport">💾 Exportar Dados</button>
                 <button class="btn btn-danger" onclick="clearData()" id="btnClear">🗑️ Limpar Tudo</button>
             </div>
@@ -4222,55 +4209,45 @@ function renderTabs() {
         // Event listeners
         document.getElementById('aircraftId').addEventListener('input', saveData);
 
-         // Posicionar botões SAIR e SOLICITAÇÕES dinamicamente
-        function positionHeaderButtons() {
+        // Posicionar botão SAIR dinamicamente
+        function positionLogoutButton() {
             const aircraftInfo = document.querySelector('.aircraft-info');
             const logoRight = document.querySelector('.logo-right');
-            const logoLeft = document.querySelector('.logo-left');
             const logoutContainer = document.querySelector('.logout-container');
-            const requestsContainer = document.querySelector('.requests-container');
         
-            if (aircraftInfo && logoRight && logoLeft && logoutContainer && requestsContainer && window.innerWidth > 768) {
-                // Posicionar SAIR (lado direito)
+            if (aircraftInfo && logoRight && logoutContainer && window.innerWidth > 768) {
                 const aircraftRect = aircraftInfo.getBoundingClientRect();
-                const logoRightRect = logoRight.getBoundingClientRect();
-                const gapStartRight = aircraftRect.right;
-                const gapEndRight = logoRightRect.left;
-                const centerPointRight = gapStartRight + ((gapEndRight - gapStartRight) / 2);
+                const logoRect = logoRight.getBoundingClientRect();
         
+                // Calcular o ponto médio entre o fim da caixa e início do logo
+                const gapStart = aircraftRect.right;
+                const gapEnd = logoRect.left;
+                const centerPoint = gapStart + ((gapEnd - gapStart) / 2);
+        
+                // Remover right e aplicar left
                 logoutContainer.style.right = 'auto';
-                logoutContainer.style.left = centerPointRight + 'px';
+                logoutContainer.style.left = centerPoint + 'px';
                 logoutContainer.style.transform = 'translateX(-50%) translateY(-50%)';
-                logoutContainer.style.opacity = '1';
-        
-                // Posicionar SOLICITAÇÕES (lado esquerdo)
-                const logoLeftRect = logoLeft.getBoundingClientRect();
-                const gapStartLeft = logoLeftRect.right;
-                const gapEndLeft = aircraftRect.left;
-                const centerPointLeft = gapStartLeft + ((gapEndLeft - gapStartLeft) / 2);
-        
-                requestsContainer.style.left = centerPointLeft + 'px';
-                requestsContainer.style.transform = 'translateX(-50%) translateY(-50%)';
-                requestsContainer.style.opacity = '1';
+                logoutContainer.style.opacity = '1'; /* Mostrar após posicionar */
             }
         }
 
         // Chamar a função quando tudo estiver carregado
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
-                 setTimeout(positionHeaderButtons, 500);
+                 setTimeout(positionLogoutButton, 500);
             });
         } else {
-            setTimeout(positionHeaderButtons, 500);
+            setTimeout(positionLogoutButton, 500);
         }
         
         // Reposicionar ao redimensionar
-        window.addEventListener('resize', positionHeaderButtons);
+        window.addEventListener('resize', positionLogoutButton);
         
         // Reposicionar quando o usuário fizer login
         auth.onAuthStateChanged((user) => {
             if (user) {
-                setTimeout(positionHeaderButtons, 1000);
+                setTimeout(positionLogoutButton, 1000);
             }
         });
         document.getElementById('startDate').addEventListener('change', () => {
