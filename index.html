@@ -2788,9 +2788,16 @@ function renderTabs() {
             if (taskName) {
                 const phase = appState.phases.find(p => p.id === phaseId);
         
-                // Gerar ID único baseado no timestamp
-                const timestamp = Date.now();
-                const newTaskId = `${phaseId}.${timestamp}`;
+                // Gerar ID sequencial correto
+                const existingTasks = phase.tasks;
+                let nextNumber = 1;
+                
+                // Encontrar o próximo número disponível
+                while (existingTasks.some(task => task.id === `${phaseId}.${nextNumber}`)) {
+                    nextNumber++;
+                }
+                
+                const newTaskId = `${phaseId}.${nextNumber}`;
         
                 const newTask = {
                     id: newTaskId,
