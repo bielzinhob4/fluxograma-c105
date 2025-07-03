@@ -384,28 +384,88 @@
         }
         
         .priority-urgent { 
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            color: white;
+            background: none;
+            color: #333;
+            padding: 0;
+            border-radius: 0;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .priority-urgent::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: #dc3545;
+            border-radius: 50%;
+            display: inline-block;
             animation: urgentPulse 1.5s infinite;
         }
         
         .priority-alta { 
-            background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
-            color: white;
+            background: none;
+            color: #333;
+            padding: 0;
+            border-radius: 0;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .priority-alta::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: #fd7e14;
+            border-radius: 50%;
+            display: inline-block;
         }
         
         .priority-normal { 
-            background: #17a2b8;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
+            background: none;
+            color: #333;
+            padding: 0;
+            border-radius: 0;
             font-size: 12px;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .priority-normal::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: #17a2b8;
+            border-radius: 50%;
+            display: inline-block;
         }
         
         .priority-baixa { 
-            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
-            color: white;
+            background: none;
+            color: #333;
+            padding: 0;
+            border-radius: 0;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .priority-baixa::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: #28a745;
+            border-radius: 50%;
+            display: inline-block;
         }
         
         @keyframes urgentPulse {
