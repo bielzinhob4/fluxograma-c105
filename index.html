@@ -368,6 +368,7 @@
         .requests-modal .modal-content {
             max-width: 800px;
             max-height: 90vh;
+            position: relative;
         }
         
         .request-form {
@@ -569,24 +570,24 @@
         }
         
         .modal-close-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
+            position: absolute;
+            top: 15px;
+            right: 15px;
             background: #f8f9fa !important;
             border: 2px solid #dee2e6 !important;
             color: #666 !important;
-            width: 45px;
-            height: 45px;
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s;
-            z-index: 10002;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .modal-close-btn:hover {
