@@ -2174,6 +2174,19 @@ function renderTabs() {
                                     // Se prioridades diferentes, ordenar por prioridade
                                     if (priorityA !== priorityB) return priorityA - priorityB;
                                     
+                                    // Se ambas estão em branco (prioridade 4), ordenar por informações
+                                    if (priorityA === 4 && priorityB === 4) {
+                                        const hasInfoA = hasTaskInfo(a);
+                                        const hasInfoB = hasTaskInfo(b);
+                                        
+                                        // Com informações primeiro, sem informações depois
+                                        if (hasInfoA && !hasInfoB) return -1;
+                                        if (!hasInfoA && hasInfoB) return 1;
+                                        
+                                        // Se ambas têm ou não têm informações, manter ordem original
+                                        return 0;
+                                    }
+                                    
                                     // Se mesma prioridade, ordenar por OS e depois por tarefa
                                     const osA = parseInt(a.osNumber) || 0;
                                     const osB = parseInt(b.osNumber) || 0;
