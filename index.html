@@ -567,6 +567,33 @@
             text-transform: uppercase;
             font-weight: 600;
         }
+        
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f8f9fa !important;
+            border: 2px solid #dee2e6 !important;
+            color: #666 !important;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .modal-close-btn:hover {
+            background: #dc3545 !important;
+            color: white !important;
+            border-color: #dc3545 !important;
+            transform: scale(1.1);
+        }
 
         .logout-btn:hover {
             background: #c82333;
@@ -1714,7 +1741,7 @@
     <div class="modal-content">
         <div class="modal-header">
             <h2>📤 Sistema de Solicitações Entre Seções</h2>
-            <button onclick="closeRequestsModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
+            <button onclick="closeRequestsModal()" class="modal-close-btn">×</button>
         </div>
         <div class="modal-body">
             <!-- Resumo -->
